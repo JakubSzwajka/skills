@@ -27,7 +27,8 @@ Stage changes introduced by linting commands.
 
 ## 4. Commit
 
-- Commit with the drafted message. Do **not** add any co-author trailers.
+- Commit with the drafted message.
+- **NEVER include Co-Authored-By, Signed-off-by, or any other trailers in the commit message. The message must contain only the commit description and nothing else.**
 - Use a HEREDOC for the message to preserve formatting.
 - Run `git status` after to confirm success.
 - Do **NOT** push.

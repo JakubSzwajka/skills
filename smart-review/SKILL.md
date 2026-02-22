@@ -11,6 +11,8 @@ description: >
 
 Review current git changes against their intended goal and produce a compact inline verdict.
 
+**READ-ONLY**: This skill must NEVER modify any files, stage changes, create commits, or alter the working tree in any way. Only use read-only commands (git diff, git log, git status, git branch). Do not use Edit, Write, or NotebookEdit tools. Do not run any command that writes to disk.
+
 ## Step 1: Gather Changes
 
 Run `git diff --stat` and `git diff --staged --stat` to see what changed.
