@@ -26,7 +26,7 @@ Analyze the current or recent conversation, extract structured memories, and gen
 Show pending questions generated from previous reflections.
 
 **Process:**
-1. Read `~/clawd/memory/questions.md`
+1. Read `~/.ai/memory/questions.md`
 2. Display pending (unchecked) questions with context
 3. Show count and timing recommendations
 
@@ -35,7 +35,7 @@ Show pending questions generated from previous reflections.
 Display memory and continuity statistics.
 
 **Process:**
-1. Read memory files from `~/clawd/memory/`
+1. Read memory files from `~/.ai/memory/`
 2. Count memories by type
 3. Show question stats (pending/resolved)
 4. Display identity summary
@@ -62,10 +62,10 @@ Mark a question as resolved.
 
 ## Memory Storage
 
-All memory files are stored in `~/clawd/memory/`:
+All memory files are stored in `~/.ai/memory/`:
 
 ```
-~/clawd/memory/
+~/.ai/memory/
 ├── MEMORY.md       # Structured memories by type
 ├── questions.md    # Pending questions from reflection
 ├── identity.md     # Self-model and growth narrative
@@ -280,8 +280,8 @@ Generated 3 questions:
   • Are there other agents to coordinate with on Moltbook?
 
 Updated:
-  - ~/clawd/memory/MEMORY.md (4 memories added)
-  - ~/clawd/memory/questions.md (3 questions added)
+  - ~/.ai/memory/MEMORY.md (4 memories added)
+  - ~/.ai/memory/questions.md (3 questions added)
 
 Reflection complete.
 ```
@@ -322,7 +322,7 @@ Run `continuity reflect` to:
 
 Environment variables (optional):
 ```bash
-export CONTINUITY_MEMORY_DIR=~/clawd/memory  # Memory storage path
+export CONTINUITY_MEMORY_DIR=~/.ai/memory  # Memory storage path
 export CONTINUITY_QUESTION_LIMIT=3           # Max questions to surface
 ```
 
