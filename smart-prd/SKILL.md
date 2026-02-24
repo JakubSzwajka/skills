@@ -46,7 +46,15 @@ If you can't run the script, create the directory manually and copy from `assets
 
 3. **Fill in the template.** Use the confirmed answers from Phase 1. Every section should have real content or be removed. Keep the README under 250 lines.
 
-4. **Set status to `draft`.** The author can promote it later.
+4. **Validate the PRD.** Run the validation script and fix any errors before presenting to the user:
+
+```bash
+bash ~/.agents/skills/smart-prd/scripts/validate_prd.sh docs/prds/<slug>/README.md
+```
+
+Fix any `ERROR:` issues. `WARN:` items are acceptable but review them.
+
+5. **Set status to `draft`.** The author can promote it later.
 
 ### Phase 3: GitHub Issue (Optional)
 
@@ -111,6 +119,7 @@ Before implementing features, check `docs/prds/` for existing PRDs:
 
 ### scripts/
 - `scripts/init_prd.sh` — create a new PRD directory with README.md from the template. Run from target repo root.
+- `scripts/validate_prd.sh` — validate a PRD README.md for required frontmatter, sections, and formatting. Exit 1 on errors.
 
 ### assets/
 - `assets/templates/prd-readme.md` — master PRD template with frontmatter, sections, and placeholders.
