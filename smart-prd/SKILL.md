@@ -1,5 +1,5 @@
 ---
-name: prd
+name: smart-prd
 description: Create and manage lightweight Product Requirement Documents (PRDs) for capturing change ideas. Use when the user wants to write a PRD, describe a change they want to make later, capture a feature idea, or says things like "let's make a PRD for this", "I want to document this change", "create a prd". Also use when the user wants to break a PRD into user stories or update PRD status.
 ---
 
@@ -37,7 +37,7 @@ If the user already described all this, skip straight to drafting.
 2. **Create the PRD directory and README.md.** Preferred: run the init script from the target repo root:
 
 ```bash
-bash ~/.agents/skills/prd/scripts/init_prd.sh <slug>
+bash ~/.agents/skills/smart-prd/scripts/init_prd.sh <slug>
 ```
 
 This creates `docs/prds/<slug>/README.md` from the template. Use `--dir` to override the PRD directory location.
