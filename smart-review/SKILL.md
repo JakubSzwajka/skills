@@ -5,6 +5,7 @@ description: >
   naming, architecture patterns, backwards compatibility, and production readiness.
   Triggers on: "review", "review changes", "code review", "review my changes",
   "is this ready to push", "check my code". Works with any language or stack.
+context: fork
 ---
 
 # Code Review
