@@ -10,6 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TEMPLATE="$SCRIPT_DIR/../assets/templates/prd-readme.md"
+NOTEBOOK_TEMPLATE="$SCRIPT_DIR/../assets/templates/notebook.md"
 
 SLUG=""
 PRD_DIR="docs/prds"
@@ -37,5 +38,7 @@ fi
 mkdir -p "$TARGET"
 DATE=$(date +%Y-%m-%d)
 sed "s/{YYYY-MM-DD}/$DATE/" "$TEMPLATE" > "$TARGET/README.md"
+cp "$NOTEBOOK_TEMPLATE" "$TARGET/notebook.md"
 
 echo "Created PRD: $TARGET/README.md"
+echo "Created notebook: $TARGET/notebook.md"
