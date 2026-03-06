@@ -5,7 +5,7 @@ description: >
   says /triage followed by a bug description or pasted ticket content. Produces a
   structured triage report with root cause, data flow, affected files, and severity.
   Does NOT introduce fixes unless explicitly asked.
-user_invocable: true
+user-invocable: true
 ---
 
 # Bug Triage

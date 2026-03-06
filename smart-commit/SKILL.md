@@ -1,8 +1,9 @@
 ---
 name: smart-commit
 description: Analyze changes, run pre-commit checks, stage and commit with a short message
-user_invocable: true
-argument: Optional scope hint — file paths, globs, or description of what to stage (e.g. "only migration files / only specific changes "). If omitted, all changes are staged.
+user-invocable: true
+disable-model-invocation: true
+argument-hint: [scope]
 ---
 
 # Commit Skill

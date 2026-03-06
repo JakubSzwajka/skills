@@ -2,6 +2,8 @@
 
 Source: https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md
 
+> **Official reference**: https://code.claude.com/docs/en/skills — the authoritative source for frontmatter fields, substitution variables (`$ARGUMENTS`, `${CLAUDE_SKILL_DIR}`, `${CLAUDE_SESSION_ID}`), dynamic context injection (`!`command``), `context: fork` + `agent:` patterns, and skill distribution.
+
 ## Core Principles
 
 ### Concise is Key

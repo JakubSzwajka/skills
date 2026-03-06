@@ -1,7 +1,6 @@
 ---
 name: continuity
 description: Memory reflection and continuity skill for Claude Code. Transforms passive logging into active development through structured memory extraction, confidence scoring, and genuine question generation. Use `continuity reflect` after sessions, `continuity greet` at session start.
-version: 1.0.0
 ---
 
 # Continuity Framework - Claude Code Skill

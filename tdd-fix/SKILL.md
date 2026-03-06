@@ -5,7 +5,8 @@ description: >
   fails, implement the fix, prove it passes. Use when the user says /tdd-fix after a
   triage has been completed in the current conversation. Requires a prior /triage report
   in context.
-user_invocable: true
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # TDD Bug Fix
