@@ -20,6 +20,17 @@
 
 <What this module owns vs. what it delegates. 1-2 sentences.>
 
+## Data Model
+
+<Simplified Mermaid ER diagram — entities and relations only, no fields. Omit if the module has no meaningful data model.>
+
+```mermaid
+erDiagram
+    User ||--o{ Order : places
+    Order ||--|{ LineItem : contains
+    Product ||--o{ LineItem : "appears in"
+```
+
 ## Read Next
 
 - [Child Module](./child/README.md)
@@ -31,20 +42,23 @@
 ### Root level (src/lib/, src/)
 - Focus: Organization, layering rules
 - Read Next: Yes, heavy
+- Data Model: Yes, simplified across sub-modules
 - Code example: No
-- Length: ~20-30 lines
+- Length: ~20-35 lines
 
 ### Mid-tier (services/, tools/)
 - Focus: Orchestration contracts
 - Read Next: Yes, children + peers
+- Data Model: If the module owns entities
 - Code example: Brief
-- Length: ~15-30 lines
+- Length: ~15-35 lines
 
 ### Leaf (auth/, openapi/, filesystem/)
 - Focus: API surface only
 - Read Next: Rarely
+- Data Model: Only if it owns entities
 - Code example: Sometimes
-- Length: ~10-18 lines
+- Length: ~10-25 lines
 
 ## Rules
 
@@ -54,3 +68,4 @@
 4. Read Next links are relative — they create the navigation graph
 5. Never duplicate — don't explain a child module's internals, link to its README
 6. No private functions, no tutorials, no caller descriptions
+7. Data Model diagrams show entities and relations only — no fields. For root-level READMEs covering complex sub-modules, simplify by showing only top-level entities. Omit the section entirely if the module has no meaningful data model

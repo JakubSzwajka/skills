@@ -63,8 +63,6 @@ Ask the user to confirm before starting. The user may:
 - Adjust wave grouping
 - Set a max wave count to stop after
 
-Use your select tool to interactively select the user's approval or adjustments.
-
 ## Phase 4: Execute Waves
 
 For each wave:
@@ -143,6 +141,16 @@ After the **last wave**, always run a review:
 4. If READY:
    - Show final summary
    - Offer to commit
+
+### 4f. Update READMEs
+
+After the review passes (or after all fix loops complete), run readme-update on modules affected by the pipeline's changes. Invoke via the Skill tool:
+
+```
+Skill(readme-update)
+```
+
+This auto-detects changed modules from git diff and updates their README.md files. The agent running this should not need guidance — readme-update handles discovery, analysis, and writing on its own.
 
 ## Phase 5: Final Summary
 

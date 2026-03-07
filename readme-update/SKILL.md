@@ -37,6 +37,7 @@ For each module directory:
 2. Read existing README.md if present
 3. Identify child directories that are themselves modules (have their own entry point)
 4. Identify peer/related modules referenced by imports
+5. Identify **entities and relations** the module owns or orchestrates (for the Data Model diagram)
 
 Determine the module's **level**:
 - **Root**: directly under src/ or src/lib/ — focus on organization and layering
