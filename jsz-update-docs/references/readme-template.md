@@ -1,71 +1,116 @@
 # README Template Reference
 
+## Goal
+
+Code-module READMEs should be short, stable module cards. They are for both humans and documentation scanners.
+
 ## Standard Template
 
 ```markdown
+---
+title: <Display Title>
+section: <Top-Level Section>
+subsection: <Optional Subsection>
+order: <Optional Integer>
+---
+
 # <Module Name>
 
 <One sentence: what this module does.>
 
+## Activation
+
+<How this module becomes active at runtime or build time.>
+
 ## Public API
 
-- `exportedFunction()` - brief description
-- `AnotherExport` - brief description
+- `exportedSymbol` - brief caller-facing description
+
+## Configuration
+
+| Env var | Default | Description |
+|---------|---------|-------------|
+| `EXAMPLE_VAR` | `value` | What it controls |
 
 ## Use It Like This
 
-<Single code snippet showing import + call, or a short narrative.>
+```ts
+import { thing } from "<module>";
+```
 
 ## Responsibility Boundary
 
-<What this module owns vs. what it delegates. 1-2 sentences.>
+<What this module owns vs. what it delegates.>
 
-## Data Model
+## Operational Constraints
 
-<Simplified Mermaid ER diagram — entities and relations only, no fields. Omit if the module has no meaningful data model.>
+- <Runtime, build, or storage assumption>
+- <Activation limitation or failure mode>
 
-```mermaid
-erDiagram
-    User ||--o{ Order : places
-    Order ||--|{ LineItem : contains
-    Product ||--o{ LineItem : "appears in"
-```
+## Known Limitations
+
+- <Short limitation if it materially affects callers>
+
+## Status
+
+<Stable, proof, experimental, legacy, best-effort, etc.>
 
 ## Read Next
 
-- [Child Module](./child/README.md)
 - [Related Module](../related/README.md)
 ```
 
-## Sizing by Level
+## Section Guidance
 
-### Root level (src/lib/, src/)
-- Focus: Organization, layering rules
-- Read Next: Yes, heavy
-- Data Model: Yes, simplified across sub-modules
-- Code example: No
-- Length: ~20-35 lines
+### Always include
 
-### Mid-tier (services/, tools/)
-- Focus: Orchestration contracts
-- Read Next: Yes, children + peers
-- Data Model: If the module owns entities
-- Code example: Brief
-- Length: ~15-35 lines
+- Summary sentence
+- `Activation`
+- `Responsibility Boundary`
+- `Operational Constraints`
+- `Read Next`
 
-### Leaf (auth/, openapi/, filesystem/)
-- Focus: API surface only
-- Read Next: Rarely
-- Data Model: Only if it owns entities
-- Code example: Sometimes
-- Length: ~10-25 lines
+### Include when relevant
 
-## Rules
+- `Public API` when callers import symbols from the module
+- `Configuration` when env vars, config files, or build outputs matter
+- `Use It Like This` when a tiny example helps clarify imports or usage
+- `Known Limitations` when behavior is intentionally incomplete or surprising
+- `Status` when maturity matters
 
-1. Under 30 lines when possible
-2. Public API lists exports — what callers actually import, not internal helpers
-3. Responsibility Boundary — the critical sentence that prevents scope creep
-4. Read Next links are relative — they create the navigation graph
-5. Never duplicate — don't explain a child module's internals, link to its README
-6. No private functions, no tutorials, no caller descriptions
-7. Data Model diagrams show entities and relations only — no fields. For root-level READMEs covering complex sub-modules, simplify by showing only top-level entities. Omit the section entirely if the module has no meaningful data model
+### Usually omit
+
+- Long tutorials
+- Step-by-step deployment docs
+- Deep child-module explanations
+- Private implementation details
+- Data-model diagrams unless they are genuinely central and stable
+
+## Sizing Rules
+
+### Root README
+
+- Focus on repo structure, top-level runtime/config contract, and navigation
+- Keep it compact and accurate
+
+### Core/Mid-tier module README
+
+- Focus on activation, ownership, orchestration, and key constraints
+- Usually 20-40 lines plus frontmatter
+
+### Leaf module README
+
+- Focus on activation, public surface, and limits
+- Usually 12-30 lines plus frontmatter
+
+## Drift Checks
+
+Before finalizing a README, compare it against:
+
+1. Entrypoint exports
+2. Runtime/boot wiring
+3. Env-var usage
+4. Parent/child module relationships
+5. Existing `Read Next` links
+
+If the README says something that the code no longer does, rewrite it even if the section already exists.

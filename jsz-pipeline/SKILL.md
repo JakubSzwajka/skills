@@ -35,26 +35,20 @@ Build waves by topological sort on dependencies:
 
 ## Phase 3: Show the Plan
 
-Display the full wave plan **before executing anything**. Format:
+Display the full wave plan **before executing anything** as a markdown table:
 
 ```
-Pipeline: <PRD title>
-Total: <N> tasks across <W> waves
+**Pipeline: <PRD title>** — <N> tasks across <W> waves
 
-🌊 **Wave 1**  ──────────────────────────────────
-  [1] Remove relationship declarations from finance models
-  [2] Remove reverse relationships from party models
-
-🌊 **Wave 2**  ──────────────────────────────────
-  [3] Refactor RepoCustomerAccounts         (needs: 1)
-  [4] Refactor RepoProviderAccounts         (needs: 1)
-  [6] Refactor payout queries               (needs: 1)
-
-🌊 **Wave 3**  ──────────────────────────────────
-  [5] Refactor payouts facade               (needs: 4)
-  [9] Refactor query engine schemas         (needs: 6, 7, 8)
-
-🔍 Review after final wave.
+| Wave | Task | Description | Needs | Status |
+|------|------|-------------|-------|--------|
+| 1 | [1] | Remove relationship declarations from finance models | — | pending |
+| 1 | [2] | Remove reverse relationships from party models | — | pending |
+| 2 | [3] | Refactor RepoCustomerAccounts | 1 | pending |
+| 2 | [4] | Refactor RepoProviderAccounts | 1 | pending |
+| 2 | [6] | Refactor payout queries | 1 | pending |
+| 3 | [5] | Refactor payouts facade | 4 | pending |
+| 3 | [9] | Refactor query engine schemas | 6, 7, 8 | pending |
 ```
 
 Ask the user to confirm before starting. The user may:
@@ -79,24 +73,30 @@ Spawn one Agent per task **in parallel** using background agents. Each agent get
 - Key context from pre-read: existing patterns, function signatures, conventions to follow
 - Instruction: "Implement this task. Keep imports sorted. When done, report what you changed and any concerns."
 
-Display while running:
+Re-render the pipeline table with updated statuses. Running tasks show `running`, completed show `done`:
 
 ```
-🌊 **Wave 2**  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [3] Refactor RepoCustomerAccounts ........... running
-  [4] Refactor RepoProviderAccounts ........... running
-  [6] Refactor payout queries ................. running
+**Pipeline: <PRD title>** — Wave 2 of 3
+
+| Wave | Task | Description | Needs | Status |
+|------|------|-------------|-------|--------|
+| 1 | [1] | Remove relationship declarations | — | done |
+| 1 | [2] | Remove reverse relationships | — | done |
+| 2 | [3] | Refactor RepoCustomerAccounts | 1 | running |
+| 2 | [4] | Refactor RepoProviderAccounts | 1 | running |
+| 2 | [6] | Refactor payout queries | 1 | running |
+| 3 | [5] | Refactor payouts facade | 4 | pending |
+| 3 | [9] | Refactor query engine schemas | 6, 7, 8 | pending |
 ```
 
 ### 4c. Collect Results
 
-As agents complete, update the display:
+As agents complete, re-render the table again. Append concerns inline in the Status column:
 
 ```
-🌊 **Wave 2**  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  [3] Refactor RepoCustomerAccounts ........... done
-  [4] Refactor RepoProviderAccounts ........... done (concern: payouts eager-load)
-  [6] Refactor payout queries ................. done
+| 2 | [3] | Refactor RepoCustomerAccounts | 1 | done |
+| 2 | [4] | Refactor RepoProviderAccounts | 1 | done (concern: payouts eager-load) |
+| 2 | [6] | Refactor payout queries | 1 | done |
 ```
 
 After all agents in the wave finish:
@@ -107,12 +107,10 @@ After all agents in the wave finish:
 
 ### 4d. Wave Summary
 
-After updating statuses, show a compact summary and **auto-continue** to the next wave unless there are concerns or discovered tasks:
+After updating statuses, show a one-line summary and **auto-continue** to the next wave unless there are concerns or discovered tasks:
 
 ```
-🌊 **Wave 2** complete  ─────────────────────────
-  3/3 tasks done
-  Next: Wave 3 — [5], [9]
+**Wave 2 complete** — 3/3 done. Next: Wave 3 ([5], [9])
 ```
 
 **Pause and ask** only when:
@@ -154,21 +152,19 @@ This auto-detects changed modules from git diff and updates their README.md file
 
 ## Phase 5: Final Summary
 
-When the pipeline completes (all waves done + review passed):
+When the pipeline completes (all waves done + review passed), re-render the full table one last time with all statuses as `done`, then a summary line:
 
 ```
-🎉 **Pipeline complete**  ═══════════════════════
-  PRD: **Finance Module Detachment**
-  Tasks: 15/15 done
-  Waves: 4
-  Review: READY
+**Pipeline complete: Finance Module Detachment** — 15/15 done, 4 waves, review READY
 
-  🌊 **Wave 1**: [1] [2]                          2/2
-  🌊 **Wave 2**: [2b] [3] [4] [6] [7] [8] [11a]  7/7
-  🌊 **Wave 3**: [5] [9] [10] [11b]              4/4
-  🌊 **Wave 4**: [11c] [12] [13] [13b]           4/4
+| Wave | Task | Description | Status |
+|------|------|-------------|--------|
+| 1 | [1] | Remove relationship declarations | done |
+| 1 | [2] | Remove reverse relationships | done |
+| 2 | [3] | Refactor RepoCustomerAccounts | done |
+| ... | ... | ... | ... |
 
-  🔍 Ready to commit.
+Ready to commit.
 ```
 
 ## Rules
