@@ -1,5 +1,5 @@
 ---
-name: jsz-create-skill
+name: _create-skill
 description: Guide for creating new Claude Code skills or updating existing ones. Use when the user wants to create a skill, build a skill, make a new skill, update a skill, or asks about skill creation. Leads the user through a Socratic discovery process, then generates a properly structured skill package. Skills are always created at ~/.agents/skills/.
 ---
 
@@ -58,7 +58,7 @@ Get user confirmation before proceeding.
 Run the init script to scaffold the skill:
 
 ```bash
-~/.agents/skills/jsz-create-skill/scripts/init_skill.py <skill-name> --path ~/.agents/skills
+~/.agents/skills/_create-skill/scripts/init_skill.py <skill-name> --path ~/.agents/skills
 ```
 
 This creates the directory with SKILL.md template and example resource dirs.
@@ -95,7 +95,7 @@ Implement scripts, references, and assets identified in Step 2. Test scripts by 
 Validate and package the skill. Requires `pyyaml` — use a venv if needed:
 
 ```bash
-cd ~/.agents/skills/jsz-create-skill/scripts && python3 package_skill.py ~/.agents/skills/<skill-name>
+cd ~/.agents/skills/_create-skill/scripts && python3 package_skill.py ~/.agents/skills/<skill-name>
 ```
 
 If validation fails, fix errors and re-run. The output is a `.skill` file (zip with .skill extension).

@@ -1,5 +1,5 @@
 ---
-name: jsz-triage
+name: _triage
 description: >
   Investigate and triage a bug report by exploring the codebase. Use when the user
   says /triage followed by a bug description or pasted ticket content. Produces a

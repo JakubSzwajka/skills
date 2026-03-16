@@ -1,5 +1,5 @@
 ---
-name: jsz-session-analysis
+name: _session-analysis
 description: >
   Analyze Claude Code session history to answer user questions about patterns, decisions,
   knowledge gaps, progress, or any custom research angle. Use when the user wants to
@@ -18,9 +18,9 @@ Analyze Claude Code session history through a custom analytical lens provided by
 ## Invocation
 
 ```
-/jsz-session-analysis What architectural decisions were made and are they consistent?
-/jsz-session-analysis --scope=user --days=30 What knowledge gaps keep recurring?
-/jsz-session-analysis --scope=project --days=14 --max-sessions=30 What was actually shipped vs just discussed?
+/_session-analysis What architectural decisions were made and are they consistent?
+/_session-analysis --scope=user --days=30 What knowledge gaps keep recurring?
+/_session-analysis --scope=project --days=14 --max-sessions=30 What was actually shipped vs just discussed?
 ```
 
 ## Arguments
@@ -38,7 +38,7 @@ Analyze Claude Code session history through a custom analytical lens provided by
 Run the extraction script to get filtered session content:
 
 ```bash
-node ~/.agents/skills/jsz-session-analysis/scripts/extract-sessions.js \
+node ~/.agents/skills/_session-analysis/scripts/extract-sessions.js \
   --scope=<scope> --days=<days> --max-sessions=<max> --min-messages=<min> \
   --project-path=<cwd>
 ```

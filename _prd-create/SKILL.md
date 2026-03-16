@@ -1,5 +1,5 @@
 ---
-name: jsz-prd-create
+name: _prd-create
 description: >
   Create and manage lightweight PRDs, then decompose them into ordered, dependency-aware, commit-sized tasks.
   Use when the user wants to write a PRD, capture a feature idea, break a PRD into stories or tasks,
@@ -41,7 +41,7 @@ If the user already described all this, skip straight to drafting.
 2. **Create the PRD directory and README.md.** Preferred: run the init script from the target repo root:
 
 ```bash
-bash ~/.agents/skills/jsz-prd-create/scripts/init_prd.sh <slug>
+bash ~/.agents/skills/_prd-create/scripts/init_prd.sh <slug>
 ```
 
 This creates `docs/prds/<slug>/README.md` and `notebook.md` from templates. Use `--dir` to override the PRD directory location.
@@ -53,7 +53,7 @@ If you can't run the script, create the directory manually and copy from `assets
 4. **Validate the PRD.** Run the validation script and fix any errors before presenting to the user:
 
 ```bash
-bash ~/.agents/skills/jsz-prd-create/scripts/validate_prd.sh docs/prds/<slug>/README.md
+bash ~/.agents/skills/_prd-create/scripts/validate_prd.sh docs/prds/<slug>/README.md
 ```
 
 Fix any `ERROR:` issues. `WARN:` items are acceptable but review them.

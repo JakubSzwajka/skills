@@ -1,5 +1,5 @@
 ---
-name: jsz-research
+name: _research
 description: >
   Deep codebase exploration that produces structured research reports. Use when you need
   to understand unfamiliar modules, map cross-cutting concerns, find patterns, or answer

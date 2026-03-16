@@ -1,6 +1,6 @@
 ---
-name: jsz-explain
-description: Visual concept explainer that researches code and generates a styled HTML page. Use when the user says "jsz-explain", "explain this", "break this down visually", or asks for a visual explanation of a codebase concept, architecture pattern, or technical question. Generates an HTML file in /tmp and returns the file link.
+name: _explain
+description: Visual concept explainer that researches code and generates a styled HTML page. Use when the user says "_explain", "explain this", "break this down visually", or asks for a visual explanation of a codebase concept, architecture pattern, or technical question. Generates an HTML file in /tmp and returns the file link.
 ---
 
 # Visual Concept Explainer
@@ -63,13 +63,13 @@ For callout syntax and visual patterns, read [references/style-guide.md](referen
 
 ### 4. Write and return
 
-Write the complete HTML file to: `/tmp/jsz-explain-<slug>.html`
+Write the complete HTML file to: `/tmp/_explain-<slug>.html`
 
 Where `<slug>` is a kebab-case short name derived from the topic (e.g., `auth-middleware`, `data-pipeline`).
 
 Return ONLY the link to the user:
 ```
-file:///tmp/jsz-explain-<slug>.html
+file:///tmp/_explain-<slug>.html
 ```
 
 Do NOT summarize the page content in conversation. The HTML page IS the output. Just provide the link.

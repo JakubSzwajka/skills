@@ -1,5 +1,5 @@
 ---
-name: jsz-review
+name: _review
 description: >
   Pre-push code review that analyzes git changes for correctness, test coverage, types,
   naming, architecture patterns, backwards compatibility, and production readiness.

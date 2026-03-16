@@ -1,5 +1,5 @@
 ---
-name: jsz-tdd-fix
+name: _tdd-fix
 description: >
   Fix a triaged bug using TDD: write a test that covers the buggy behavior, prove it
   fails, implement the fix, prove it passes. Use when the user says /tdd-fix after a

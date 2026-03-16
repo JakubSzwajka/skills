@@ -1,5 +1,5 @@
 ---
-name: jsz-test
+name: _test
 description: >
   Run tests and produce a focused report answering specific questions. Auto-detects
   test framework (pytest, jest, go test, cargo test, etc.). Filters noise and returns

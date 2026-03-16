@@ -1,5 +1,5 @@
 ---
-name: jsz-commit
+name: _commit
 description: Analyze changes, run pre-commit checks, stage and commit with a short message
 user-invocable: true
 disable-model-invocation: true

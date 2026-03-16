@@ -1,5 +1,5 @@
 ---
-name: jsz-update-docs
+name: _update-docs
 description: Scan changed or specified code modules and update their README.md files to match the current module contract. Use when the user asks to update readmes, sync docs, document recent code changes, or keep module docs aligned with the codebase. Triggers on commands like "update readmes", "sync docs", "readme update", or after changes to module entrypoints, runtime wiring, env config, or module relationships.
 ---
 
@@ -122,7 +122,7 @@ After editing:
 Run:
 
 ```bash
-python3 ~/.agents/skills/jsz-update-docs/scripts/audit_readmes.py --root <repo> [README paths...]
+python3 ~/.agents/skills/_update-docs/scripts/audit_readmes.py --root <repo> [README paths...]
 ```
 
 If a module changed internally but its public contract did not change, leave the README alone and report that no update was needed.

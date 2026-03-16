@@ -1,5 +1,5 @@
 ---
-name: jsz-prd-challenge
+name: _prd-challenge
 description: >
   Stress-test a PRD against the real codebase to find feasibility gaps, ambiguities, missing details,
   and risks before implementation begins. Produces a structured feasibility report in conversation.
@@ -21,7 +21,7 @@ Read ALL files in the PRD directory (README.md, tasks.md, data-shape.md, any sup
 
 ### 2. Deep-dive the codebase
 
-For each major claim or assumption in the PRD, verify it against the codebase. Use `/jsz-research` or the Explore agent for thorough investigation. Focus on these verification axes:
+For each major claim or assumption in the PRD, verify it against the codebase. Use `/_research` or the Explore agent for thorough investigation. Focus on these verification axes:
 
 **Structural accuracy**
 - Models & schemas referenced — do they exist? Do they have the fields/relationships described?

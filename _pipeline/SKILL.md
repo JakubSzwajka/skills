@@ -1,5 +1,5 @@
 ---
-name: jsz-pipeline
+name: _pipeline
 description: >
   Execute a PRD's tasks in dependency-ordered waves using parallel agents.
   Computes waves from tasks.md, shows the execution plan, then runs wave-by-wave
@@ -120,7 +120,7 @@ After updating statuses, show a one-line summary and **auto-continue** to the ne
 
 When pausing, offer these actions:
 - **continue** — proceed to next wave
-- **review** — run jsz-review on changes so far
+- **review** — run _review on changes so far
 - **pause** — stop here, user will resume later
 - **add task** — incorporate discovered tasks, recompute waves
 - **abort** — stop pipeline
@@ -129,7 +129,7 @@ When pausing, offer these actions:
 
 After the **last wave**, always run a review:
 
-1. Spawn an Agent with jsz-review instructions (context: fork)
+1. Spawn an Agent with _review instructions (context: fork)
 2. Present the review verdict
 3. If NEEDS WORK:
    - Show findings
@@ -142,13 +142,13 @@ After the **last wave**, always run a review:
 
 ### 4f. Update READMEs
 
-After the review passes (or after all fix loops complete), run jsz-update-docs on modules affected by the pipeline's changes. Invoke via the Skill tool:
+After the review passes (or after all fix loops complete), run _update-docs on modules affected by the pipeline's changes. Invoke via the Skill tool:
 
 ```
-Skill(jsz-update-docs)
+Skill(_update-docs)
 ```
 
-This auto-detects changed modules from git diff and updates their README.md files. The agent running this should not need guidance — jsz-update-docs handles discovery, analysis, and writing on its own.
+This auto-detects changed modules from git diff and updates their README.md files. The agent running this should not need guidance — _update-docs handles discovery, analysis, and writing on its own.
 
 ## Phase 5: Final Summary
 
