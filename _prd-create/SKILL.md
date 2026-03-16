@@ -60,24 +60,6 @@ Fix any `ERROR:` issues. `WARN:` items are acceptable but review them.
 
 5. **Set status to `draft`.** The author can promote it later.
 
-### Phase 3: GitHub Issue (Optional)
-
-After creating the PRD file, check if the repo has GitHub issues enabled:
-
-```bash
-gh issue list --limit 1 2>/dev/null
-```
-
-If it works, create an issue:
-
-```bash
-gh issue create --title "PRD: <title>" --body "$(cat docs/prds/<slug>/README.md)"
-```
-
-Then update the PRD's `gh-issue` frontmatter field with the issue URL. This bidirectional link lets agents find the discussion context.
-
-If `gh` fails or the repo doesn't support issues, skip this step silently.
-
 ## Breaking into User Stories
 
 When the user returns to a PRD to deep-dive, help them break it into story files in the same directory:

@@ -2,7 +2,6 @@
 status: draft
 date: {YYYY-MM-DD}
 author: "{who captured this}"
-gh-issue: "{link to GitHub issue, if created}"
 ---
 
 # {Title — short description of the change}
