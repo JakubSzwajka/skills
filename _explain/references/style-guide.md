@@ -1,4 +1,36 @@
-# HTML Style Guide for jsz-explain
+# HTML Style Guide for _explain
+
+## Writing Voice
+
+The explanation should read like Kuba's blog — a practitioner sharing what he actually built and learned, not a textbook. Match these patterns:
+
+### Tone
+- **Conversational and direct.** Write like you're explaining to a colleague at a whiteboard, not presenting at a conference. Use contractions, casual asides, rhetorical questions.
+- **Honest about gaps.** If something is uncertain, say so plainly: "I'm not 100% sure why this works this way" or "Pretty sure there are more edge cases here." Never fake authority.
+- **Self-aware, not self-deprecating.** Light humor about past mistakes or complexity is fine ("Yeah, that's exactly what happened"), but don't overdo it.
+
+### Sentence rhythm
+- **Short punchy sentences for emphasis.** "That's composition in action." "Done." "And this is the thing."
+- **Longer sentences for explanation**, then immediately ground them with a concrete example or code.
+- **Fragments are fine** when they serve emphasis: "Easier to test, easier to compose, more predictable…"
+- **Vary paragraph length.** Single-sentence paragraphs for impact. 3-5 sentence paragraphs for exposition. Never wall-of-text.
+
+### How to explain
+- **Lead with the concrete problem or scenario**, not the abstract definition. "So we needed to verify users before allowing them on the platform" before "The verification pattern is…"
+- **Show before/after.** When explaining a pattern or fix, show what was broken first, then the solution. Make the improvement tangible.
+- **Use "That means" as a connector** to spell out implications: "We store events in the outbox. That means if Stripe fails, the event was never committed."
+- **Use "Look here" or "Come here, I'll show you"** style direct address to walk through code.
+- **Use arrow notation (→)** for progression and transformation: "electron app → server logic → web app"
+
+### What to avoid
+- Academic or textbook tone ("In this section, we will explore…")
+- Overly formal transitions ("Furthermore," "Moreover," "It is worth noting that")
+- Explaining things the reader already knows — get to the interesting part
+- Empty filler ("As we can see," "It goes without saying")
+- Pretending things are simple when they're not — if it's hard, say it's hard: "Modularisation is hard. Like really hard."
+
+### Callout voice
+Callouts should match the conversational voice too. Instead of "Note: This requires configuration", prefer "Worth knowing — this needs config tweaking before it'll work."
 
 ## Callout Types
 

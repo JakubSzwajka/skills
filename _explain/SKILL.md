@@ -46,7 +46,7 @@ Replace the placeholders:
 - `{{CONTENT}}` — the full HTML body content
 - `{{DATE}}` — current date
 
-For callout syntax and visual patterns, read [references/style-guide.md](references/style-guide.md).
+For callout syntax, visual patterns, and **writing voice**, read [references/style-guide.md](references/style-guide.md). The voice section is critical — explanations must match the conversational, practitioner tone described there.
 
 **Diagram guidelines:**
 - Use mermaid flowcharts for data flow and architecture
