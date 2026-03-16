@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #1a1b26;
+      --bg-surface: #24283b;
+      --bg-raised: #2f3347;
+      --text: #c0caf5;
+      --text-muted: #565f89;
+      --text-bright: #e0e6ff;
+      --accent: #7aa2f7;
+      --accent-dim: #3d59a1;
+      --green: #9ece6a;
+      --orange: #ff9e64;
+      --red: #f7768e;
+      --yellow: #e0af68;
+      --purple: #bb9af7;
+      --cyan: #7dcfff;
+      --border: #3b4261;
+      --radius: 8px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --bg-surface: #ffffff;
+      --bg-raised: #e8e8e8;
+      --text: #333333;
+      --text-muted: #888888;
+      --text-bright: #111111;
+      --accent: #2563eb;
+      --accent-dim: #93b4f5;
+      --green: #16a34a;
+      --orange: #d97706;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --purple: #7c3aed;
+      --cyan: #0891b2;
+      --border: #d4d4d4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 17px;
+      line-height: 1.7;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 100;
+    }
+    .theme-toggle:hover { background: var(--bg-raised); }
+
+    /* Header */
+    .header {
+      margin-bottom: 3rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid var(--accent-dim);
+    }
+    .header h1 {
+      font-size: 2rem;
+      color: var(--text-bright);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .header .context {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 2.5rem;
+    }
+    .section h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section h3 {
+      font-size: 1.15rem;
+      color: var(--text-bright);
+      margin: 1.2rem 0 0.6rem;
+    }
+
+    /* Prose */
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: var(--text-bright); }
+    em { color: var(--purple); font-style: italic; }
+
+    ul, ol {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+    li { margin-bottom: 0.4rem; }
+
+    /* Code */
+    code {
+      font-family: var(--font-mono);
+      background: var(--bg-raised);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--cyan);
+    }
+    pre {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--text);
+    }
+
+    /* Callout boxes */
+    .callout {
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+      border-left: 4px solid;
+    }
+    .callout-info {
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-surface));
+      border-color: var(--accent);
+    }
+    .callout-warning {
+      background: color-mix(in srgb, var(--orange) 10%, var(--bg-surface));
+      border-color: var(--orange);
+    }
+    .callout-uncertainty {
+      background: color-mix(in srgb, var(--yellow) 10%, var(--bg-surface));
+      border-color: var(--yellow);
+    }
+    .callout-uncertainty::before {
+      content: "⚠ ";
+      font-weight: bold;
+    }
+    .callout-depends {
+      background: color-mix(in srgb, var(--purple) 10%, var(--bg-surface));
+      border-color: var(--purple);
+    }
+    .callout-depends::before {
+      content: "🔗 ";
+    }
+    .callout-key {
+      background: color-mix(in srgb, var(--green) 10%, var(--bg-surface));
+      border-color: var(--green);
+    }
+    .callout-key::before {
+      content: "💡 ";
+    }
+    .callout .label {
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    .callout-uncertainty .label { color: var(--yellow); }
+    .callout-depends .label { color: var(--purple); }
+    .callout-key .label { color: var(--green); }
+    .callout-info .label { color: var(--accent); }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin: 1.2rem 0;
+      text-align: center;
+    }
+
+    /* Table of contents */
+    .toc {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .toc h3 {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.6rem;
+    }
+    .toc ul { list-style: none; margin: 0; padding: 0; }
+    .toc li { margin-bottom: 0.3rem; }
+    .toc a {
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .toc a:hover { color: var(--accent); }
+
+    /* File references */
+    .file-ref {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      color: var(--cyan);
+      background: var(--bg-raised);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+    }
+    th {
+      background: var(--bg-raised);
+      color: var(--text-bright);
+      font-weight: 600;
+    }
+    td { background: var(--bg-surface); }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">◑ Theme</button>
+
+  {{CONTENT}}
+
+  <div class="footer">
+    Generated by jsz-explain · {{DATE}}
+  </div>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', html.dataset.theme);
+      // Re-init mermaid with new theme
+      initMermaid();
+    }
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.dataset.theme = saved;
+
+    // Mermaid init
+    function initMermaid() {
+      const theme = document.documentElement.dataset.theme === 'light' ? 'default' : 'dark';
+      mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });
+      document.querySelectorAll('.mermaid').forEach((el, i) => {
+        const id = 'mermaid-' + i;
+        const code = el.getAttribute('data-source') || el.textContent;
+        el.setAttribute('data-source', code);
+        el.innerHTML = '';
+        mermaid.render(id, code).then(({svg}) => { el.innerHTML = svg; });
+      });
+    }
+    initMermaid();
+  </script>
+</body>
+</html>

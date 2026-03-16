@@ -167,6 +167,37 @@ When the pipeline completes (all waves done + review passed), re-render the full
 Ready to commit.
 ```
 
+### Guided Review
+
+After the final table, produce a **review guide** that helps the user navigate the changed files in logical order. Group files by review priority, not by wave or alphabetical order.
+
+```
+## Review Guide
+
+**Core changes** — review these first, they carry the main intent:
+- `src/finance/models.py` — relationship declarations removed
+- `src/finance/repos.py` — query patterns rewritten
+
+**Dependent changes** — flow from the core, check for consistency:
+- `src/payouts/facade.py` — now uses new repo interface
+- `src/payouts/queries.py` — updated joins
+
+**Test updates** — verify they cover the new behavior:
+- `tests/finance/test_repos.py` — new query assertions
+- `tests/payouts/test_facade.py` — adapted to interface change
+
+**Docs & config** — quick scan:
+- `src/finance/README.md` — updated module contract
+```
+
+Rules for building the guide:
+1. **Core changes** = files where the primary intent of the PRD lives. Usually the modules named in task descriptions.
+2. **Dependent changes** = files that had to change because core changed. Imports, callers, wiring.
+3. **Test updates** = new or modified test files. Group by the core/dependent file they cover.
+4. **Docs & config** = READMEs, configs, migrations, type stubs — low-risk, quick scan.
+5. Keep each group to the most important files. If a group has 10+ files, show the top 5 and note "and N more".
+6. Use the actual file paths from `git diff --name-only`.
+
 ## Rules
 
 1. **Never implement code yourself** — all implementation and review-fix work goes to agents. The only exception is trivial cleanup (removing an unused import, fixing a typo) that would be slower to delegate than to do inline.
