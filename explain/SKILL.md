@@ -1,5 +1,5 @@
 ---
-name: _explain
+name: explain
 description: Visual concept explainer that researches code and generates a styled HTML page. Use when the user says "_explain", "explain this", "break this down visually", or asks for a visual explanation of a codebase concept, architecture pattern, or technical question. Generates an HTML file in /tmp and returns the file link.
 ---
 
@@ -39,7 +39,7 @@ Adapt sections to what makes sense for the topic. Not every explanation needs al
 
 ### 3. Generate HTML
 
-Read the HTML template at [assets/template.html](assets/template.html).
+Read the HTML template at [assets/template.html](assets/template.html). The template is lightweight — styling and scripts are loaded from external files automatically. Do NOT inline any CSS or JS.
 
 Replace the placeholders:
 - `{{TITLE}}` — short descriptive title
