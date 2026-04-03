@@ -1,56 +1,158 @@
 ---
 name: dont-start-blind
-description: Bootstrap working context before execution-heavy work. Use when the user is resuming a thread, switching into a repo/project, starting implementation, asking to continue work, or using phrases like "work on X", "resume", "continue", "we need to build", "do this", "implement this", or explicit `task:` framing.
+description: >
+  Bootstrap working context before execution-heavy work. Combines project orientation
+  (tasks, git, architecture) with codebase exploration (files, patterns, data flow).
+  Use when the user is resuming a thread, switching into a repo/project, starting
+  implementation, asking to continue work, wanting to understand a module or system,
+  or using phrases like "work on X", "resume", "continue", "we need to build",
+  "do this", "implement this", "research", "how does X work", "map out X",
+  "explore the codebase", "understand the X module", or explicit `task:` framing.
 ---
 
 # Dont Start Blind
 
-Produce a short Lucy-style working brief before charging into execution.
+Orient before acting. Two phases: lightweight project orientation (inline), then codebase exploration (subagent) when there's code to understand.
 
-Use the context sources and tools already available. Do not couple yourself to one storage backend or pretend a source must be queried in one specific way. The job is orientation, not plumbing worship.
-
-## When to do a full bootstrap
+## When to trigger
 
 Do a full bootstrap when the user is clearly entering work mode:
 - resuming or continuing a prior thread
 - switching into a repo, branch, project, ticket, or PRD
 - asking to implement, build, fix, review, or research in a concrete codebase
+- wanting to understand a module, system, or cross-cutting concern
 - giving an explicit `task:` or other execution-scoped instruction
 
 For phrasing and examples, read [references/trigger-patterns.md](references/trigger-patterns.md).
 
-## Bootstrap workflow
+---
 
-1. Infer the likely thread from the user message, current repo/cwd, and any explicit task, branch, ticket, or project names.
-2. Check context sources in priority order:
-   - **Trajectory first** — active tasks (`pitodo list`), current branch, git state, recent commits. This is the primary signal for resumed work.
-   - **Knowledge when anchored** — search the knowledge graph only when the thread ties to a known project or domain. Don't search speculatively.
-   - **Experience is ambient** — behavioral context (preferences, patterns, dispositions) is generally already loaded by the system, not fetched by this skill. Don't scan memory or journal files. Exception: when entering a thread where a known behavioral preference directly changes the next move (e.g., a preferred approach to risky refactors), it's fair to surface it — but the default is ambient, not fetched.
-   - **Reflective artifacts stay out** — journal, narrative, and other reflective outputs are never retrieved here.
-3. Compress the useful context into a short working brief.
-4. Look for ambiguity, conflict, or missing pieces.
-5. If the context is fuzzy, stop and ask.
-6. If the context is coherent enough, say so and proceed.
+## Phase 1: Project Orientation (you do this, inline)
 
-## What to gather
+Cheap and fast. Gather project state that frames the work.
 
-Gather only what is likely to change the next move. Do not gather relationship context, reflective history, or behavioral dispositions — those are ambient, not orientational.
+### 1. Infer the thread
+
+From the user message, current repo/cwd, and any explicit task, branch, ticket, or project names.
+
+### 2. Check context sources in priority order
+
+- **Trajectory first** — active tasks (`pitodo list`), current branch, git state, recent commits. This is the primary signal for resumed work.
+- **Knowledge when anchored** — search the knowledge graph only when the thread ties to a known project or domain. Don't search speculatively.
+- **Architecture state** — check AGENTS.md, CLAUDE.md, project instructions, README. If any mention or link to an architecture document, follow it. Note whether structural rules exist or not.
+- **Experience is ambient** — behavioral context is generally already loaded by the system, not fetched by this skill. Don't scan memory or journal files.
+- **Reflective artifacts stay out** — journal, narrative, and other reflective outputs are never retrieved here.
+
+### 3. What to gather
+
+Only what's likely to change the next move:
 - likely thread / repo / project
 - active work, tasks, or commitments in flight
 - recent decisions, pauses, blockers, or accepted tradeoffs
 - durable constraints or patterns relevant to the thread
+- architecture state (defined / partial / none 🏗️)
 - obvious risks, contradictions, or stale assumptions
 - what is still missing before safe execution
 
-Do not dump every remembered fact just because you can. That is hoarding with extra steps.
+Do not dump every remembered fact. That is hoarding with extra steps.
 
-## Working brief format
+### 4. Decide: does this thread need codebase exploration?
 
-Keep it short, operational, and in Lucy tone.
+**Yes — run Phase 2** when:
+- The task involves modifying or understanding unfamiliar code
+- The user explicitly asks to research/explore/map a module or system
+- The PRD or task references files, modules, or patterns you haven't seen yet
+- You need to understand data flow, conventions, or integration points before acting
 
-Use a shape like:
+**No — skip to brief** when:
+- Pure resume on the same files you already know ("continue where we left off")
+- Planning/discussion thread with no codebase target yet
+- The user just wants task status or orientation, not exploration
+- The codebase context is already loaded from a prior pass
+
+---
+
+## Phase 2: Codebase Exploration (spawned subagent)
+
+When there's code to understand, spawn a read-only explorer. The explorer starts fresh — no conversation history, only the scoped questions you give it.
+
+### 2a. Formulate exploration questions
+
+Based on Phase 1 findings (the task, PRD, user request), identify **2-5 concrete questions** the explorer should answer. Examples:
+- "What are the entry points for the notification system?"
+- "How does data flow from the API route to the database in the bookings module?"
+- "What patterns and conventions does this module use for validation?"
+- "What files would need to change to add a new payment provider?"
+
+### 2b. Spawn the explorer
+
+```
+spawn:
+  model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
+  tools: [read, bash]    # read-only — bash for grep/find/git only
+  systemPrompt: |
+    You are a codebase explorer. You are READ-ONLY — never modify files.
+    Your job: answer specific questions about a codebase by reading files,
+    tracing data flow, and identifying patterns.
+    
+    Use `read` to examine source files. Use `bash` for grep, find, and
+    git commands only — never run anything that writes to disk.
+    
+    Be concrete: cite file paths and line numbers. Be concise: insights
+    the caller needs, not exhaustive listings.
+  task: |
+    ## Codebase Exploration
+    
+    **Repo**: <repo path>
+    **Context**: <1-2 sentences about what work is planned, from Phase 1>
+    
+    ### Questions
+    1. <question>
+    2. <question>
+    ...
+    
+    ### Instructions
+    
+    Work breadth-first:
+    1. Find entry points — main classes, functions, or routes for the topic
+    2. Trace data flow — follow the call chain from entry through layers
+    3. Identify patterns — conventions, base classes, mixins, shared utilities
+    4. Check for gotchas — error handling, edge cases, TODOs, known issues
+    
+    ### Output Format
+    
+    Respond with EXACTLY this structure:
+    
+    ### Key Files
+    - `path/to/file.py` — role/purpose (one line each)
+    
+    ### Architecture / Data Flow
+    <Brief description of how the system works, call chain or data flow>
+    
+    ### Patterns & Conventions
+    - <Pattern>: description
+    
+    ### Gotchas & Edge Cases
+    - <Issue>: explanation
+    
+    ### Answers
+    <Direct answers to each numbered question, with file:line references>
+```
+
+### 2c. Integrate findings
+
+Read the explorer's output and fold the key insights into the working brief. Do not dump the raw explorer output into the brief — distill it.
+
+---
+
+## Working Brief
+
+After Phase 1 (and Phase 2 if it ran), produce a short operational brief:
+
 - **Thread:** what this most likely is
 - **In flight:** active task / branch / momentum
+- **Architecture:** defined (source) / partially defined / not defined 🏗️
+- **Codebase context:** key files, patterns, data flow relevant to the task (from Phase 2, or "skipped — not needed" / "already loaded")
 - **Relevant baggage:** prior decisions, constraints, or continuity worth loading
 - **Watch out:** risks, conflicts, stale assumptions, or hidden tradeoffs
 - **Missing:** what you still need clarified, if anything
@@ -58,6 +160,8 @@ Use a shape like:
 
 If the context is thin, say that plainly.
 If two possible threads are competing, surface the conflict explicitly.
+
+---
 
 ## When to stop and ask
 
@@ -75,16 +179,25 @@ Ask the smallest clarifying question that unlocks safe work.
 If the working brief is coherent and no major conflict remains, proceed into the task.
 Do not linger in ceremony. The brief exists to improve action, not replace it.
 
+## After Orientation
+
+Based on what was found, the natural next steps are:
+- Context is clear, task is defined → proceed to implementation
+- Findings reveal unexpected complexity → "This is more complex than expected. Want a deeper adversarial research pass?" (triggers research-deep)
+- User was exploring before implementation → "Want me to create a PRD based on these findings?"
+- User was debugging → "Want me to triage a specific bug in this area?"
+
 ## Boundaries
 
 This skill does not:
 - create a new memory system
 - require a specific retrieval backend
-- scan or retrieve experience/memory files (that's the activation layer's job, not orientation)
-- replace planning, implementation, review, or research skills
+- scan or retrieve experience/memory files (that's the activation layer's job)
+- replace planning, implementation, or review skills
 - force a giant summary when a tiny orientation pass is enough
 
 This skill does:
 - make prior context actually enter the room before execution
+- explore unfamiliar code areas so the main agent has a clear map
 - surface missing or conflicting context early
 - reduce blind restarts and fake amnesia

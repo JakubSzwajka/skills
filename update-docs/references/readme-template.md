@@ -42,6 +42,13 @@ import { thing } from "<module>";
 
 <What this module owns vs. what it delegates.>
 
+## Dependencies (include when architecture is defined)
+
+- **Facades called:** `FacadeA`, `FacadeB`, ...
+- **Called by:** routes, processes, ...
+- **Events published:** EventA, EventB, ...
+- **Events consumed:** EventC, ...
+
 ## Operational Constraints
 
 - <Runtime, build, or storage assumption>

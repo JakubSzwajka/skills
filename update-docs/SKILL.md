@@ -62,6 +62,7 @@ When checking drift, prioritize these questions:
 - What config/env/build artifacts does it require?
 - What caller-visible API or behavior changed?
 - Did parent/child/peer links change?
+- **If architecture is defined** (check AGENTS.md, CLAUDE.md, or linked architecture doc): does this module's actual import graph match the stated boundary rules? Has it gained new cross-module dependencies since the last README update?
 
 Do not rely on exports alone. Runtime wiring, env usage, route registration, and plugin mounting rules are part of the module contract.
 
@@ -94,6 +95,7 @@ Optional when relevant:
 - `Use It Like This`
 - `Known Limitations`
 - `Status`
+- `Dependencies` (include when the project has a defined architecture — lists facades called, callers, events published/consumed)
 
 Update policy by change type:
 - Public exports changed: update `Public API`

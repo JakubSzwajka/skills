@@ -40,6 +40,22 @@ Use this checklist to ensure consistent, thorough reviews. Not every item applie
 - [ ] No circular dependencies introduced
 - [ ] File placement matches project structure conventions
 
+## Module & Architecture (only when architecture is defined — skip entirely if 🏗️)
+
+Check against the project's stated architecture rules. Do not invent rules — only check what's documented.
+
+- [ ] Imports respect stated module boundary rules (e.g., "domain A cannot import domain B's models")
+- [ ] New code lives in the correct layer per the layer rules
+- [ ] Cross-module orchestration is in the designated orchestration layer, not in domain facades
+- [ ] New facade/service dependencies are justified — flag if a class now has >5 injected dependencies from other modules
+- [ ] Event publishing follows the stated convention
+- [ ] External service calls respect transaction boundary rules (no dual writes without compensation)
+- [ ] New FK relationships across module boundaries are justified against the boundary rules
+- [ ] Generic/shared modules don't gain domain-specific vocabulary
+
+If a change violates a stated rule but seems intentional, flag as WARN:
+"Violates [specific rule from architecture doc] — intentional?"
+
 ## Dead Code
 - [ ] **For removals/migrations**: scan for symbols that only existed to support the removed mechanism — helper functions, TypeAliases, dataclasses, TypeVars, utility methods. These become dead the moment the mechanism is gone.
 - [ ] No imports left over from removed code

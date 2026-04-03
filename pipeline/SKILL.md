@@ -34,6 +34,24 @@ Build waves by topological sort on `dependsOnIds`:
 - Skip subtasks already marked `done`
 - Flag any dependency cycles as errors — stop and report
 
+## Phase 2.5: Architecture Pre-Flight
+
+Check whether the project has defined architecture rules:
+
+1. Look at what's already in your context: AGENTS.md, CLAUDE.md, project instructions, repo root README.
+2. If any of those mention or link to an architecture document, follow it and read it.
+3. Classify:
+
+**If ✅ architecture defined:**
+- For each subtask, quick-check: do the target files match the expected layer/module?
+- If any subtask description implies cross-module orchestration in a domain facade, mark it with ⚠️ in the wave plan table.
+- Store the architecture rules excerpt — it will be included in every child agent's prompt in Phase 4b.
+
+**If 🏗️ not defined:**
+- Add a header line to the wave plan display:
+  `🏗️ Architecture: Not defined. Agents will implement without architecture constraints.`
+- Do NOT block — proceed normally. The flag is informational.
+
 ## Phase 3: Show the Plan
 
 Display the full wave plan **before executing anything** as a markdown table:
@@ -66,6 +84,7 @@ Spawn one agent per subtask **in parallel** using background agents. Each agent 
 - The subtask's description (from pitodo)
 - Relevant PRD context from the parent task description
 - Key context from pre-read: existing patterns, function signatures, conventions
+- **Architecture rules** from Phase 2.5 (if defined): "This project follows these architecture rules: [relevant excerpt]. Ensure your implementation complies."
 - Instruction: "Implement this task. Keep imports sorted."
 - A **required completion report format**. Every child agent must finish with this exact structure:
 

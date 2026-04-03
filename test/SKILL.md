@@ -18,6 +18,15 @@ Run tests and produce a structured report that answers the caller's specific que
 1. **What to test**: file paths, module names, test patterns, or "all tests"
 2. **What question to answer**: e.g., "do the referral tests pass?", "what breaks after the refactor?", "is the new endpoint covered?"
 
+## Step 0: Verify Test Infrastructure Exists
+
+Before detecting a specific framework, confirm that test infrastructure is present at all. If none of the markers from Step 1 are found:
+
+- Report: **"⚠️ No test framework found in this project."**
+- Recommend a framework based on the stack (e.g. vitest for Vite/TS, pytest for Python, go test for Go).
+- Do NOT silently report "0 tests passed" — that reads as green when it isn't.
+- Return verdict: **NO INFRA** so the caller knows the situation.
+
 ## Step 1: Detect Framework
 
 Auto-detect the test framework by checking for:

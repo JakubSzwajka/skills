@@ -1,11 +1,14 @@
 ---
 name: explain
 description: Visual concept explainer that researches code and generates a styled HTML page. Use when the user says "_explain", "explain this", "break this down visually", or asks for a visual explanation of a codebase concept, architecture pattern, or technical question. Generates an HTML file in /tmp and returns the file link.
+context: fork
 ---
 
 # Visual Concept Explainer
 
 Generate a self-contained HTML explanation page for a code concept, architecture pattern, or codebase question. The page renders mermaid diagrams, styled callouts, and structured prose for easy visual digestion.
+
+This skill runs as a **forked context** — it inherits the conversation so it knows what you've been discussing. All work happens inline: research the code, structure the explanation, generate HTML. No subagents.
 
 ## Arguments
 
@@ -15,15 +18,15 @@ Generate a self-contained HTML explanation page for a code concept, architecture
 
 ### 1. Research
 
-Spawn a research subagent to gather context:
+Explore the codebase directly to gather context for the explanation:
 
-```
-agent: Research the following to prepare an explanation: $ARGUMENTS
+- Use Glob/Grep to find relevant files
+- Read source files to understand the implementation
+- Trace data flow and dependencies
+- Identify key abstractions and relationships
+- Note anything uncertain or context-dependent
 
-Read relevant source files, trace data flow and dependencies, identify key abstractions and relationships. Note anything uncertain or context-dependent.
-```
-
-Collect findings before generating HTML.
+Keep research focused — gather only what's needed to explain the topic clearly.
 
 ### 2. Structure
 

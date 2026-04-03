@@ -43,6 +43,18 @@ Examples:
 - `fix ...`
 - `review ...`
 
+### 5. Exploration / research language
+These mean the user wants to understand code before acting. Always triggers Phase 2 (codebase exploration).
+
+Examples:
+- `research the notification system`
+- `how does X work?`
+- `map out the booking module`
+- `explore the codebase`
+- `understand the X module`
+- `what patterns does this module use?`
+- `map all places that interact with Stripe`
+
 ## Context signals beyond phrase text
 Do not rely on wording alone. Also use:
 
@@ -53,15 +65,15 @@ Do not rely on wording alone. Also use:
 - whether the request implies risk, dependency, or unfinished prior work
 
 ## Weak or ambiguous cases
-Do a lighter bootstrap when the request is vague or exploratory.
+Do a lighter bootstrap (Phase 1 only, skip Phase 2) when the request is vague or not code-anchored.
 
 Examples:
 - `yo`
 - `quick question`
-- `what do you think about X?`
-- `how does this work?`
+- `what do you think about X?` (abstract, not tied to a module)
 
 In those cases, only force a full working brief if the thread clearly locks onto a repo, task, or execution path.
+Only trigger Phase 2 if there's a concrete codebase area to explore.
 
 ## Practical rule
 If the user sounds like they are about to spend real effort in a thread, do not start blind.
