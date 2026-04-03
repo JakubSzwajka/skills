@@ -69,3 +69,10 @@ If the fix is obvious (1-2 line change, clear what needs to happen), mention it 
 - Always delegate codebase exploration to an Explore agent
 - If the ticket is ambiguous, ask clarifying questions before researching
 - Keep the report concise — no raw logs or agent output dumps
+
+## After Triage
+
+Based on your findings, suggest one of:
+- Root cause is clear but complex → "This needs a planned fix. Want me to create a PRD for it?"
+- Root cause needs deeper understanding → "Want me to research the affected module more deeply?"
+- Fix is trivial (1-2 lines) → "This looks like a quick fix — want me to implement it, then run tests?"

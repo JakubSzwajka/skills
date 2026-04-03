@@ -1,31 +1,27 @@
 ---
 name: prd-create
 description: >
-  Create and manage lightweight PRDs, then decompose them into ordered, dependency-aware, commit-sized tasks.
-  Use when the user wants to write a PRD, capture a feature idea, break a PRD into stories or tasks,
-  update PRD status, or says things like "create a prd", "break down this PRD", "split PRD into tasks",
-  "decompose PRD", "create tasks from PRD", "prd to tasks".
+  Capture a feature idea or change as a structured pitodo task tree, then auto-challenge it against the codebase.
+  Use when the user wants to write a PRD, capture a feature idea, plan a change, break work into tasks,
+  or says things like "create a prd", "plan this", "break this down", "decompose into tasks",
+  "create tasks for", "prd to tasks".
 ---
 
 # PRD Skill
 
 ## Philosophy
 
-PRDs are **quick-capture documents for change ideas**. You're mid-flow, you spot something that needs doing, you sketch it — problem, solution shape, key cases — and move on. Later you come back, break it into user stories, decompose into tasks, and implement.
-
-A PRD is NOT an ADR. ADRs record *decisions* (why X over Y). PRDs describe *changes to build* (what and why). A PRD might reference ADRs when the change requires architectural decisions.
+PRDs are **quick-capture documents for change ideas** stored as pitodo task trees. You spot something that needs doing, sketch it — problem, solution shape, key cases — and capture it as a parent task with subtasks. The pitodo task log serves as the working notebook across sessions.
 
 Key constraints:
-- The master `README.md` must stay under **250 lines** (hard cap: 300)
-- Each PRD is a **directory** — stories and tasks get added as sibling files
-- Status tracks the lifecycle: `draft → proposed → accepted → in-progress → done`
-- Keep it sketchable in 5 minutes — this is idea capture, not a spec
+- The parent task description is the PRD — keep it **under 300 lines**
+- Subtasks are the implementation units with dependency ordering via `dependsOnIds`
+- Task logs replace notebook.md — append progress notes, decisions, and gotchas
+- The challenge phase runs automatically after creation
 
-## Creating a PRD
+## Phase 1: Quick Interview (2-4 questions)
 
-### Phase 1: Quick Interview (2-4 questions)
-
-Don't over-interview. Ask just enough to fill the template:
+Don't over-interview. Ask just enough to fill the structure:
 
 1. **What's the problem?** — What's broken, missing, or suboptimal?
 2. **What's the rough solution?** — High-level shape, not implementation details.
@@ -34,171 +30,138 @@ Don't over-interview. Ask just enough to fill the template:
 
 If the user already described all this, skip straight to drafting.
 
-### Phase 2: Draft
+## Phase 2: Create Parent Task
 
-1. **Choose a slug.** Derive from the problem description. Use kebab-case (`email-notifications`, `booking-refunds`).
+Use `pitodo action=add` to create the parent task:
 
-2. **Create the PRD directory and README.md.** Preferred: run the init script from the target repo root:
-
-```bash
-bash ~/.agents/skills/_prd-create/scripts/init_prd.sh <slug>
-```
-
-This creates `docs/prds/<slug>/README.md` and `notebook.md` from templates. Use `--dir` to override the PRD directory location.
-
-If you can't run the script, create the directory manually and copy from `assets/templates/prd-readme.md`.
-
-3. **Fill in the template.** Use the confirmed answers from Phase 1. Every section should have real content or be removed. Keep the README under 250 lines.
-
-4. **Validate the PRD.** Run the validation script and fix any errors before presenting to the user:
-
-```bash
-bash ~/.agents/skills/_prd-create/scripts/validate_prd.sh docs/prds/<slug>/README.md
-```
-
-Fix any `ERROR:` issues. `WARN:` items are acceptable but review them.
-
-5. **Set status to `draft`.** The author can promote it later.
-
-### Phase 3: Resolve Open Questions
-
-After drafting, review the **Open Questions** section. Don't just leave them — actively work through them:
-
-1. **Self-answer first.** For each open question, try to answer it yourself using codebase analysis, existing patterns, and domain knowledge. If you can resolve a question confidently, move it out of Open Questions and into the relevant PRD section (e.g., a resolved constraint goes into Proposed Solution or Key Cases).
-
-2. **Surface remaining questions in conversation.** Any questions you couldn't fully resolve — list them in your response to the user. Don't bury them in the PRD silently.
-
-3. **Propose answers.** For each unresolved question, suggest 1-3 possible answers with brief trade-offs. Frame them as options the user can pick from or react to. Example:
-
-   > **Open: Should retries be bounded or infinite?**
-   > - *Option A:* Cap at 3 retries with exponential backoff — simple, predictable
-   > - *Option B:* Retry indefinitely with dead-letter after 24h — more resilient but needs monitoring
-   > - *Option C:* Configurable per-event-type — flexible but adds complexity upfront
-
-4. **Wait for input.** Let the user resolve the remaining questions before promoting the PRD past `draft`. Update the PRD with their answers.
-
-## Breaking into User Stories
-
-When the user returns to a PRD to deep-dive, help them break it into story files in the same directory:
+- **title**: `[ProjectName] <imperative description>` (match existing convention)
+- **description**: The full PRD content using this structure:
 
 ```
-docs/prds/email-notifications/
-  README.md              ← master PRD
-  01-send-on-confirm.md  ← user story
-  02-retry-failures.md   ← user story
-  03-unsubscribe.md      ← user story
+Branch: TBD
+
+## Problem
+<What's broken, missing, or suboptimal>
+
+## Goal
+<What success looks like>
+
+## Scope
+- <bullet points of what's included>
+
+## Key cases
+- <main scenarios to handle>
+
+## Out of scope
+- <what we're NOT doing>
+
+## Notes
+<implementation hints, relevant files, related work>
 ```
 
-Each story file should contain:
-- **Title** — short imperative description
-- **User story** — "As a [role], I want [X], so that [Y]"
-- **Acceptance criteria** — checkboxes an agent can verify
-- **Notes** — implementation hints, edge cases, related ADRs
+- **projectId**: Match to the relevant project (check `pitodo action=project_list`)
+- **tags**: Optional, use sparingly
 
-Keep each story file under 80 lines. Update the master README's status to `accepted` once stories are defined.
+## Phase 3: Decompose into Subtasks
 
-## Decomposing into Tasks
+Analyze the codebase based on the PRD content, then create subtasks:
 
-Break a PRD into small, reviewable, dependency-aware tasks grounded in the actual codebase.
+1. **Search for files, modules, and patterns** mentioned or implied by the PRD
+2. **Understand the existing architecture** relevant to the change
+3. **Identify integration points**, shared types, and test files
+4. **Note conventions** (naming, file structure, patterns)
 
-### 1. Locate the PRD
+For each subtask, use `pitodo action=add`:
 
-If the user names a PRD slug, look in `docs/prds/<slug>/`. Otherwise, list available PRDs and ask which one.
+- **parentId**: The parent task ID from Phase 2
+- **title**: Imperative verb phrase — "Add validation to login form", "Extract shared types"
+- **description**: 2-5 sentences of what to change and why. Reference concrete files. Include a validates check.
+- **dependsOnIds**: IDs of subtasks that must complete first (siblings only)
 
-Read the PRD's `README.md` and any story files (`01-*.md`, `02-*.md`, etc.) in the directory.
+### Subtask Sizing
 
-### 2. Analyze the Codebase
+A well-sized subtask:
+- Is reviewable in one pass
+- Touches a coherent slice of related changes
+- Can be described in 2-5 sentences
+- Has a clear done state
 
-Based on the PRD content:
-- Search for files, modules, and patterns mentioned or implied by the PRD
-- Understand the existing architecture relevant to the change
-- Identify integration points, shared types, and test files
-- Note conventions (naming, file structure, patterns) to keep tasks consistent
+Prefer many small tasks over few large ones.
 
-Spend real effort here — the value is **concrete, file-aware tasks**, not generic ones.
+### Present Summary
 
-### 3. Generate or Update tasks.md
+After creating subtasks, show:
+- Total subtask count and dependency structure
+- Which subtasks are parallelizable (no deps)
+- Any subtasks that seem risky (flag for review)
 
-Read [references/task-format.md](references/task-format.md) for the exact output format and sizing guidelines.
+## Phase 4: Auto-Challenge
 
-**Creating new tasks.md:**
-1. Decompose the PRD into the smallest reviewable units of work
-2. Order tasks so dependencies come first
-3. Mark dependency relationships explicitly
-4. Reference concrete files from codebase analysis
-5. Write each task description in 2-5 sentences — enough to act on immediately
-6. Write the file to `<prd-directory>/tasks.md`
+After creating the task tree, **automatically spawn a challenger subagent** to stress-test the PRD against the codebase. Do not ask the user — just do it.
 
-**Updating existing tasks.md:**
-1. Read the current tasks.md
-2. Preserve all `done` statuses — never uncheck completed work
-3. Add, remove, or update tasks based on PRD changes or user instructions
-4. Fix numbering and dependency references
-5. Update the `last-updated` date
+Spawn the challenger with these instructions:
 
-### 4. Present Summary
-
-After writing tasks.md, show:
-- Total task count and how many are parallelizable
-- Any tasks that seem risky or uncertain (flag for user review)
-- Suggested first task to start with
-
-### Task Rules
-
-- Every task must have a clear **validates** check — no ambiguous "done" states
-- Prefer many small tasks over few large ones — err on the side of splitting
-- Tasks must reference real files from the codebase, not hypothetical ones
-- If the PRD has stories, align tasks to stories but split stories further if needed
-- Never create tasks for work already completed (check git status/recent commits if relevant)
-- Keep the full tasks.md under 300 lines — if more, the PRD itself may need splitting
-
-## Updating Status
-
-Update the `status` field in the README.md frontmatter:
-
-| Status | Meaning |
-|---|---|
-| `draft` | Idea captured, not yet reviewed |
-| `proposed` | Ready for review/discussion |
-| `accepted` | Approved, ready to break into stories or implement |
-| `in-progress` | Implementation underway |
-| `done` | All stories implemented and verified |
-
-## Consulting PRDs
-
-Before implementing features, check `docs/prds/` for existing PRDs:
-
-1. Scan directory names for relevance
-2. Read the README.md of matching PRDs
-3. Check status — only `accepted` or `in-progress` PRDs are active
-4. Follow the stories if they exist; ask the user if they don't
-
-## Agent Notebook
-
-Each PRD directory contains a `notebook.md` — a shared scratchpad for cross-session context.
-
-**Before starting any task** from a PRD, read `notebook.md` in that PRD directory.
-
-**After discovering something worth sharing** — a constraint, non-obvious decision, gotcha, or useful pattern — append a short note. Use the suggested format in the template:
+1. **Read the parent task** description (the PRD) via `pitodo action=get`
+2. **Read all subtasks** to understand the planned decomposition
+3. **Deep-dive the codebase** — for each major claim or assumption in the PRD:
+   - Verify models, schemas, facades exist as described
+   - Check module boundaries and dependency rules
+   - Count affected test files and consumers accurately
+   - Verify dependency ordering makes sense
+4. **Log findings** to the parent task via `pitodo action=log`:
 
 ```
-### [Task N] Short title
-- **Found:** what you discovered
-- **Decision:** what you chose and why
-- **Watch out:** gotchas for future agents
+[CHALLENGE] Verdict: FEASIBLE / FEASIBLE WITH CONCERNS / NEEDS REWORK
+
+What works:
+- <bullet points with file:line refs>
+
+Problems found:
+- [P1] <blocker — must fix before starting>
+- [P2] <significant — will cause rework>
+- [P3] <minor — can resolve during implementation>
+
+Missing from PRD:
+- <things the codebase reveals that the PRD doesn't address>
+
+Suggested changes:
+- <specific updates to task descriptions or dependencies>
 ```
 
-Keep notes concise. Never delete existing notes.
+The challenger must:
+- Reference actual files and line numbers
+- Challenge whether the approach is the right one
+- Check for simpler alternatives
+- Count affected files accurately — verify, don't trust estimates
+- Look for hidden coupling and undocumented behaviors
 
-## Resources
+## Phase 5: Present Results
 
-### scripts/
-- `scripts/init_prd.sh` — create a new PRD directory with README.md from the template. Run from target repo root.
-- `scripts/validate_prd.sh` — validate a PRD README.md for required frontmatter, sections, and formatting. Exit 1 on errors.
+After the challenger completes, present to the user:
+1. The task tree (parent + subtasks with deps)
+2. The challenge findings
+3. Ask: "Want me to update the PRD based on these findings, or proceed as-is?"
 
-### assets/
-- `assets/templates/prd-readme.md` — master PRD template with frontmatter, sections, and placeholders.
-- `assets/templates/notebook.md` — agent notebook template, copied into each PRD directory.
+If the user wants updates, modify the parent task description and/or subtask descriptions via `pitodo action=update`.
 
-### references/
-- `references/task-format.md` — exact output format spec for tasks.md, including sizing guidelines and dependency notation.
+## Consulting Existing PRDs
+
+Before creating a new PRD, check pitodo for existing tasks in the same project:
+- `pitodo action=list` filtered by project
+- Look for overlapping or related work
+- Reference existing tasks in the new PRD's notes if relevant
+
+## Task Log as Notebook
+
+The parent task's log serves as the cross-session notebook:
+- **Before starting any subtask**, read the parent task log for context
+- **After discovering something worth sharing**, append via `pitodo action=log`:
+  - Constraints, non-obvious decisions, gotchas
+  - Use author="pi" for agent notes
+
+## After PRD Creation
+
+Once the PRD is created and challenged:
+- If verdict is FEASIBLE → "PRD and tasks are ready. Want me to run the pipeline to implement?"
+- If verdict is FEASIBLE WITH CONCERNS → "Want me to update the PRD with the suggested fixes first?"
+- If verdict is NEEDS REWORK → "The challenger found significant issues. Let's rework the PRD together."

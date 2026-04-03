@@ -119,3 +119,11 @@ Only include categories that have findings. Keep the report compact — this is 
 
 Do not declare READY when WARNs are listed. Resolve or explicitly accept them first.
 Do not give a confident verdict until you have re-checked that your concerns match the intended invariant/assumptions of the change.
+
+## After Review
+
+Based on the verdict, suggest one of:
+- **READY** → "Want me to commit these changes?"
+- **NEEDS WORK** with test concerns → "Want me to run tests on the flagged areas first?"
+- **NEEDS WORK** otherwise → "Want me to fix these issues?"
+- **BLOCKER** → "These need fixing before push. Want me to start with the blockers?"

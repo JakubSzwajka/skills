@@ -1,36 +1,37 @@
 ---
 name: pipeline
 description: >
-  Execute a PRD's tasks in dependency-ordered waves using parallel agents.
-  Computes waves from tasks.md, shows the execution plan, then runs wave-by-wave
+  Execute a pitodo task tree in dependency-ordered waves using parallel agents.
+  Reads subtasks from pitodo, computes waves from dependsOnIds, runs wave-by-wave
   with review after the final wave. Pauses on decisions or review blockers.
-  Trigger on: "run pipeline", "execute prd", "implement prd", "start pipeline".
+  Trigger on: "run pipeline", "execute tasks", "implement tasks", "start pipeline".
 disable-model-invocation: true
 user-invocable: true
-argument-hint: [prd-path-or-slug]
+argument-hint: [task-id-or-project]
 ---
 
 # Pipeline
 
-Execute a PRD's task list in parallel waves. You are an **orchestrator** — you delegate all implementation to agents and never write code yourself.
+Execute a pitodo task tree in parallel waves. You are an **orchestrator** — you delegate all implementation to agents and never write code yourself.
 
-## Phase 1: Load and Parse
+## Phase 1: Load Tasks
 
-1. Locate the PRD. `$ARGUMENTS` is either:
-   - A path to a PRD directory (e.g. `docs/prds/finance-detachment/`)
-   - A slug that resolves to `docs/prds/<slug>/`
-   - If empty, ask which PRD to run
-2. Read `tasks.md` from the PRD directory
-3. Read `README.md` from the PRD directory for context
-4. Parse every task: extract id, title, description, status, depends-on list, files, validates
+1. **Locate the parent task.** `$ARGUMENTS` is either:
+   - A pitodo task ID (or unique prefix)
+   - A project name to filter by
+   - If empty, check the current project context or ask which task tree to run
+2. **Read the parent task** via `pitodo action=get id=<parent-id>` — this contains the PRD/description
+3. **List subtasks** via `pitodo action=list filterProject=<project>` and filter to children of the parent (matching `parentId`)
+4. **Parse each subtask**: extract id, title, description, status, dependsOnIds
+5. **Read the parent task log** for any notebook context, challenge findings, or prior session notes
 
 ## Phase 2: Compute Waves
 
-Build waves by topological sort on dependencies:
+Build waves by topological sort on `dependsOnIds`:
 
-- **Wave 0**: all tasks with no dependencies (or dependencies already `done`)
-- **Wave N**: tasks whose dependencies are all satisfied by waves 0..(N-1)
-- Skip tasks already marked `done`
+- **Wave 0**: all subtasks with no dependencies (or dependencies already `done`)
+- **Wave N**: subtasks whose dependencies are all satisfied by waves 0..(N-1)
+- Skip subtasks already marked `done`
 - Flag any dependency cycles as errors — stop and report
 
 ## Phase 3: Show the Plan
@@ -38,20 +39,18 @@ Build waves by topological sort on dependencies:
 Display the full wave plan **before executing anything** as a markdown table:
 
 ```
-**Pipeline: <PRD title>** — <N> tasks across <W> waves
+**Pipeline: <parent task title>** — <N> tasks across <W> waves
 
 | Wave | Task | Description | Needs | Status |
 |------|------|-------------|-------|--------|
-| 1 | [1] | Remove relationship declarations from finance models | — | pending |
-| 1 | [2] | Remove reverse relationships from party models | — | pending |
-| 2 | [3] | Refactor RepoCustomerAccounts | 1 | pending |
-| 2 | [4] | Refactor RepoProviderAccounts | 1 | pending |
-| 2 | [6] | Refactor payout queries | 1 | pending |
-| 3 | [5] | Refactor payouts facade | 4 | pending |
-| 3 | [9] | Refactor query engine schemas | 6, 7, 8 | pending |
+| 1 | [id1] | Remove relationship declarations | — | pending |
+| 1 | [id2] | Remove reverse relationships | — | pending |
+| 2 | [id3] | Refactor RepoCustomerAccounts | id1 | pending |
+| 2 | [id4] | Refactor RepoProviderAccounts | id1 | pending |
+| 3 | [id5] | Refactor payouts facade | id4 | pending |
 ```
 
-Review the wave plan for sanity (dependency order, grouping, parallelism). If it looks correct, **auto-proceed** — do not wait for user approval. If something looks off (circular deps, wrong grouping, tasks that should be serialized), fix it yourself and proceed.
+Review the wave plan for sanity. If it looks correct, **auto-proceed**. If something looks off, fix it yourself and proceed.
 
 ## Phase 4: Execute Waves
 
@@ -59,54 +58,63 @@ For each wave:
 
 ### 4a. Pre-read
 
-Before launching agents, **read the target files** listed in each task's **Files:** field. This gives you context to write better agent prompts and catch obvious issues early. Don't send raw file contents to agents — summarize what they need to know (existing patterns, function signatures, import conventions). Start with the tracing bullet and incrementally build a solution via delegating each iteration to an agent.
+Before launching agents, **read the target files** mentioned in each subtask's description. Summarize what agents need to know (existing patterns, function signatures, import conventions).
 
 ### 4b. Launch
 
-Spawn one Agent per task **in parallel** using background agents. Each agent gets:
-- The task's detail section from tasks.md (description, files, validates)
-- Relevant PRD context (summary, decisions, constraints from README.md)
-- Key context from pre-read: existing patterns, function signatures, conventions to follow
-- Instruction: "Implement this task. Keep imports sorted. When done, report what you changed and any concerns."
+Spawn one agent per subtask **in parallel** using background agents. Each agent gets:
+- The subtask's description (from pitodo)
+- Relevant PRD context from the parent task description
+- Key context from pre-read: existing patterns, function signatures, conventions
+- Instruction: "Implement this task. Keep imports sorted."
+- A **required completion report format**. Every child agent must finish with this exact structure:
 
-Re-render the pipeline table with updated statuses. Running tasks show `running`, completed show `done`:
+```md
+RESULT: DONE | NO-OP | BLOCKED
 
+Commands run:
+- <command>
+- <command>
+
+Files changed:
+- <path>
+- <path>
+
+Validation run:
+- <command> — PASS/FAIL
+- <command> — PASS/FAIL
+
+Summary:
+- <what changed>
+- <concern or 'none'>
 ```
-**Pipeline: <PRD title>** — Wave 2 of 3
 
-| Wave | Task | Description | Needs | Status |
-|------|------|-------------|-------|--------|
-| 1 | [1] | Remove relationship declarations | — | done |
-| 1 | [2] | Remove reverse relationships | — | done |
-| 2 | [3] | Refactor RepoCustomerAccounts | 1 | running |
-| 2 | [4] | Refactor RepoProviderAccounts | 1 | running |
-| 2 | [6] | Refactor payout queries | 1 | running |
-| 3 | [5] | Refactor payouts facade | 4 | pending |
-| 3 | [9] | Refactor query engine schemas | 6, 7, 8 | pending |
-```
+Rules for child agents:
+- If `git diff` is empty or no files were changed, report `RESULT: NO-OP` explicitly.
+- Do not claim success without listing concrete changed files.
+- Include the exact validation commands you ran.
+
+Re-render the pipeline table with updated statuses (`running`, `done`).
 
 ### 4c. Collect Results
 
-As agents complete, re-render the table again. Append concerns inline in the Status column:
-
-```
-| 2 | [3] | Refactor RepoCustomerAccounts | 1 | done |
-| 2 | [4] | Refactor RepoProviderAccounts | 1 | done (concern: payouts eager-load) |
-| 2 | [6] | Refactor payout queries | 1 | done |
-```
-
-After all agents in the wave finish:
+As agents complete, update the table. After all agents in the wave finish:
 1. Collect summaries — what each agent changed, any concerns raised
-2. Check for new tasks discovered mid-flight (agents may report "I also found X needs fixing")
-3. Update tasks.md — mark completed tasks as `done`
-4. Quick-verify changes if anything looks off (read modified files, spot-check)
+2. **Check the child completion report format**. Treat the task as failed / not done if any required section is missing.
+3. If an agent reports `RESULT: NO-OP`, do **not** mark the task done.
+4. Quick-verify changes, especially for deterministic tasks, using targeted checks like `git diff -- <expected files>` or `git status --short`.
+5. Check for new tasks discovered mid-flight
+6. **Update subtask statuses** via `pitodo action=status id=<subtask-id> status=done` only after the child report and spot-check both look real
+7. **Log progress** via `pitodo action=log id=<parent-id> author=pi text="Wave N complete: <summary>"`
+
+If the child claims success but provides no changed files, no validation commands, or an empty diff, treat that as `NO-OP` and pause instead of pretending the wave completed.
 
 ### 4d. Wave Summary
 
-After updating statuses, show a one-line summary and **auto-continue** to the next wave unless there are concerns or discovered tasks:
+After updating statuses, show a one-line summary and **auto-continue** to the next wave unless there are concerns:
 
 ```
-**Wave 2 complete** — 3/3 done. Next: Wave 3 ([5], [9])
+**Wave 2 complete** — 3/3 done. Next: Wave 3 ([id5], [id9])
 ```
 
 **Pause and ask** only when:
@@ -116,92 +124,73 @@ After updating statuses, show a one-line summary and **auto-continue** to the ne
 
 When pausing, offer these actions:
 - **continue** — proceed to next wave
-- **review** — run _review on changes so far
+- **review** — run review on changes so far
 - **pause** — stop here, user will resume later
-- **add task** — incorporate discovered tasks, recompute waves
+- **add task** — create new subtask via pitodo, recompute waves
 - **abort** — stop pipeline
 
 ### 4e. Review Gate (after final wave)
 
 After the **last wave**, always run a review:
 
-1. Spawn an Agent with _review instructions (context: fork)
+1. Spawn a review subagent (read-only code review of all changes)
 2. Present the review verdict
 3. If NEEDS WORK:
    - Show findings
    - Ask: fix now or defer?
-   - If fix: **delegate fixes to agents** (spawn one agent per finding or group of related findings). Do not implement fixes yourself.
+   - If fix: **delegate fixes to agents**. Do not implement fixes yourself.
    - Re-review after fixes. Max 3 fix-review loops before forcing a pause.
 4. If READY:
    - Show final summary
    - Offer to commit
 
-### 4f. Update READMEs
+### 4f. Update Docs
 
-After the review passes (or after all fix loops complete), run _update-docs on modules affected by the pipeline's changes. Invoke via the Skill tool:
-
-```
-Skill(_update-docs)
-```
-
-This auto-detects changed modules from git diff and updates their README.md files. The agent running this should not need guidance — _update-docs handles discovery, analysis, and writing on its own.
+After the review passes, run update-docs on modules affected by the pipeline's changes.
 
 ## Phase 5: Final Summary
 
-When the pipeline completes (all waves done + review passed), re-render the full table one last time with all statuses as `done`, then a summary line:
+When the pipeline completes, re-render the full table with all statuses as `done`:
 
 ```
-**Pipeline complete: Finance Module Detachment** — 15/15 done, 4 waves, review READY
+**Pipeline complete: <parent task title>** — <N>/<N> done, <W> waves, review READY
 
 | Wave | Task | Description | Status |
 |------|------|-------------|--------|
-| 1 | [1] | Remove relationship declarations | done |
-| 1 | [2] | Remove reverse relationships | done |
-| 2 | [3] | Refactor RepoCustomerAccounts | done |
+| 1 | [id1] | Remove relationship declarations | done |
+| 1 | [id2] | Remove reverse relationships | done |
+| 2 | [id3] | Refactor RepoCustomerAccounts | done |
 | ... | ... | ... | ... |
 
 Ready to commit.
 ```
 
+**Log final status** to the parent task:
+```
+pitodo action=log id=<parent-id> author=pi text="Pipeline complete: <N>/<N> tasks done across <W> waves. Review: READY."
+```
+
 ### Guided Review
 
-After the final table, produce a **review guide** that helps the user navigate the changed files in logical order. Group files by review priority, not by wave or alphabetical order.
+After the final table, produce a **review guide** grouping changed files by review priority:
 
-```
-## Review Guide
+1. **Core changes** — files where the primary intent lives
+2. **Dependent changes** — files that had to change because core changed
+3. **Test updates** — new or modified test files
+4. **Docs & config** — READMEs, configs, migrations
 
-**Core changes** — review these first, they carry the main intent:
-- `src/finance/models.py` — relationship declarations removed
-- `src/finance/repos.py` — query patterns rewritten
-
-**Dependent changes** — flow from the core, check for consistency:
-- `src/payouts/facade.py` — now uses new repo interface
-- `src/payouts/queries.py` — updated joins
-
-**Test updates** — verify they cover the new behavior:
-- `tests/finance/test_repos.py` — new query assertions
-- `tests/payouts/test_facade.py` — adapted to interface change
-
-**Docs & config** — quick scan:
-- `src/finance/README.md` — updated module contract
-```
-
-Rules for building the guide:
-1. **Core changes** = files where the primary intent of the PRD lives. Usually the modules named in task descriptions.
-2. **Dependent changes** = files that had to change because core changed. Imports, callers, wiring.
-3. **Test updates** = new or modified test files. Group by the core/dependent file they cover.
-4. **Docs & config** = READMEs, configs, migrations, type stubs — low-risk, quick scan.
-5. Keep each group to the most important files. If a group has 10+ files, show the top 5 and note "and N more".
-6. Use the actual file paths from `git diff --name-only`.
+Keep each group to the most important files. Use actual paths from `git diff --name-only`.
 
 ## Rules
 
-1. **Never implement code yourself** — all implementation and review-fix work goes to agents. The only exception is trivial cleanup (removing an unused import, fixing a typo) that would be slower to delegate than to do inline.
-2. **Never skip the wave plan display** — the user must see what's coming before anything runs
-3. **Always update tasks.md** after each wave — this is your state file and enables resume
+1. **Never implement code yourself** — all implementation goes to agents. Exception: trivial cleanup that would be slower to delegate.
+   - If a small deterministic task (schema line, config tweak, migration file, one-file rename) no-ops after a delegated retry, use this exception instead of repeating the same failed delegation pattern.
+2. **Never skip the wave plan display** — the user must see what's coming
+3. **Always update pitodo** after each wave — statuses and log entries
 4. **Pause on architecture decisions** — if an agent reports a design choice is needed, stop and ask
-5. **Auto-continue between waves** — don't block on a gate prompt when everything is clean. Only pause when there are concerns, discoveries, or errors.
-6. **Discovered tasks go into the next available wave** — recompute dependencies when adding
-7. **Max 3 fix-review loops** — after 3 rounds of review findings, pause and escalate to user
-8. **Pre-read before launch** — read target files before each wave so agents get informed prompts
-9. **Tell agents to keep imports sorted** — agents don't run linters, so remind them of conventions. Expect that pre-commit hooks will catch remaining style issues at commit time.
+5. **Auto-continue between waves** — don't block unless there are concerns
+6. **Discovered tasks go into the next available wave** — create via pitodo, recompute dependencies
+7. **Max 3 fix-review loops** — after 3 rounds, pause and escalate
+8. **Pre-read before launch** — read target files so agents get informed prompts
+9. **Tell agents to keep imports sorted** — remind them of conventions
+10. **Always review at end** — never skip the post-pipeline review gate

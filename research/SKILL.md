@@ -67,3 +67,10 @@ Produce a structured report:
 ```
 
 Keep the report concise. Focus on insights the caller needs to make decisions, not exhaustive listings.
+
+## After Research
+
+Based on what was found, suggest one of:
+- User was exploring before implementation → "Want me to create a PRD based on these findings?"
+- User was debugging → "Want me to triage a specific bug in this area?"
+- Findings reveal unexpected complexity → "This is more complex than expected. Want a deeper adversarial research pass?"

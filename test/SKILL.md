@@ -73,3 +73,10 @@ Filter out:
 - Passing test details (unless specifically asked)
 - Full stack traces (extract the relevant assertion/error only)
 - Deprecation warnings and other noise
+
+## After Tests
+
+Based on results, suggest one of:
+- **PASS** with unstaged changes → "Tests pass. Want me to review the changes?"
+- **FAIL** → "Want me to investigate and fix the failing tests?"
+- **Partial confidence** (targeted only, shared code touched) → "Targeted tests pass, but the change touches shared code. Want me to run the broader suite?"
