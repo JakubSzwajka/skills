@@ -34,10 +34,13 @@ python3 ~/.claude/skills/todo/todo.py <command> [args...]
 
 ```bash
 # Add
-todo add "title" --project <id> [--parent <id>] [--description "..."] [--tags a,b] [--note "..."] [--author kuba]
+todo add "title" [--project <id>] [--parent <id>] [--description "..."] [--tags a,b] [--note "..."] [--author kuba]
 
 # List
 todo list [--project <id>] [--status <s>] [--tag <t>] [--all] [--tree]
+# if --project is omitted, CLI prompts you to pick one interactively
+# with fzf installed, list opens a split view: task tree on the left, task preview on the right
+# without fzf, it falls back to a numbered prompt and plain list output
 
 # Show detail
 todo show <id>
@@ -77,6 +80,9 @@ python3 ~/.claude/skills/todo/todo.py $ARGUMENTS
 
 - Author is `kuba` when acting on user's behalf, `pi` when acting autonomously
 - Descriptions support `[[wiki-links]]` to knowledge base pages in the vault
+- If `todo list` is called without `--project`, the CLI prompts you to pick a project interactively (or choose inbox)
+- With `fzf` installed, `todo list` becomes a full-screen split-view browser: task tree with subtasks on the left, selected task preview on the right
+- Browser legend shows status symbols; `Ctrl-B` goes back to project selection; preview scroll uses `Shift-Up/Down` or `PgUp/PgDn`
 - Subtasks auto-inherit project from parent — don't pass `--project` on subtasks
 - `--tree` flag shows parent/child hierarchy
 - The CLI enforces: correct folder placement, required frontmatter, relationship wiki-links

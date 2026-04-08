@@ -15,8 +15,10 @@ Enforces folder structure:
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
+from shlex import quote as shlex_quote
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -283,6 +285,153 @@ def load_all_projects() -> dict[str, dict]:
         projects[slug] = {"_path": p, "slug": slug, **props}
     return projects
 
+
+def select_project_interactively() -> str:
+    projects = load_all_projects()
+    if not projects:
+        die("No projects found. Create one first with 'todo project add'.")
+
+    ordered = sorted(projects.items(), key=lambda item: (item[1].get("name", item[0]).lower(), item[0]))
+
+    if shutil.which("fzf"):
+        choices = ["\t".join(["", "inbox / no project"])]
+        for slug, proj in ordered:
+            name = proj.get("name", slug)
+            choices.append("\t".join([slug, name]))
+
+        try:
+            r = subprocess.run(
+                [
+                    "fzf",
+                    "--prompt", "Project> ",
+                    "--height", "100%",
+                    "--layout", "reverse",
+                    "--border",
+                    "--with-nth", "2,1",
+                    "--delimiter", "\t",
+                    "--header", "Enter: select  •  Esc: cancel",
+                    "--header-lines", "0",
+                ],
+                input="\n".join(choices) + "\n",
+                capture_output=True,
+                text=True,
+            )
+        except Exception:
+            r = None
+
+        if r and r.returncode == 0:
+            selection = r.stdout.strip()
+            if not selection:
+                return ""
+            return selection.split("\t", 1)[0]
+
+        if r and r.returncode == 130:
+            die("Project selection cancelled.")
+
+    print("Select a project:")
+    print("  0) inbox / no project")
+    for idx, (slug, proj) in enumerate(ordered, start=1):
+        name = proj.get("name", slug)
+        print(f"  {idx}) {name} ({slug})")
+
+    while True:
+        try:
+            choice = input("Project> ").strip()
+        except EOFError:
+            die("Project is required when not running interactively. Pass --project <id>.")
+
+        if choice in {"", "0"}:
+            return ""
+        if choice.isdigit():
+            idx = int(choice)
+            if 1 <= idx <= len(ordered):
+                return ordered[idx - 1][0]
+
+        matches = [slug for slug, proj in ordered if choice in {slug, proj.get("name", "")}]
+        if len(matches) == 1:
+            return matches[0]
+
+        print("Invalid selection. Enter a number, project slug, or exact project name.")
+
+
+def _task_status_symbol(status: str) -> str:
+    return {"open": "○", "in_progress": "◑", "done": "●", "cancelled": "✕"}.get(status, "?")
+
+
+def _collect_tree_rows(filtered: dict, all_tasks: dict, parent: str = "", prefix: str = "") -> list[tuple[str, str]]:
+    rows = []
+    children = sorted(
+        [(s, t) for s, t in filtered.items() if (t.get("parent") or "") == parent],
+        key=lambda item: (item[1].get("title", item[0]).lower(), item[0]),
+    )
+    for idx, (slug, t) in enumerate(children):
+        is_last = idx == len(children) - 1
+        branch = "└─ " if is_last else "├─ "
+        next_prefix = prefix + ("   " if is_last else "│  ")
+        st = t.get("status", "?")
+        title = t.get("title", slug)
+        row = f"{prefix}{branch}{_task_status_symbol(st)} {title} [{st}]"
+        rows.append((slug, row))
+        rows.extend(_collect_tree_rows(filtered, all_tasks, slug, next_prefix))
+    return rows
+
+
+def browse_tasks_interactively(project_slug: str, filtered: dict, all_tasks: dict) -> str | None:
+    if not shutil.which("fzf"):
+        return None
+    if not filtered:
+        return None
+
+    rows = _collect_tree_rows(filtered, all_tasks)
+    if not rows:
+        return None
+
+    script_path = str(Path(__file__).resolve())
+    project_label = project_slug or "inbox"
+    choices = "\n".join(f"{slug}\t{row}" for slug, row in rows) + "\n"
+
+    try:
+        r = subprocess.run(
+            [
+                "fzf",
+                "--ansi",
+                "--prompt", f"Tasks@{project_label}> ",
+                "--height", "100%",
+                "--layout", "reverse",
+                "--border",
+                "--delimiter", "\t",
+                "--with-nth", "2",
+                "--expect", "ctrl-b,enter",
+                "--preview", f"python3 {shlex_quote(script_path)} show {{1}}",
+                "--preview-window", "right:70%:wrap",
+                "--header", "Legend: ○ open  ◑ in_progress  ● done  ✕ cancelled\nEnter: open  •  Ctrl-B: back to projects  •  Esc: cancel  •  Preview scroll: Shift-Up/Down, PgUp/PgDn",
+            ],
+            input=choices,
+            capture_output=True,
+            text=True,
+        )
+    except Exception:
+        return None
+
+    if r.returncode == 130:
+        return "cancel"
+    if r.returncode != 0:
+        return None
+
+    lines = [line for line in r.stdout.splitlines() if line.strip()]
+    if not lines:
+        return "cancel"
+
+    key = lines[0]
+    if key == "ctrl-b":
+        return "back"
+
+    selection = lines[-1]
+    slug = selection.split("\t", 1)[0]
+    show_args = argparse.Namespace(id=slug)
+    cmd_show(show_args)
+    return "selected"
+
 # ---------------------------------------------------------------------------
 # Commands: Projects
 # ---------------------------------------------------------------------------
@@ -388,6 +537,8 @@ def cmd_add(args):
         if not effective_project:
             die(f"Parent task {parent_slug} has no project — subtasks need a project context")
         project_slug = effective_project
+    elif not project_slug:
+        project_slug = select_project_interactively()
 
     if project_slug and not obsidian_exists(project_path(project_slug)):
         die(f"Project not found: {project_slug}")
@@ -428,38 +579,53 @@ def cmd_list(args):
         print("\033[90mNo tasks.\033[0m")
         return
 
-    # Filter
-    filtered = {}
-    for slug, t in tasks.items():
-        st = t.get("status", "")
-        if not args.all and st in ("done", "cancelled"):
-            continue
-        if args.status and st != args.status:
-            continue
-        if args.project:
+    project_filter = args.project
+
+    while True:
+        if not project_filter:
+            project_filter = select_project_interactively()
+
+        # Filter
+        filtered = {}
+        for slug, t in tasks.items():
+            st = t.get("status", "")
+            if not args.all and st in ("done", "cancelled"):
+                continue
+            if args.status and st != args.status:
+                continue
             effective = resolve_project_for_task(t, tasks)
-            if effective != args.project:
+            if effective != project_filter:
                 continue
-        if args.tag:
-            task_tags = [x for x in t.get("tags", []) if x != "type/task"]
-            if args.tag not in task_tags:
-                continue
-        filtered[slug] = t
+            if args.tag:
+                task_tags = [x for x in t.get("tags", []) if x != "type/task"]
+                if args.tag not in task_tags:
+                    continue
+            filtered[slug] = t
 
-    if not filtered:
-        print("\033[90mNo tasks.\033[0m")
+        if not filtered:
+            print("\033[90mNo tasks.\033[0m")
+            return
+
+        browse_result = browse_tasks_interactively(project_filter, filtered, tasks)
+        if browse_result == "back" and not args.project:
+            project_filter = ""
+            continue
+        if browse_result in {"selected", "cancel"}:
+            return
+        if browse_result is not None:
+            return
+
+        if args.tree:
+            _print_tree(filtered, tasks)
+        else:
+            for slug, t in filtered.items():
+                _print_task_line(slug, t, tasks)
         return
-
-    if args.tree:
-        _print_tree(filtered, tasks)
-    else:
-        for slug, t in filtered.items():
-            _print_task_line(slug, t, tasks)
 
 
 def _print_task_line(slug: str, t: dict, all_tasks: dict):
     st = t.get("status", "?")
-    st_sym = {"open": "○", "in_progress": "◑", "done": "●", "cancelled": "✕"}.get(st, "?")
+    st_sym = _task_status_symbol(st)
     project = resolve_project_for_task(t, all_tasks)
     proj_chip = f"  \033[35m@{project}\033[0m" if project else ""
     tags = [x for x in t.get("tags", []) if x != "type/task"]
@@ -477,7 +643,7 @@ def _print_tree(filtered: dict, all_tasks: dict, parent: str = "", indent: str =
 
 def _print_task_line_indented(slug: str, t: dict, all_tasks: dict, indent: str):
     st = t.get("status", "?")
-    st_sym = {"open": "○", "in_progress": "◑", "done": "●", "cancelled": "✕"}.get(st, "?")
+    st_sym = _task_status_symbol(st)
     project = resolve_project_for_task(t, all_tasks)
     proj_chip = f"  \033[35m@{project}\033[0m" if project else ""
     tags = [x for x in t.get("tags", []) if x != "type/task"]
@@ -535,7 +701,7 @@ def cmd_show(args):
         print(f"\n  \033[2mSubtasks:\033[0m")
         for s, t in subtasks:
             st2 = t.get("status", "?")
-            st_sym = {"open": "○", "in_progress": "◑", "done": "●", "cancelled": "✕"}.get(st2, "?")
+            st_sym = _task_status_symbol(st2)
             print(f"    {st_sym} \033[2m#{s}\033[0m  {t.get('title', s)}  [{st2}]")
 
     # Log
