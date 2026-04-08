@@ -1,8 +1,8 @@
 ---
 name: pipeline
 description: >
-  Execute a pitodo task tree in dependency-ordered waves using parallel agents.
-  Reads subtasks from pitodo, computes waves from dependsOnIds, runs wave-by-wave
+  Execute a todo task tree in dependency-ordered waves using parallel agents.
+  Reads subtasks from todo, computes waves from dependsOnIds, runs wave-by-wave
   with review after the final wave. Pauses on decisions or review blockers.
   Trigger on: "run pipeline", "execute tasks", "implement tasks", "start pipeline".
 disable-model-invocation: true
@@ -12,16 +12,16 @@ argument-hint: [task-id-or-project]
 
 # Pipeline
 
-Execute a pitodo task tree in parallel waves. You are an **orchestrator** — you delegate all implementation to agents and never write code yourself.
+Execute a todo task tree in parallel waves. You are an **orchestrator** — you delegate all implementation to agents and never write code yourself.
 
 ## Phase 1: Load Tasks
 
 1. **Locate the parent task.** `$ARGUMENTS` is either:
-   - A pitodo task ID (or unique prefix)
+   - A todo task ID (or unique prefix)
    - A project name to filter by
    - If empty, check the current project context or ask which task tree to run
-2. **Read the parent task** via `pitodo action=get id=<parent-id>` — this contains the PRD/description
-3. **List subtasks** via `pitodo action=list filterProject=<project>` and filter to children of the parent (matching `parentId`)
+2. **Read the parent task** via `todo show <parent-id>` — this contains the PRD/description
+3. **List subtasks** via `todo list --project <project> --tree` and filter to children of the parent
 4. **Parse each subtask**: extract id, title, description, status, dependsOnIds
 5. **Read the parent task log** for any notebook context, challenge findings, or prior session notes
 
@@ -81,7 +81,7 @@ Before launching agents, **read the target files** mentioned in each subtask's d
 ### 4b. Launch
 
 Spawn one agent per subtask **in parallel** using background agents. Each agent gets:
-- The subtask's description (from pitodo)
+- The subtask's description (from todo)
 - Relevant PRD context from the parent task description
 - Key context from pre-read: existing patterns, function signatures, conventions
 - **Architecture rules** from Phase 2.5 (if defined): "This project follows these architecture rules: [relevant excerpt]. Ensure your implementation complies."
@@ -123,8 +123,8 @@ As agents complete, update the table. After all agents in the wave finish:
 3. If an agent reports `RESULT: NO-OP`, do **not** mark the task done.
 4. Quick-verify changes, especially for deterministic tasks, using targeted checks like `git diff -- <expected files>` or `git status --short`.
 5. Check for new tasks discovered mid-flight
-6. **Update subtask statuses** via `pitodo action=status id=<subtask-id> status=done` only after the child report and spot-check both look real
-7. **Log progress** via `pitodo action=log id=<parent-id> author=pi text="Wave N complete: <summary>"`
+6. **Update subtask statuses** via `todo status <subtask-id> done` only after the child report and spot-check both look real
+7. **Log progress** via `todo log <parent-id> "Wave N complete: <summary>" --author lucy`
 
 If the child claims success but provides no changed files, no validation commands, or an empty diff, treat that as `NO-OP` and pause instead of pretending the wave completed.
 
@@ -145,7 +145,7 @@ When pausing, offer these actions:
 - **continue** — proceed to next wave
 - **review** — run review on changes so far
 - **pause** — stop here, user will resume later
-- **add task** — create new subtask via pitodo, recompute waves
+- **add task** — create new subtask via todo, recompute waves
 - **abort** — stop pipeline
 
 ### 4e. Review Gate (after final wave)
@@ -186,7 +186,7 @@ Ready to commit.
 
 **Log final status** to the parent task:
 ```
-pitodo action=log id=<parent-id> author=pi text="Pipeline complete: <N>/<N> tasks done across <W> waves. Review: READY."
+todo log <parent-id> "Pipeline complete: <N>/<N> tasks done across <W> waves. Review: READY." --author lucy
 ```
 
 ### Guided Review
@@ -205,10 +205,10 @@ Keep each group to the most important files. Use actual paths from `git diff --n
 1. **Never implement code yourself** — all implementation goes to agents. Exception: trivial cleanup that would be slower to delegate.
    - If a small deterministic task (schema line, config tweak, migration file, one-file rename) no-ops after a delegated retry, use this exception instead of repeating the same failed delegation pattern.
 2. **Never skip the wave plan display** — the user must see what's coming
-3. **Always update pitodo** after each wave — statuses and log entries
+3. **Always update todo** after each wave — statuses and log entries
 4. **Pause on architecture decisions** — if an agent reports a design choice is needed, stop and ask
 5. **Auto-continue between waves** — don't block unless there are concerns
-6. **Discovered tasks go into the next available wave** — create via pitodo, recompute dependencies
+6. **Discovered tasks go into the next available wave** — create via todo, recompute dependencies
 7. **Max 3 fix-review loops** — after 3 rounds, pause and escalate
 8. **Pre-read before launch** — read target files so agents get informed prompts
 9. **Tell agents to keep imports sorted** — remind them of conventions

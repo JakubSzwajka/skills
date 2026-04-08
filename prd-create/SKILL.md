@@ -1,7 +1,7 @@
 ---
 name: prd-create
 description: >
-  Capture a feature idea or change as a structured pitodo task tree, then auto-challenge it against the codebase.
+  Capture a feature idea or change as a structured todo task tree, then auto-challenge it against the codebase.
   Use when the user wants to write a PRD, capture a feature idea, plan a change, break work into tasks,
   or says things like "create a prd", "plan this", "break this down", "decompose into tasks",
   "create tasks for", "prd to tasks".
@@ -11,7 +11,7 @@ description: >
 
 ## Philosophy
 
-PRDs are **quick-capture documents for change ideas** stored as pitodo task trees. You spot something that needs doing, sketch it — problem, solution shape, key cases — and capture it as a parent task with subtasks. The pitodo task log serves as the working notebook across sessions.
+PRDs are **quick-capture documents for change ideas** stored as todo task trees. You spot something that needs doing, sketch it — problem, solution shape, key cases — and capture it as a parent task with subtasks. The todo task log serves as the working notebook across sessions.
 
 Key constraints:
 - The parent task description is the PRD — keep it **under 300 lines**
@@ -32,7 +32,7 @@ If the user already described all this, skip straight to drafting.
 
 ## Phase 2: Create Parent Task
 
-Use `pitodo action=add` to create the parent task:
+Use `todo add` to create the parent task:
 
 - **title**: `[ProjectName] <imperative description>` (match existing convention)
 - **description**: The full PRD content using this structure:
@@ -67,7 +67,7 @@ Branch: TBD
 <implementation hints, relevant files, related work>
 ```
 
-- **projectId**: Match to the relevant project (check `pitodo action=project_list`)
+- **projectId**: Match to the relevant project (check `todo project list`)
 - **tags**: Optional, use sparingly
 
 ## Phase 3: Decompose into Subtasks
@@ -79,7 +79,7 @@ Analyze the codebase based on the PRD content, then create subtasks:
 3. **Identify integration points**, shared types, and test files
 4. **Note conventions** (naming, file structure, patterns)
 
-For each subtask, use `pitodo action=add`:
+For each subtask, use `todo add`:
 
 - **parentId**: The parent task ID from Phase 2
 - **title**: Imperative verb phrase — "Add validation to login form", "Extract shared types"
@@ -125,16 +125,14 @@ Before spawning the challenger, check whether the project has defined architectu
 ### Round 1: Challenger
 
 Before spawning, gather the challenger's inputs:
-1. Read the parent task description (the PRD) via `pitodo action=get`
-2. Read all subtasks via `pitodo action=list` filtered to the parent
+1. Read the parent task description (the PRD) via `todo show <id>`
+2. Read all subtasks via `todo list --project <project> --tree` filtered to the parent
 3. If architecture rules were loaded in Pre-Challenge, capture them
 
-Then spawn the challenger using the `spawn` tool:
+Then launch a challenger subagent (read-only — bash for grep/find/git only):
 
 ```
-spawn:
   model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
-  tools: [read, bash]    # read-only — bash for grep/find/git only
   systemPrompt: |
     You are a PRD challenger. You stress-test PRDs against actual codebases.
     You are READ-ONLY — never modify files.
@@ -190,7 +188,7 @@ spawn:
     ```
 ```
 
-After the subagent completes, log its findings to the parent task via `pitodo action=log author=pi` with the `[CHALLENGE]` prefix.
+After the subagent completes, log its findings to the parent task via `todo log <id> "[CHALLENGE] ..." --author lucy`.
 
 ### Convergence Rules
 
@@ -198,16 +196,16 @@ After each challenge round, evaluate the verdict:
 
 - **FEASIBLE** → proceed directly to Phase 5.
 - **FEASIBLE WITH CONCERNS** → auto-resolve. For each concern:
-  - If the fix is clear (missing type, wrong validation approach, missing file reference, dependency order fix) → apply it immediately by updating the parent PRD and/or subtask descriptions via `pitodo action=update`. Do NOT ask the user.
+  - If the fix is clear (missing type, wrong validation approach, missing file reference, dependency order fix) → apply it immediately by updating the parent PRD and/or subtask descriptions via `todo update <id>`. Do NOT ask the user.
   - If the concern is genuinely ambiguous or changes scope → collect it for user escalation.
-  - After applying fixes, spawn the challenger again (same pattern as Round 1, but scoped to the fixed areas). This is Round 2.
-- **NEEDS REWORK** → attempt one round of fixes for anything actionable, then re-challenge with a scoped spawn. If still NEEDS REWORK after that, escalate to the user.
+  - After applying fixes, launch the challenger again (same pattern as Round 1, but scoped to the fixed areas). This is Round 2.
+- **NEEDS REWORK** → attempt one round of fixes for anything actionable, then re-challenge with a scoped subagent. If still NEEDS REWORK after that, escalate to the user.
 
 ### Loop Limits
 
 - **Maximum 3 challenge rounds.** If the verdict is not FEASIBLE after 3 rounds, stop and escalate.
 - Each round after the first should be scoped: the challenger only re-verifies the fixes and any areas they previously flagged, not the entire PRD from scratch.
-- Log each round's verdict and what was fixed to the parent task via `pitodo action=log author=pi`.
+- Log each round's verdict and what was fixed to the parent task via `todo log <id> "..." --author lucy`.
 
 ### What "auto-resolve" means
 
@@ -241,8 +239,8 @@ This summary should be understandable without reading the full PRD or subtask tr
 
 ## Consulting Existing PRDs
 
-Before creating a new PRD, check pitodo for existing tasks in the same project:
-- `pitodo action=list` filtered by project
+Before creating a new PRD, check todo for existing tasks in the same project:
+- `todo list --project <project>`
 - Look for overlapping or related work
 - Reference existing tasks in the new PRD's notes if relevant
 
@@ -250,9 +248,9 @@ Before creating a new PRD, check pitodo for existing tasks in the same project:
 
 The parent task's log serves as the cross-session notebook:
 - **Before starting any subtask**, read the parent task log for context
-- **After discovering something worth sharing**, append via `pitodo action=log`:
+- **After discovering something worth sharing**, append via `todo log`:
   - Constraints, non-obvious decisions, gotchas
-  - Use author="pi" for agent notes
+  - Use --author lucy for agent notes
 
 ## After PRD Creation
 

@@ -30,7 +30,7 @@ Capture the **full diff** (`git diff` + `git diff --staged` or the appropriate r
 1. Get the current branch name with `git branch --show-current`.
 2. Search for PRD files that match the branch name or changed file paths. Look in common locations:
    - `docs/prds/`, `prds/`, `.prds/`, `docs/` — glob for `**/*.md` files and check content.
-   - Also check pitodo for tasks matching the branch name.
+   - Also check todo for tasks matching the branch name.
 3. If a PRD is found, read it and capture the content.
 4. If no PRD is found, ask the user: "I couldn't find a PRD for this change. What was the goal of these changes?" Use their answer.
 
@@ -51,14 +51,12 @@ Check whether the project has defined architecture rules:
 
 Read [references/review-checklist.md](references/review-checklist.md) — you'll pass it to the reviewer.
 
-## Step 2: Spawn the Reviewer
+## Step 2: Launch the Reviewer
 
-Spawn a single subagent using the `spawn` tool:
+Launch a single subagent (read-only — bash for git commands and grep only):
 
 ```
-spawn:
   model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
-  tools: [read, bash]    # read-only — bash for git commands and grep only
   systemPrompt: |
     You are a code reviewer. You are READ-ONLY — never modify files, stage changes,
     create commits, or run any command that writes to disk.

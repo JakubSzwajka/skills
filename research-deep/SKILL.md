@@ -31,7 +31,7 @@ Use a kebab-case slug derived from the topic (e.g., `local-first-sync`).
 
 ## Phase 1: Explore
 
-Spawn **5 parallel subagents** using the `spawn` tool with `tasks` array. Each subagent gets a distinct research lens and writes its findings to a separate file.
+Launch **5 parallel subagents**. Each subagent gets a distinct research lens and writes its findings to a separate file.
 
 Every subagent should use all available tools — `Read`, `Bash`, web search, knowledge graph, local docs, codebase exploration. Go wide. Go deep. Leave no stone unturned.
 

@@ -28,14 +28,12 @@ Extract from the user's input:
 
 If the ticket is ambiguous, ask clarifying questions before proceeding.
 
-## Step 2: Spawn the Investigator
+## Step 2: Launch the Investigator
 
-Spawn a single subagent using the `spawn` tool:
+Launch a single subagent (read-only — bash for grep/find/git only):
 
 ```
-spawn:
   model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
-  tools: [read, bash]    # read-only — bash for grep/find/git only
   systemPrompt: |
     You are a bug investigator. You are READ-ONLY — never modify files or
     introduce fixes. Your job is to trace a bug through the codebase and

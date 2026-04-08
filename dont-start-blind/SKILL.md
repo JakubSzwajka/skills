@@ -37,7 +37,7 @@ From the user message, current repo/cwd, and any explicit task, branch, ticket, 
 
 ### 2. Check context sources in priority order
 
-- **Trajectory first** — active tasks (`pitodo list`), current branch, git state, recent commits. This is the primary signal for resumed work.
+- **Trajectory first** — active tasks (`todo list`), current branch, git state, recent commits. This is the primary signal for resumed work.
 - **Knowledge when anchored** — search the knowledge graph only when the thread ties to a known project or domain. Don't search speculatively.
 - **Architecture state** — check AGENTS.md, CLAUDE.md, project instructions, README. If any mention or link to an architecture document, follow it. Note whether structural rules exist or not.
 - **Experience is ambient** — behavioral context is generally already loaded by the system, not fetched by this skill. Don't scan memory or journal files.
@@ -74,7 +74,7 @@ Do not dump every remembered fact. That is hoarding with extra steps.
 
 ## Phase 2: Codebase Exploration (spawned subagent)
 
-When there's code to understand, spawn a read-only explorer. The explorer starts fresh — no conversation history, only the scoped questions you give it.
+When there's code to understand, launch a read-only subagent as explorer. The explorer starts fresh — no conversation history, only the scoped questions you give it.
 
 ### 2a. Formulate exploration questions
 
@@ -84,12 +84,12 @@ Based on Phase 1 findings (the task, PRD, user request), identify **2-5 concrete
 - "What patterns and conventions does this module use for validation?"
 - "What files would need to change to add a new payment provider?"
 
-### 2b. Spawn the explorer
+### 2b. Launch the explorer
+
+Launch a subagent (read-only — bash for grep/find/git only):
 
 ```
-spawn:
   model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
-  tools: [read, bash]    # read-only — bash for grep/find/git only
   systemPrompt: |
     You are a codebase explorer. You are READ-ONLY — never modify files.
     Your job: answer specific questions about a codebase by reading files,
