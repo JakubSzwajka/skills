@@ -1,88 +1,167 @@
 ---
 name: todo
-description: Manage tasks and projects as markdown in the Obsidian vault. Enforces project/task/subtask folder hierarchy.
+description: Manage repo-local task folders under docs/tasks/. Prefer file conventions over a CLI.
 user-invocable: true
-argument-hint: [command] [args...]
+argument-hint: [task-id-or-question]
 ---
 
 # Todo Skill
 
-Manage tasks and projects stored as markdown in `~/knowledge/tasks/`. Uses a Python CLI that wraps the Obsidian CLI and enforces folder structure.
+Manage repo-local task artifacts stored in the current repository.
 
-## CLI
+Canonical layout:
 
-```bash
-python3 ~/.claude/skills/todo/todo.py <command> [args...]
+```txt
+docs/tasks/
+  active/
+    <YYYY-MM-DD-task-name>/
+      prd.md
+      tasks.md
+      log.md
+  archive/
+    <YYYY-MM-DD-task-name>/
+      prd.md
+      tasks.md
+      log.md
 ```
 
-## Folder structure (enforced by CLI)
+## Philosophy
 
+This skill is mostly about **knowing where the work lives and using it consistently**.
+
+You do **not** need a dedicated CLI first.
+A good agent should be able to:
+- find active task folders quickly
+- read `prd.md`, `tasks.md`, and `log.md`
+- update those files directly when work progresses
+- move finished or cancelled task folders from `active/` to `archive/`
+
+Knowledge links may appear in these files, but the task folders themselves are the source of truth for active work.
+
+## File meanings
+
+### `prd.md`
+The spec.
+Use it for:
+- problem
+- goal
+- scope
+- key cases
+- out of scope
+- implementation notes
+- related KB links when useful
+
+### `tasks.md`
+The execution plan.
+Use it for:
+- overall task title / status
+- subtask checklist
+- subtask statuses
+- dependencies between subtasks
+- file/module targets when known
+
+### `log.md`
+The notebook.
+Use it for:
+- progress notes
+- decisions
+- gotchas
+- challenge findings
+- handoff context across sessions
+
+## Default behavior
+
+When the user asks about tasks, PRDs, planning, or active work in a repo:
+1. Look in `docs/tasks/active/` first
+2. Read the relevant `prd.md`, `tasks.md`, and `log.md`
+3. Only check `docs/tasks/archive/` for historical context or related finished work
+4. Do not treat the KB as the owner of task state
+
+## Common operations
+
+### Show active tasks
+List task folders under:
+
+```txt
+docs/tasks/active/
 ```
-~/knowledge/tasks/
-  <project>.md                        # project metadata
-  <project>/
-    <task>.md                         # task file
-    <task>/
-      <subtask>.md                    # subtask file
-  _inbox/
-    <task>.md                         # tasks without a project
+
+If there is only one obvious active task, use it.
+If there are several, ask which one matters.
+
+### Read a task
+Open:
+
+```txt
+docs/tasks/active/<task-id>/prd.md
+docs/tasks/active/<task-id>/tasks.md
+docs/tasks/active/<task-id>/log.md
 ```
 
-## Commands
+Use `archive/` instead of `active/` only when the task is historical.
 
-### Tasks
+### Create a task
+Create:
 
-```bash
-# Add
-todo add "title" [--project <id>] [--parent <id>] [--description "..."] [--tags a,b] [--note "..."] [--author kuba]
-
-# List
-todo list [--project <id>] [--status <s>] [--tag <t>] [--all] [--tree]
-# if --project is omitted, CLI prompts you to pick one interactively
-# with fzf installed, list opens a split view: task tree on the left, task preview on the right
-# without fzf, it falls back to a numbered prompt and plain list output
-
-# Show detail
-todo show <id>
-
-# Change status
-todo status <id> <open|in_progress|done|cancelled>
-
-# Add log entry
-todo log <id> "note text" [--author kuba]
-
-# Update fields
-todo update <id> [--title "..."] [--description "..."] [--status <s>] [--tags a,b]
-
-# Delete
-todo delete <id>
+```txt
+docs/tasks/active/<task-id>/
+  prd.md
+  tasks.md
+  log.md
 ```
 
-### Projects
+Where `<task-id>` is:
 
-```bash
-todo project list
-todo project add "name" [--id <slug>] [--description "..."]
-todo project show <id>
-todo project delete <id>
+```txt
+YYYY-MM-DD-task-name
 ```
 
-## How to handle /todo
+### Update a task
+Edit `tasks.md` when:
+- a subtask status changes
+- dependencies change
+- new subtasks are discovered
+- overall task status changes
 
-If `$ARGUMENTS` is empty, run `todo list`.
+Append to `log.md` when:
+- something was learned
+- a wave completed
+- a blocker appeared
+- a handoff note matters later
 
-Otherwise, pass arguments directly to the CLI:
-```bash
-python3 ~/.claude/skills/todo/todo.py $ARGUMENTS
+### Archive a task
+Move a task folder from:
+
+```txt
+docs/tasks/active/<task-id>/
 ```
+
+to:
+
+```txt
+docs/tasks/archive/<task-id>/
+```
+
+when the task is genuinely:
+- `done`, or
+- `cancelled`
+
+Do not archive work that is merely paused, blocked, or in review.
 
 ## Conventions
 
-- Author is `kuba` when acting on user's behalf, `pi` when acting autonomously
-- Descriptions support `[[wiki-links]]` to knowledge base pages in the vault
-- If `todo list` is called without `--project`, the CLI prompts you to pick a project interactively (or choose inbox)
-- With `fzf` installed, `todo list` becomes a full-screen split-view browser: task tree with subtasks on the left, selected task preview on the right
-- Browser legend shows status symbols; `Ctrl-B` goes back to project selection; preview scroll uses `Shift-Up/Down` or `PgUp/PgDn`
-- Subtasks auto-inherit project from parent — don't pass `--project` on subtasks
-- `--tree` flag shows parent/child hierarchy
-- The CLI enforces: correct folder placement, required frontmatter, relationship wiki-links
+- Prefer short, readable task IDs
+- Keep the PRD in `prd.md`, not embedded in task metadata
+- Keep execution state in `tasks.md`
+- Keep discoveries and continuity in `log.md`
+- Link to KB when useful, but do not offload task state there
+- Prefer direct file edits over inventing a system before it's needed
+
+## What this skill is not
+
+- not a central task database
+- not Obsidian-backed canonical storage
+- not the owner of durable knowledge
+- not dependent on a CLI to be useful
+
+It is just the repo-local work surface. Which, frankly, is enough.

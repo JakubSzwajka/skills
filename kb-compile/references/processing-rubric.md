@@ -69,6 +69,14 @@ Do not promote when the candidate is mostly:
 - a one-off question answer
 - an operational README topic with no durable general insight
 
+**Important exception:** Concrete architectural patterns with specific
+mechanisms (decision frameworks, named strategies, implementation
+patterns with clear trade-offs) are NOT lesson summaries, even when
+they come from a single lesson. Score them on the rubric normally.
+A pattern like "4 approaches to plugin data persistence" or "JSONB
+metadata extensibility replacing EAV" is a durable reusable concept,
+not a lesson recap.
+
 ## 6. Course extraction pattern
 
 For courses, look for:

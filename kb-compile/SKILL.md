@@ -22,12 +22,17 @@ If something is still in `inbox/`, treat it as not processed yet.
 1. Inspect the target path in `~/knowledge/inbox/`.
 2. Classify the material: course, article, paper, repo notes,
    transcript bundle, mixed folder.
-3. Read the source material and extract candidate concepts.
-4. Use parallel extraction with subagents when the material has many
+3. **Pre-scan: build a coverage checklist.** Enumerate every processing
+   unit (lesson, chapter, section, article) before reading any content.
+   Write this checklist into the extraction report scaffold immediately.
+4. Read the source material and extract candidate concepts.
+   **Every processing unit must be read** — do not skip units or batch
+   them by scanning titles alone.
+5. Use parallel extraction with subagents when the material has many
    lessons/files.
-5. Consolidate duplicate candidates.
-6. Search existing knowledge before creating anything.
-7. Create only durable, reusable nodes in `~/knowledge/knowledge/`.
+6. Consolidate duplicate candidates.
+7. Search existing knowledge before creating anything.
+8. Create only durable, reusable nodes in `~/knowledge/knowledge/`.
 8. Immediately after each `knowledge_create` call, patch the newly
    created file frontmatter with an `edit` call to insert
    `created: YYYY-MM-DD` after `tags:` and before the closing `---`.
@@ -36,8 +41,10 @@ If something is still in `inbox/`, treat it as not processed yet.
 10. After node creation, run a cross-reference patching pass against
     existing nodes.
 11. Run knowledge lint after patching.
-12. Optionally write an extraction report under
-    `~/knowledge/explorations/reports/`.
+12. Write an extraction report under
+    `~/knowledge/explorations/reports/`. **This is mandatory, not
+    optional.** The report must include the full coverage checklist
+    with every processing unit resolved (see Coverage Checklist below).
 13. Archive the processed source into `~/knowledge/sources/`.
 14. Run the final repository commit after nodes are created,
     cross-references are patched, and lint passes:
@@ -102,6 +109,37 @@ For courses:
 - do not create lesson-per-node sludge
 - prefer course hub nodes plus durable concept nodes
 - keep precise `Source Trail` references
+
+## Coverage checklist
+
+Every extraction run must maintain a coverage checklist. Build it during
+the pre-scan step and resolve it during extraction.
+
+Each processing unit gets one of these dispositions:
+
+- **Extracted** → list the node(s) created or updated
+- **Merged** → concept was already covered by an existing node (name it)
+- **Skipped** → no durable concepts found (state the reason briefly)
+
+The checklist goes into the extraction report. Any unit left unresolved
+at the end of the run is a **gap** — flag it prominently.
+
+Example:
+
+```
+| Unit   | Disposition | Detail |
+|--------|-------------|--------|
+| M02L01 | Extracted   | brownfield-ai-advantage, macrokernel-sdk-architecture |
+| M02L02 | Extracted   | macrokernel-sdk-architecture (same node, L01+L02) |
+| M02L07 | Skipped     | Practical walkthrough, reinforces L01-L06, no new concepts |
+```
+
+## Course index update rule
+
+When processing a course module, update the course index file in
+`~/knowledge/sources/courses/<course>/index.md` with lesson summaries
+for the processed module. An index that only covers earlier modules is
+incomplete and makes future audits impossible.
 
 ## Non-negotiable rules
 

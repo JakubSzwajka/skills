@@ -1,22 +1,38 @@
 ---
 name: prd-create
 description: >
-  Capture a feature idea or change as a structured todo task tree, then auto-challenge it against the codebase.
-  Use when the user wants to write a PRD, capture a feature idea, plan a change, break work into tasks,
-  or says things like "create a prd", "plan this", "break this down", "decompose into tasks",
-  "create tasks for", "prd to tasks".
+  Capture a feature idea or change as a repo-local PRD task folder under docs/tasks/active/,
+  then auto-challenge it against the codebase. Use when the user wants to write a PRD,
+  capture a feature idea, plan a change, break work into tasks, or says things like
+  "create a prd", "plan this", "break this down", "decompose into tasks", "create tasks for",
+  "prd to tasks".
 ---
 
 # PRD Skill
 
 ## Philosophy
 
-PRDs are **quick-capture documents for change ideas** stored as todo task trees. You spot something that needs doing, sketch it — problem, solution shape, key cases — and capture it as a parent task with subtasks. The todo task log serves as the working notebook across sessions.
+PRDs are **repo-local planning artifacts** stored in:
+
+```txt
+docs/tasks/active/<YYYY-MM-DD-task-name>/
+  prd.md
+  tasks.md
+  log.md
+```
+
+This folder is the canonical source for active work in the repo.
+
+- `prd.md` = the spec / change doc
+- `tasks.md` = the execution plan, checklist, statuses, and dependencies
+- `log.md` = the running notebook across sessions
+
+Knowledge still belongs in the KB, but tasks and PRDs do **not**. Link to KB when useful; do not store operational state there.
 
 Key constraints:
-- The parent task description is the PRD — keep it **under 300 lines**
-- Subtasks are the implementation units with dependency ordering via `dependsOnIds`
-- Task logs replace notebook.md — append progress notes, decisions, and gotchas
+- The PRD lives in `prd.md`, not inside some fake task description field
+- The execution plan lives in `tasks.md`, not in the KB and not in a central todo store
+- Notes, challenge findings, and progress go in `log.md`
 - The challenge phase runs automatically after creation
 
 ## Phase 1: Quick Interview (2-4 questions)
@@ -30,15 +46,29 @@ Don't over-interview. Ask just enough to fill the structure:
 
 If the user already described all this, skip straight to drafting.
 
-## Phase 2: Create Parent Task
+## Phase 2: Create the Task Folder
 
-Use `todo add` to create the parent task:
+Create a repo-local task folder:
 
-- **title**: `[ProjectName] <imperative description>` (match existing convention)
-- **description**: The full PRD content using this structure:
-
+```txt
+docs/tasks/active/<task-id>/
 ```
-Branch: TBD
+
+Where `<task-id>` is:
+
+```txt
+YYYY-MM-DD-task-name
+```
+
+Use a short, readable slug. If there is an obvious repo/project prefix in the task title, keep it in the human title, not necessarily in the folder name.
+
+### Write `prd.md`
+
+Use this structure:
+
+```md
+# Title
+<Short descriptive title>
 
 ## Problem
 <What's broken, missing, or suboptimal>
@@ -51,11 +81,11 @@ Branch: TBD
 
 ## Collateral
 <Non-functional neighbors of this change. Populate by scanning the codebase — don't guess.>
-- **Tests:** What test coverage is expected? Does test infrastructure exist, or must it be set up first?
+- **Tests:** What coverage is expected? Does infrastructure exist?
 - **Docs:** Which READMEs, architecture docs, or API specs need updating?
-- **Config:** Any new env vars? Are .env.example files affected?
-- **Observability:** Any new endpoints or flows that need logging, metrics, or tracing?
-- **Schema:** Any new tables, columns, or migrations? Is the data model documented?
+- **Config:** Any env vars or config changes?
+- **Observability:** Logging, metrics, tracing, alerts?
+- **Schema:** Tables, columns, migrations, data model implications?
 
 ## Key cases
 - <main scenarios to handle>
@@ -64,194 +94,253 @@ Branch: TBD
 - <what we're NOT doing>
 
 ## Notes
-<implementation hints, relevant files, related work>
+- Branch: TBD
+- Relevant files: <paths if known>
+- KB links: [[node-name]]
 ```
 
-- **projectId**: Match to the relevant project (check `todo project list`)
-- **tags**: Optional, use sparingly
+### Write `tasks.md`
+
+This file is the execution plan. It should contain:
+- parent task title / summary
+- overall status
+- subtasks with stable IDs like `T1`, `T2`, `T3`
+- per-subtask status
+- per-subtask dependencies
+- concrete notes and target files/modules when known
+
+Use a readable markdown structure. Example:
+
+```md
+# Tasks
+
+Overall status: open
+
+## T1 Design repo-local task schema
+- status: open
+- deps: []
+- notes: Define the storage layout and file responsibilities.
+
+## T2 Update PRD skill
+- status: open
+- deps: [T1]
+- notes: Make prd-create emit docs/tasks artifacts instead of using central todo assumptions.
+
+## T3 Update pipeline skill
+- status: open
+- deps: [T1]
+- notes: Read prd.md, tasks.md, and log.md from docs/tasks/active.
+```
+
+### Write `log.md`
+
+Initialize it like this:
+
+```md
+# Log
+
+- YYYY-MM-DD HH:MM lucy: Created PRD and initial task breakdown.
+```
 
 ## Phase 3: Decompose into Subtasks
 
-Analyze the codebase based on the PRD content, then create subtasks:
+Analyze the codebase based on the PRD, then create subtasks in `tasks.md`:
 
-1. **Search for files, modules, and patterns** mentioned or implied by the PRD
-2. **Understand the existing architecture** relevant to the change
-3. **Identify integration points**, shared types, and test files
-4. **Note conventions** (naming, file structure, patterns)
+1. Search for files, modules, and patterns mentioned or implied by the PRD
+2. Understand the existing architecture relevant to the change
+3. Identify integration points, shared types, and test files
+4. Note conventions: naming, file structure, patterns
 
-For each subtask, use `todo add`:
-
-- **parentId**: The parent task ID from Phase 2
-- **title**: Imperative verb phrase — "Add validation to login form", "Extract shared types"
-- **description**: 2-5 sentences of what to change and why. Reference concrete files. Include a validates check.
-- **dependsOnIds**: IDs of subtasks that must complete first (siblings only)
+For each subtask:
+- use a stable ID (`T1`, `T2`, ...)
+- title should be an imperative phrase — "Add validation to login form", "Extract shared types"
+- notes should be 2-5 sentences or concise bullets describing what changes and why
+- reference concrete files where possible
+- include a validation expectation
+- include `deps: [...]` using sibling IDs only
 
 ### Subtask Sizing
 
-A well-sized subtask:
-- Is reviewable in one pass
-- Touches a coherent slice of related changes
-- Can be described in 2-5 sentences
-- Has a clear done state
+A good subtask:
+- is reviewable in one pass
+- touches a coherent slice of changes
+- can be described briefly but concretely
+- has a clear done state
 
-Prefer many small tasks over few large ones.
+Prefer several small tasks over a few swamp-monsters.
 
 ### Collateral Subtasks
 
-The Collateral section in the PRD identifies non-functional work. Turn each non-empty collateral item into a subtask (or fold it into an existing one if the scope is small). Examples: "Add vitest and write integration tests for new endpoints", "Update API README with new route", "Add LOG_LEVEL to .env.example". If the collateral section says test infrastructure doesn't exist, the first subtask should set it up — not the last.
+Turn each meaningful collateral item into its own subtask or fold it into an existing one if truly tiny. Examples:
+- add or extend tests
+- update README / API docs
+- update `.env.example`
+- add migration
+- add instrumentation
+
+If test infrastructure doesn't exist, setup goes first — not at the end like some cursed afterthought.
 
 ### Present Summary
 
-After creating subtasks, show:
-- Total subtask count and dependency structure
-- Which subtasks are parallelizable (no deps)
-- Any subtasks that seem risky (flag for review)
+After creating the plan, show:
+- total subtask count and dependency structure
+- which subtasks are parallelizable
+- any risky subtasks worth review
 
 ## Phase 4: Challenge Loop
 
-After creating the task tree, run an **automated challenge-and-resolve loop**. Do not ask the user — converge autonomously, then hand off a clean result.
+After creating the task folder, run an **automated challenge-and-resolve loop**. Do not ask the user unless a real ambiguity or scope decision remains.
 
 ### Pre-Challenge: Load Architecture Context
 
-Before spawning the challenger, check whether the project has defined architecture rules:
+Before spawning the challenger:
+1. Check AGENTS.md, CLAUDE.md, repo root README, and project instructions
+2. If any mention or link to architecture documents, follow and read them
+3. If structural rules exist, include them in the challenger's prompt
+4. If no architecture rules are found, append this to `log.md`:
 
-1. Look at what's already in your context: AGENTS.md, CLAUDE.md, project instructions, repo root README.
-2. If any of those mention or link to an architecture document, follow it and read it.
-3. If structural rules exist (layer rules, module boundaries, event conventions, transaction boundaries), include them in the challenger's prompt.
-4. If no architecture rules are found, log to the parent task:
-   `🏗️ Architecture: Not defined. Could not verify module boundaries, layer placement, or integration patterns. Recommend defining architecture rules before implementing structural changes.`
-   This is not a blocker — the PRD proceeds, but the flag is visible for whoever reviews or implements it.
+```md
+- YYYY-MM-DD HH:MM lucy: 🏗️ Architecture not defined. Could not verify module boundaries, layer placement, or integration patterns.
+```
+
+This is not a blocker; it's just useful honesty.
 
 ### Round 1: Challenger
 
-Before spawning, gather the challenger's inputs:
-1. Read the parent task description (the PRD) via `todo show <id>`
-2. Read all subtasks via `todo list --project <project> --tree` filtered to the parent
-3. If architecture rules were loaded in Pre-Challenge, capture them
+Before spawning, gather:
+1. Full `prd.md`
+2. Full `tasks.md`
+3. Relevant architecture rules, if any
 
 Then launch a challenger subagent (read-only — bash for grep/find/git only):
 
-```
-  model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
-  systemPrompt: |
-    You are a PRD challenger. You stress-test PRDs against actual codebases.
-    You are READ-ONLY — never modify files.
-    
-    Your job: verify every claim and assumption in the PRD against the real code.
-    Be adversarial but specific — always cite file:line.
-    Challenge whether the approach is the right one. Check for simpler alternatives.
-    Count affected files accurately — verify, don't trust estimates.
-    Look for hidden coupling and undocumented behaviors.
-  task: |
-    ## Challenge this PRD
-    
-    ### PRD Content
-    <full parent task description>
-    
-    ### Subtasks
-    <for each subtask: id, title, description, dependsOnIds>
-    
-    ### Architecture Rules
-    <architecture rules if defined, or "Not defined">
-    If architecture rules are defined: verify each subtask places code in the
-    correct layer, respects module boundaries, and doesn't introduce cross-module
-    coupling. Flag violations as P1.
-    
-    ### Instructions
-    
-    For each major claim or assumption in the PRD:
-    - Verify models, schemas, facades exist as described
-    - Check module boundaries and dependency rules
-    - Count affected test files and consumers accurately
-    - Verify dependency ordering makes sense
-    
-    ### Output Format
-    
-    Respond with EXACTLY this structure:
-    
-    ```
-    VERDICT: FEASIBLE / FEASIBLE WITH CONCERNS / NEEDS REWORK
-    
-    What works:
-    - <bullet points with file:line refs>
-    
-    Problems found:
-    - [P1] <blocker — must fix before starting> — file:line
-    - [P2] <significant — will cause rework> — file:line
-    - [P3] <minor — can resolve during implementation> — file:line
-    
-    Missing from PRD:
-    - <things the codebase reveals that the PRD doesn't address>
-    
-    Suggested changes:
-    - <specific updates to task descriptions or dependencies>
-    ```
+```txt
+model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
+systemPrompt: |
+  You are a PRD challenger. You stress-test PRDs against actual codebases.
+  You are READ-ONLY — never modify files.
+
+  Your job: verify every claim and assumption in the PRD against the real code.
+  Be adversarial but specific — always cite file:line.
+  Challenge whether the approach is the right one. Check for simpler alternatives.
+  Count affected files accurately — verify, don't trust estimates.
+  Look for hidden coupling and undocumented behaviors.
+task: |
+  ## Challenge this PRD
+
+  ### PRD Content
+  <full prd.md>
+
+  ### Task Plan
+  <full tasks.md>
+
+  ### Architecture Rules
+  <architecture rules if defined, or "Not defined">
+
+  ### Instructions
+  For each major claim or assumption in the PRD:
+  - verify models, schemas, facades, entry points, and target modules exist as described
+  - check module boundaries and dependency rules
+  - count affected tests and consumers accurately
+  - verify dependency ordering in tasks.md makes sense
+
+  ### Output Format
+  Respond with EXACTLY this structure:
+
+  VERDICT: FEASIBLE / FEASIBLE WITH CONCERNS / NEEDS REWORK
+
+  What works:
+  - <bullet points with file:line refs>
+
+  Problems found:
+  - [P1] <blocker — must fix before starting> — file:line
+  - [P2] <significant — will cause rework> — file:line
+  - [P3] <minor — can resolve during implementation> — file:line
+
+  Missing from PRD:
+  - <things the codebase reveals that the PRD doesn't address>
+
+  Suggested changes:
+  - <specific updates to prd.md or tasks.md>
 ```
 
-After the subagent completes, log its findings to the parent task via `todo log <id> "[CHALLENGE] ..." --author lucy`.
+After the subagent completes, append its findings to `log.md`.
 
 ### Convergence Rules
 
-After each challenge round, evaluate the verdict:
+After each challenge round:
 
-- **FEASIBLE** → proceed directly to Phase 5.
-- **FEASIBLE WITH CONCERNS** → auto-resolve. For each concern:
-  - If the fix is clear (missing type, wrong validation approach, missing file reference, dependency order fix) → apply it immediately by updating the parent PRD and/or subtask descriptions via `todo update <id>`. Do NOT ask the user.
-  - If the concern is genuinely ambiguous or changes scope → collect it for user escalation.
-  - After applying fixes, launch the challenger again (same pattern as Round 1, but scoped to the fixed areas). This is Round 2.
-- **NEEDS REWORK** → attempt one round of fixes for anything actionable, then re-challenge with a scoped subagent. If still NEEDS REWORK after that, escalate to the user.
+- **FEASIBLE** → proceed to Phase 5
+- **FEASIBLE WITH CONCERNS** → auto-resolve anything mechanical by editing `prd.md` and/or `tasks.md`, then re-challenge the fixed areas
+- **NEEDS REWORK** → attempt one round of mechanical fixes; if major ambiguity remains after re-challenge, escalate
+
+### What counts as auto-resolve
+
+Allowed:
+- fix dependency ordering
+- add missing file references
+- correct target modules or type references
+- add missing tests/docs/config subtasks
+- tighten validation notes
+
+Not allowed:
+- changing product direction
+- introducing major architectural alternatives without user buy-in
+- changing scope in a meaningful way
+- deciding ambiguous tradeoffs the user should own
 
 ### Loop Limits
 
-- **Maximum 3 challenge rounds.** If the verdict is not FEASIBLE after 3 rounds, stop and escalate.
-- Each round after the first should be scoped: the challenger only re-verifies the fixes and any areas they previously flagged, not the entire PRD from scratch.
-- Log each round's verdict and what was fixed to the parent task via `todo log <id> "..." --author lucy`.
-
-### What "auto-resolve" means
-
-Auto-resolve = update task descriptions, fix dependency ordering, add missing type references, correct file paths, adjust validation approach, add missing test cases to subtask scope. These are mechanical fixes that don't change the product direction.
-
-Do NOT auto-resolve: scope changes, architectural alternatives, "should we even do this?" questions, trade-offs that need product judgment. Escalate these.
+- maximum 3 challenge rounds
+- each round after the first should be scoped to prior findings
+- append each round's verdict and fixes to `log.md`
 
 ## Phase 5: Present Clean Result
 
-Only present to the user **after the challenge loop converges to FEASIBLE** (or after max rounds with escalation items).
+Only present after the challenge loop converges or reaches clear escalation.
 
 ### Executive Summary (required)
 
-Start with a **3-5 sentence summary** of the final PRD:
-- What is this ticket about? (1-2 sentences)
-- What's the user-facing impact? (1 sentence)
-- What's the implementation shape? (1-2 sentences)
-
-This summary should be understandable without reading the full PRD or subtask tree.
+Start with 3-5 sentences:
+- what this task is about
+- the user-facing impact
+- the implementation shape
 
 ### Then show:
-1. The task tree (parent + subtasks with deps, compact format)
-2. What was challenged and resolved (brief — "X concerns raised, Y auto-fixed, Z escalated")
-3. Any escalation items that need the user's judgment (if any)
+1. task folder path
+2. compact task tree from `tasks.md`
+3. what was challenged and resolved
+4. any escalation items needing judgment
 
 ### Handoff message
 
-- If fully converged (FEASIBLE, no escalations): "PRD is ready for review. Want me to run the pipeline to implement?"
-- If converged with escalations: "PRD is ready except for [N] questions that need your input: [list]. Once resolved, we can implement."
-- If did not converge (max rounds hit): "The challenge loop couldn't fully resolve these issues: [list]. Let's rework together."
+- If fully converged: `PRD is ready for review. Want me to run the pipeline to implement?`
+- If converged with escalations: `PRD is ready except for [N] questions that need your input: [list]. Once resolved, we can implement.`
+- If not converged: `The challenge loop couldn't fully resolve these issues: [list]. Let's rework together.`
 
 ## Consulting Existing PRDs
 
-Before creating a new PRD, check todo for existing tasks in the same project:
-- `todo list --project <project>`
-- Look for overlapping or related work
-- Reference existing tasks in the new PRD's notes if relevant
+Before creating a new task folder, check for overlapping work in:
 
-## Task Log as Notebook
+```txt
+docs/tasks/active/
+docs/tasks/archive/
+```
 
-The parent task's log serves as the cross-session notebook:
-- **Before starting any subtask**, read the parent task log for context
-- **After discovering something worth sharing**, append via `todo log`:
-  - Constraints, non-obvious decisions, gotchas
-  - Use --author lucy for agent notes
+Read relevant existing `prd.md` / `tasks.md` files and reference them in the new PRD's notes if useful.
+
+## Log as Notebook
+
+The task folder's `log.md` is the cross-session notebook:
+- before starting implementation, read it
+- after finding something worth preserving, append it
+- use `lucy` as the author in the log text
 
 ## After PRD Creation
 
-The challenge loop handles convergence automatically. By the time Phase 5 fires, the PRD is either ready or has specific escalation questions. See Phase 5 handoff messages for the exact flow.
+By the time Phase 5 fires, the repo should contain a ready task folder under `docs/tasks/active/<task-id>/` with:
+- `prd.md`
+- `tasks.md`
+- `log.md`
+
+That folder is the handoff artifact. Not the KB. Not a central todo store. The actual repo. Wild concept.
