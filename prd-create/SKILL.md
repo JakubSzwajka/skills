@@ -12,10 +12,21 @@ description: >
 
 ## Philosophy
 
-PRDs are **repo-local planning artifacts** stored in:
+This skill is the **canonical owner of the repo-local task artifact format**.
+
+PRDs and task plans live in:
 
 ```txt
 docs/tasks/active/<YYYY-MM-DD-task-name>/
+  prd.md
+  tasks.md
+  log.md
+```
+
+Archived work lives in:
+
+```txt
+docs/tasks/archive/<YYYY-MM-DD-task-name>/
   prd.md
   tasks.md
   log.md
@@ -27,13 +38,25 @@ This folder is the canonical source for active work in the repo.
 - `tasks.md` = the execution plan, checklist, statuses, and dependencies
 - `log.md` = the running notebook across sessions
 
+Canonical statuses for the overall task and each subtask:
+- `open` — queued, not started yet
+- `in_progress` — actively being worked on
+- `review` — implementation is complete enough for handoff/review, or waiting on an external response
+- `done` — finished
+- `cancelled` — intentionally dropped
+
+Archive semantics:
+- active work stays under `docs/tasks/active/`
+- move a task folder to `docs/tasks/archive/` only when the overall task is `done` or `cancelled`
+
 Knowledge still belongs in the KB, but tasks and PRDs do **not**. Link to KB when useful; do not store operational state there.
 
 Key constraints:
 - The PRD lives in `prd.md`, not inside some fake task description field
-- The execution plan lives in `tasks.md`, not in the KB and not in a central todo store
+- The execution plan lives in `tasks.md`, not in the KB and not in any central tracker
 - Notes, challenge findings, and progress go in `log.md`
 - The challenge phase runs automatically after creation
+- Other skills, especially `pipeline`, consume and update this artifact format rather than redefining it
 
 ## Phase 1: Quick Interview (2-4 questions)
 
@@ -103,9 +126,9 @@ Use this structure:
 
 This file is the execution plan. It should contain:
 - parent task title / summary
-- overall status
+- overall status using one of: `open`, `in_progress`, `review`, `done`, `cancelled`
 - subtasks with stable IDs like `T1`, `T2`, `T3`
-- per-subtask status
+- per-subtask status using the same canonical set
 - per-subtask dependencies
 - concrete notes and target files/modules when known
 
@@ -124,7 +147,7 @@ Overall status: open
 ## T2 Update PRD skill
 - status: open
 - deps: [T1]
-- notes: Make prd-create emit docs/tasks artifacts instead of using central todo assumptions.
+- notes: Make prd-create emit the canonical docs/tasks artifact format.
 
 ## T3 Update pipeline skill
 - status: open
@@ -194,9 +217,9 @@ After creating the task folder, run an **automated challenge-and-resolve loop**.
 ### Pre-Challenge: Load Architecture Context
 
 Before spawning the challenger:
-1. Check AGENTS.md, CLAUDE.md, repo root README, and project instructions
-2. If any mention or link to architecture documents, follow and read them
-3. If structural rules exist, include them in the challenger's prompt
+1. CLAUDE.md is already in your system prompt — do not re-read it. Extract architecture rules from what you already have.
+2. Only read additional docs (README, AGENTS.md, adjacent repo docs) if they contain architecture rules you'll actually include in the challenger's prompt. Don't read files speculatively.
+3. If structural rules exist, include them in the challenger's prompt.
 4. If no architecture rules are found, append this to `log.md`:
 
 ```md
@@ -212,13 +235,14 @@ Before spawning, gather:
 2. Full `tasks.md`
 3. Relevant architecture rules, if any
 
-Then launch a challenger subagent (read-only — bash for grep/find/git only):
+Then launch a **single** challenger subagent. The challenger must write its full verdict to a file — spawn results get truncated, so never rely on the return value for the full output. One spawn per round, no chains.
 
 ```txt
 model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
+tools: [read, bash, write]  # write needed for verdict file only
 systemPrompt: |
   You are a PRD challenger. You stress-test PRDs against actual codebases.
-  You are READ-ONLY — never modify files.
+  You may ONLY write to the verdict file specified in the task — no other file modifications.
 
   Your job: verify every claim and assumption in the PRD against the real code.
   Be adversarial but specific — always cite file:line.
@@ -228,11 +252,9 @@ systemPrompt: |
 task: |
   ## Challenge this PRD
 
-  ### PRD Content
-  <full prd.md>
-
-  ### Task Plan
-  <full tasks.md>
+  Read:
+  - <absolute path to prd.md>
+  - <absolute path to tasks.md>
 
   ### Architecture Rules
   <architecture rules if defined, or "Not defined">
@@ -244,8 +266,11 @@ task: |
   - count affected tests and consumers accurately
   - verify dependency ordering in tasks.md makes sense
 
-  ### Output Format
-  Respond with EXACTLY this structure:
+  ### Output
+  Write your FULL verdict to: <task-folder>/challenge-r<N>.md
+  Also return the VERDICT line in your final message.
+
+  Use EXACTLY this structure in the file:
 
   VERDICT: FEASIBLE / FEASIBLE WITH CONCERNS / NEEDS REWORK
 
@@ -264,7 +289,10 @@ task: |
   - <specific updates to prd.md or tasks.md>
 ```
 
-After the subagent completes, append its findings to `log.md`.
+**After the subagent completes:**
+1. Read `<task-folder>/challenge-r<N>.md` for the full verdict — do NOT rely on the spawn return value
+2. Append the verdict to `log.md`
+3. Delete the challenge file after incorporating findings (it's transient, not an artifact)
 
 ### Convergence Rules
 
@@ -343,4 +371,4 @@ By the time Phase 5 fires, the repo should contain a ready task folder under `do
 - `tasks.md`
 - `log.md`
 
-That folder is the handoff artifact. Not the KB. Not a central todo store. The actual repo. Wild concept.
+That folder is the handoff artifact and the canonical task format for downstream skills. Not the KB. Not some separate tracker. The actual repo. Wild concept.

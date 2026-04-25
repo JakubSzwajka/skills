@@ -25,6 +25,8 @@ docs/tasks/active/<task-id>/
 
 Archived tasks live in `docs/tasks/archive/` and are read only for old context, never as the active execution source.
 
+The canonical task artifact format, file responsibilities, statuses, and archive semantics are defined by `prd-create`. `pipeline` consumes and updates that format; it does not invent a second one.
+
 ## Expected task format
 
 The pipeline expects `tasks.md` to contain:
@@ -42,20 +44,20 @@ Example acceptable subtask shape:
 ## T1 Design schema
 - status: done
 - deps: []
-- files: docs/tasks, skills/todo
-- notes: Define repo-local storage layout.
+- files: docs/tasks, /Users/kuba.szwajka/.agents/skills/prd-create/SKILL.md
+- notes: Define repo-local task artifact layout.
 
 ## T2 Rewrite pipeline skill
 - status: in_progress
 - deps: [T1]
 - files: /Users/kuba.szwajka/.agents/skills/pipeline/SKILL.md
-- notes: Replace todo CLI assumptions with docs/tasks parsing.
+- notes: Make pipeline consume the PRD task artifact from docs/tasks.
 ```
 
 ## Phase 1: Load Task Context
 
 1. **Locate the parent task folder.** `$ARGUMENTS` is either:
-   - an exact task ID like `2026-04-10-repo-local-todo`
+   - an exact task ID like `2026-04-10-repo-local-task-artifacts`
    - a unique prefix
    - empty, in which case inspect `docs/tasks/active/` and infer the most likely task from branch, recent edits, and active context; ask if unclear
 2. Resolve the parent folder under `docs/tasks/active/<task-id>/`
@@ -70,6 +72,15 @@ Example acceptable subtask shape:
    - statuses are recognizable (`open`, `in_progress`, `review`, `done`, `cancelled`) or clearly expressed as checkboxes / equivalent markers
    - enough context exists to delegate work sanely
 6. If there are no actionable subtasks left, stop and say so plainly
+
+### Status transition rules
+
+Use the canonical statuses defined by `prd-create`:
+- `open` → `in_progress` when execution starts on a subtask
+- `in_progress` → `review` when implementation is complete but awaits Kuba or another external reviewer/decision
+- `in_progress` → `done` only when the subtask is fully validated and no review handoff is needed
+- leave blocked work as `open` or `review` with a clear note in `tasks.md` / `log.md`; do not invent ad-hoc statuses
+- when all subtasks are `done` or intentionally `cancelled`, update the parent task status accordingly
 
 ## Phase 2: Compute Waves
 
@@ -263,7 +274,7 @@ Keep each group to the important files. Use actual paths from `git diff --name-o
 
 ## Rules
 
-1. **Never treat the old todo/Obsidian system as canonical.** This skill reads repo-local task artifacts only
+1. **Never invent a parallel tracking system.** This skill reads and updates repo-local task artifacts only
 2. **Never implement major code yourself** — delegate to agents. Exception: tiny deterministic cleanup that would be slower to delegate
 3. **Never skip the wave plan display** — the user must see what's coming
 4. **Always update the repo-local task artifacts after each wave** — `tasks.md` and `log.md` are the continuity source

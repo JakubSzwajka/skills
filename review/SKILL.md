@@ -30,7 +30,7 @@ Capture the **full diff** (`git diff` + `git diff --staged` or the appropriate r
 1. Get the current branch name with `git branch --show-current`.
 2. Search for PRD files that match the branch name or changed file paths. Look in common locations:
    - `docs/prds/`, `prds/`, `.prds/`, `docs/` — glob for `**/*.md` files and check content.
-   - Also check todo for tasks matching the branch name.
+   - Also check `docs/tasks/active/` and `docs/tasks/archive/` for task folders matching the branch name or changed areas.
 3. If a PRD is found, read it and capture the content.
 4. If no PRD is found, ask the user: "I couldn't find a PRD for this change. What was the goal of these changes?" Use their answer.
 

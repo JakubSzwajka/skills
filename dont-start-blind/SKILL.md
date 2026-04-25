@@ -141,6 +141,11 @@ task: |
   3. Identify patterns — conventions, base classes, mixins, shared utilities
   4. Check for gotchas — error handling, edge cases, TODOs, known issues
 
+  For broad discovery searches across multiple directories, use
+  files-with-matches first to identify relevant files, then read
+  targeted files. Don't dump unbounded grep content searches —
+  they waste context on noise.
+
   ### Output Format
   Respond with EXACTLY this structure:
 
