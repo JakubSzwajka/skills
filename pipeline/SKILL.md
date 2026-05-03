@@ -12,7 +12,7 @@ argument-hint: [task-id]
 
 # Pipeline
 
-Execute a repo-local task plan. You are the orchestrator: load the task artifact, compute runnable work, delegate implementation, verify results, update state, and hand off cleanly.
+Execute a repo-local task plan. You are the orchestrator: load the task artifact, compute runnable work, delegate implementation (spawn tool), verify results, update state, and hand off cleanly.
 
 Canonical source:
 

@@ -28,9 +28,30 @@ Before spawning agents, read target files/modules or discover likely targets wit
 - relevant PRD/log notes
 - obvious traps
 
+## Spawn tactic
+
+Use subagents as narrow specialists, not a feature swarm.
+
+- Spawn one implementation agent per independent subtask in the current wave.
+- Do not parallelize subtasks that are likely to edit the same files/modules; run those serially inside the wave.
+- If a wave is unclear, spawn a read-only explorer first, then update the plan before implementation.
+- Parent owns task status updates; children implement and report evidence, they do not mark tasks done.
+- Use read-only review agents for final/pre-handoff review.
+- Use fixer agents scoped to one review finding or one blocked subtask, never “fix everything”.
+
+Child system prompt:
+
+```txt
+You are an implementation agent for exactly one pipeline subtask.
+Do not work on sibling tasks.
+Do not update task status yourself unless explicitly asked.
+Make the smallest correct change.
+Return evidence mapped to acceptance criteria.
+```
+
 ## Child agent prompt
 
-Spawn one agent per subtask in the current wave. Required report:
+Spawn one agent per eligible subtask in the current wave. Required report:
 
 ```md
 RESULT: DONE | NO-OP | BLOCKED
