@@ -20,6 +20,8 @@ Use this skill when the user wants to:
 
 Start with the relevant i18n JSON files. If the user does not specify files, locate the main English and Polish locale files and inspect nearby UI files to infer context.
 
+For brand-guideline compliance audits, do not stop at locale files. Read the repo-local brand/copy guideline first when present, usually `docs/brand-copy-guidelines.md`, then search active product surfaces for stale or forbidden terms from that guide. Include SEO, structured data, legal/privacy/terms/contact copy, email templates/generated-edition chrome, README files, and docs that present current product positioning.
+
 Read [references/review-rubric.md](references/review-rubric.md) before evaluating wording. Read [references/output-format.md](references/output-format.md) before presenting suggestions.
 
 ## Review workflow
@@ -78,7 +80,37 @@ Produce a review that includes:
 - separate hardcoded UI strings section
 - a clear approval prompt
 
-Follow the exact structure in [references/output-format.md](references/output-format.md).
+Follow the exact structure in [references/output-format.md](references/output-format.md), unless the user asks for a different audit format.
+
+## Brand-guideline compliance audits
+
+When the user asks to review copy against brand/copy guidelines, run this as a compliance audit rather than only a wording-quality pass.
+
+Workflow additions:
+1. Read the repo-local brand/copy guideline file first, usually `docs/brand-copy-guidelines.md`.
+2. Audit active product surfaces, including:
+   - i18n locale files
+   - route/component copy
+   - SEO and structured-data copy
+   - legal/privacy/terms/contact copy
+   - email templates and generated-edition chrome
+   - README/docs that present current product positioning
+3. Separate active user-facing/product guidance from historical archives, research notes, deprecated task docs, fixtures, tests, technical route names, CSS classes, and internal enum names.
+4. Search for the guideline's forbidden or stale terms across the active source/docs scope. Treat remaining matches as findings only when they are active user-facing copy or current product guidance.
+5. Use the severity definitions requested by the user. If the user does not provide severities, default to:
+   - P0: stale access model, trial/billing factual errors, overclaims, AI-first hero/positioning
+   - P1: terminology drift, unclear billing, generic AI-newsletter positioning
+   - P2: missing trust cues, weak onboarding examples, daily-by-default drift, generic filler copy
+6. For each finding include:
+   - file path
+   - exact string/component/key
+   - problem
+   - severity
+   - recommended replacement/action
+   - whether it is safe to change immediately
+7. Do not apply edits unless explicitly approved.
+
+For brand audits, the requested compliance-audit table can replace the normal EN/PL proposal format. Still include the PL proposal caveat whenever you propose Polish wording.
 
 ## Approval rules
 
