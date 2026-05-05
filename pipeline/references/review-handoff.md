@@ -1,15 +1,15 @@
 # Review and Handoff Reference
 
-## Final review gate
+## Pass review gate
 
-After the last wave:
-1. Run a read-only review subagent over all git changes.
+After the selected subtask is implemented:
+1. Run a read-only review subagent over the changes for this pass.
 2. Present verdict: `READY` or `NEEDS WORK`.
 3. If `NEEDS WORK`, show findings and ask whether to fix now or defer.
-4. If fixing, delegate non-trivial fixes to agents, then re-review.
+4. If fixing, delegate non-trivial fixes to a scoped fixer agent, then re-review.
 5. Stop after 3 fix/review loops and pause with remaining blockers.
 
-Never skip final review.
+Never skip pass review.
 
 ## Docs gate
 
@@ -20,16 +20,14 @@ After review passes, run `update-docs` behavior if changes altered:
 - API surface
 - module relationships
 
-## Final summary
+## Pass summary
 
 Render:
 
 ```md
-**Pipeline complete: <task-id>** — <done>/<total> done, <waves> waves, review READY
-
-| Wave | Task | Status |
-|------|------|--------|
-| 1 | T1 | done |
+**Pipeline pass done: <task-id>**
+Selected: T3 <title> — done/review/blocked
+Next: T4 <title> or "none"
 ```
 
 Then include:
