@@ -22,19 +22,16 @@ After review passes, run `update-docs` behavior if changes altered:
 
 ## Pass summary
 
-Render:
+Render the shared handoff packet from `../../references/handoff-packet.md`.
 
-```md
-**Pipeline pass done: <task-id>**
-Selected: T3 <title> — done/review/blocked
-Next: T4 <title> or "none"
-```
-
-Then include:
+Include:
+- selected subtask and status
 - files changed and what changed
+- evidence mapped to acceptance criteria
 - validation commands/results
 - review verdict
 - remaining decisions/blockers, if any
+- next runnable subtask or `none`
 - whether the task folder should move from `docs/tasks/active/` to `docs/tasks/archive/`
 
 ## Review guide

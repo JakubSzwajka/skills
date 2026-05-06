@@ -108,12 +108,11 @@ Based on Phase 1 findings (the task folder, PRD, task plan, user request), ident
 
 ### 2b. Launch the explorer
 
-Launch a subagent (read-only — bash for grep/find/git only):
+Read `../references/spawned-agent-contract.md`, then launch a subagent (read-only — bash for grep/find/git only). Omit `model` by default; only specify one if the user asked for it or the runtime supports it.
 
 ```txt
-model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
 systemPrompt: |
-  You are a codebase explorer. You are READ-ONLY — never modify files.
+  You are a codebase explorer. Follow the spawned-agent contract. You are READ-ONLY — never modify files.
   Your job: answer specific questions about a codebase by reading files,
   tracing data flow, and identifying patterns.
 

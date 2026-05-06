@@ -29,7 +29,6 @@ Uses memorable specialists: CEO/founder, eng manager, senior designer, QA lead, 
 Our skills are more functional/internal:
 
 - `prd-create`
-- `pipeline-ui`
 - `review`
 - `triage`
 - `research-deep`
@@ -233,23 +232,9 @@ Not urgent unless browser automation becomes a bigger part of our normal workflo
 
 ### 10. Design shotgun branch for UI work
 
-**What gstack does**
+**Status**: skipped for now.
 
-Generates multiple design directions, shows comparison board, collects feedback, then hands chosen direction to implementation.
-
-**What we have**
-
-`pipeline-ui` and `design-challenger` are useful, but not a true multi-direction option generator.
-
-**Possible steal**
-
-Extend `pipeline-ui` with an optional exploration mode:
-
-```txt
-brief -> 3 directions -> critique/pick -> implement -> verify
-```
-
-Useful when taste/direction is uncertain. Skip when the UI change is obvious.
+`pipeline-ui` was removed because it was not getting used. If UI exploration comes back, add it to `design-challenger` or a new focused UI skill instead of reviving a broad UI pipeline.
 
 ## Suggested implementation order
 
@@ -258,7 +243,6 @@ Useful when taste/direction is uncertain. Skip when the UI change is obvious.
 3. `context-save` + `context-restore`.
 4. standardized handoff/readiness block across major skills.
 5. local skill-run telemetry.
-6. optional design-shotgun mode inside `pipeline-ui`.
 
 ## Guardrails
 

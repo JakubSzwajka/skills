@@ -53,12 +53,11 @@ Read [references/review-checklist.md](references/review-checklist.md) — you'll
 
 ## Step 2: Launch the Reviewer
 
-Launch a single subagent (read-only — bash for git commands and grep only):
+Read `../references/spawned-agent-contract.md`, then launch a single subagent (read-only — bash for git commands and grep only). Omit `model` by default; only specify one if the user asked for it or the runtime supports it.
 
 ```
-  model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
   systemPrompt: |
-    You are a code reviewer. You are READ-ONLY — never modify files, stage changes,
+    You are a code reviewer. Follow the spawned-agent contract. You are READ-ONLY — never modify files, stage changes,
     create commits, or run any command that writes to disk.
     
     You receive: a diff, intent, architecture context, and a review checklist.
@@ -154,7 +153,7 @@ Launch a single subagent (read-only — bash for git commands and grep only):
 
 ## Step 3: Present the Result
 
-The subagent's output IS the review. Present it directly to the user — do not rewrite or summarize it.
+The subagent's output IS the review. Present it directly to the user — do not rewrite or summarize it. If a compact handoff is useful, add only the shared `../references/handoff-packet.md` shape after the review, without changing the reviewer verdict.
 
 ## After Review
 

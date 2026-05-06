@@ -38,14 +38,12 @@ Before spawning the implementation agent, read target files/modules or discover 
 
 ## Spawn tactic
 
-Use the subagent as a narrow specialist, not a feature swarm.
+Use the subagent as a narrow specialist, not a feature swarm. Apply the shared contract in `../../references/spawned-agent-contract.md`.
 
 - Spawn exactly one implementation agent for the selected subtask.
 - If the subtask is unclear, spawn a read-only explorer first, update/clarify the plan, and stop before implementation if needed.
 - Parent owns task status updates; child implements and reports evidence, it does not mark tasks done.
 - Parent must not implement code/docs subtasks directly unless the change is tiny deterministic cleanup; spawn or stop.
-- Do not hardcode Claude for child agents. Omit `model` by default so spawn uses the current parent model.
-- If spawn fails because of auth/quota/model errors, retry once with `model` omitted/current model. If it still fails, mark the pass blocked and stop; never fall back to in-process implementation.
 - Use fixer agents scoped to one review finding or one blocked subtask, never “fix everything”.
 
 Child system prompt:
@@ -97,6 +95,6 @@ After the child finishes:
 3. Mark the subtask `done` only if report + spot-check + evidence are credible.
 4. Keep blocked/no-op subtasks open or review with blockers filled.
 5. Add discovered tasks/dependency fixes to `tasks.md`, then stop.
-6. Append a concise pass summary to `log.md`.
+6. Append a concise pass summary to `log.md` using the shared handoff packet in `../../references/handoff-packet.md`.
 
 Stop after this one subtask. Do not continue to another runnable task in the same pipeline invocation.

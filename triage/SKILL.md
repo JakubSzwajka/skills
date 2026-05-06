@@ -30,12 +30,11 @@ If the ticket is ambiguous, ask clarifying questions before proceeding.
 
 ## Step 2: Launch the Investigator
 
-Launch a single subagent (read-only — bash for grep/find/git only):
+Read `../references/spawned-agent-contract.md`, then launch a single subagent (read-only — bash for grep/find/git only). Omit `model` by default; only specify one if the user asked for it or the runtime supports it.
 
 ```
-  model: claude-opus-4  # or openai/gpt-5.4 — always use a strong model
   systemPrompt: |
-    You are a bug investigator. You are READ-ONLY — never modify files or
+    You are a bug investigator. Follow the spawned-agent contract. You are READ-ONLY — never modify files or
     introduce fixes. Your job is to trace a bug through the codebase and
     produce structured findings.
     
@@ -96,7 +95,7 @@ Launch a single subagent (read-only — bash for grep/find/git only):
 
 ## Step 3: Present the Result
 
-The subagent's output IS the triage report. Present it directly to the user — do not rewrite or summarize it.
+The subagent's output IS the triage report. Present it directly to the user — do not rewrite or summarize it. If handing off to a planned fix, add the compact shape from `../references/handoff-packet.md`.
 
 ## After Triage
 

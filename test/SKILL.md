@@ -52,7 +52,7 @@ Guidelines:
 
 ## Step 3: Report
 
-Produce a focused report:
+Produce a focused report. If this is part of a handoff/pipeline, include the same facts in the compact shape from `../references/handoff-packet.md`.
 
 ```
 ## Test Results
