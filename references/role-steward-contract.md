@@ -17,15 +17,33 @@ Each steward must know:
 
 ## Repo knowledge convention
 
-Prefer repo-local durable knowledge under:
+Repo-local durable knowledge lives in canonical steward-owned files. These files are the source of truth; do not replace them with feature-specific docs.
 
 ```txt
 docs/knowledge/
   product/
+    vision.md
+    users.md
+    workflows.md
+    scope.md
   architecture/
+    principles.md
+    boundaries.md
+    runtime.md
+    data.md
+    decisions.md
   design/
+    principles.md
+    brand.md
+    copy-voice.md
+    components.md
   quality/
+    test-strategy.md
+    validation.md
+    release-checklist.md
 ```
+
+Feature/task-specific detail may live in task artifacts (`docs/tasks/active/<task-id>/`) unless the user explicitly asks for extra knowledge docs. When durable doctrine is discovered, summarize it into the canonical owned files above.
 
 Also read existing repo guidance when present:
 
@@ -43,15 +61,19 @@ If a repo already has an equivalent convention, use it and note the mapping.
 
 ## Missing knowledge behavior
 
+Read canonical owned knowledge docs first when present: the exact files listed above for your domain, the task folder (`prd.md`, `tasks.md`, `log.md`), and any linked architecture/design/quality/product docs. If canonical files are missing, propose creating them; do not invent alternative knowledge filenames.
+
 When required knowledge is missing or incomplete:
 
-1. Do not invent silently.
-2. Report a blocking question when the answer materially changes the plan or work units.
-3. Include a recommended default and why it is safe/useful.
-4. Identify exactly which repo doc should be created or updated after the answer.
+1. Do not invent doctrine silently.
+2. Return `STATUS: NEEDS_INPUT` when the answer materially changes the plan or work units.
+3. Limit blocking questions to the smallest useful set, maximum 5 per steward.
+4. Each blocking question must include a recommended default, why it matters, and which repo doc should be created or updated after the answer.
 5. Distinguish blocking decisions from deferred decisions.
+6. If a gap needs longer decision ping-pong, recommend the relevant steward session (`product-owner`, `architect`, `designer`, or `qa`) and include a copy-pasteable `Fresh steward session prompt` the parent can give the user.
+7. The prompt must ask the fresh steward session to interview/grill the user, accept links/docs/screens/examples, converge on shared decisions, save/update the canonical owned docs listed above, and return guidance for `work-unit-factory`.
 
-Subagents do not ask the user directly. They report questions to the parent orchestrator, which asks the user.
+Subagents do not ask the user directly. They report questions and fresh-session prompts to the parent orchestrator, which asks the user or hands off the prompt. The parent must preserve these prompts as copy-paste blocks when planning is blocked; summarizing them into single questions is not enough.
 
 ## Write/update behavior
 
@@ -69,7 +91,7 @@ A steward may edit owned docs only when the parent explicitly assigns update mod
 ## Output shape
 
 ```md
-STATUS: READY | BLOCKED | NEEDS UPDATE
+STATUS: READY | NEEDS_INPUT | NEEDS_UPDATE | BLOCKED | NO_GO
 
 Owned knowledge read:
 - `<path>` — found/missing/relevant
@@ -80,6 +102,22 @@ Current doctrine:
 Blocking questions:
 - <question> — Recommended default: <default> — Why it matters: <plan impact> — Update doc: `<path>`
 
+Fresh steward session prompt:
+~~~txt
+@<steward> / grill-me <domain>
+
+We need to resolve missing <domain> doctrine for <task/repo>. Please interview me until we have enough shared understanding to plan work units safely. Ask follow-up questions, accept links/docs/screens/examples I provide, challenge defaults, then write/update the canonical `docs/knowledge/<domain>/` files for your steward role. Do not create feature-specific knowledge docs unless I explicitly ask for them.
+
+Known context:
+- <brief summary>
+
+Open decisions to resolve:
+- <decision 1>
+- <decision 2>
+
+End with: decisions made, docs updated, remaining blockers, and guidance for work-unit-factory.
+~~~
+
 Deferred decisions:
 - <decision that can wait, or `none`>
 
@@ -88,8 +126,13 @@ Guidance for work units:
 
 Proposed doc updates:
 - `<path>` — <summary of change or new doc>
+
+Concerns:
+- <risks, contradictions, or `none`>
 ```
 
-Use `STATUS: BLOCKED` when missing decisions should stop planning.
-Use `STATUS: NEEDS UPDATE` when planning can continue but repo knowledge should be updated.
+Use `STATUS: NEEDS_INPUT` when missing decisions should stop planning until the parent asks the user.
+Use `STATUS: NEEDS_UPDATE` when planning can continue but repo knowledge should be updated.
+Use `STATUS: BLOCKED` when external access/tooling/context prevents useful analysis.
+Use `STATUS: NO_GO` when the current plan should not proceed even with defaults.
 Use `STATUS: READY` when the domain has enough documented guidance for the requested work.

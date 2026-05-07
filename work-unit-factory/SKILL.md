@@ -12,16 +12,19 @@ argument-hint: [task-id-or-brief]
 
 # Work Unit Factory
 
-Manufacture detailed work units. Do not implement them.
-This skill creates or repairs the plan that a separate processor can iterate.
+Manufacture detailed work units in order of the plan to be executed by the team.
+Your task is to orchestrate it's creation and communication between the team members. All members are specified in `../agents/**` directory. 
+Choose involved parties smartly basd on the task, context and overall goal.
 
 Canonical output:
-
 ```txt
-docs/tasks/active/<task-id>/
+docs/tasks/active/<YYYY-MM-DD-prd-slug>/
   prd.md
-  tasks.md
+  open-questions.md
   log.md
+  tasks/
+      <task-id>.md
+      index.md -> list of all tasks in the plan
 ```
 
 Shared references:
@@ -31,97 +34,62 @@ Shared references:
 - `../references/spawned-agent-contract.md`
 - `../references/handoff-packet.md`
 
+## Constraints
+- Use subagents with dedicated skills to communicate with the agents in delegation manner.
+- Be explicit what passing down a task to the agent, with saying what you need, and what handoff format you expect in return.
+
 ## Workflow
 
+0. **Ensure that all involved agents, have their knowledge pre-requisites met satisfied in the current working context.**
+   - Agents does not work blindly, each of them needs to know how should they do the job. 
+   - Ask each one for confirmation that they are ready to work on the given task. I.e. if architect has all the documentation he needs to work on the task etc. If he will report missing information, treat filling the gaps as a ticket for the user to address.
+
 1. **Locate or create target**
-   - If `$ARGUMENTS` names an existing `docs/tasks/active/<task-id>/`, use it.
+   - If `$ARGUMENTS` names an existing `docs/tasks/active/<YYYY-MM-DD-prd-slug>/`, use it.
    - If there is one obvious active task folder, ask before mutating unless the user named it.
-   - If no task folder exists and the user gave a brief, create `docs/tasks/active/<YYYY-MM-DD-slug>/` with minimal `prd.md`, `tasks.md`, and `log.md`.
-   - If ambiguity would change scope, ask one clarifying question and stop.
+   - If no task folder exists and the user gave a brief, create `docs/tasks/active/<YYYY-MM-DD-prd-slug>/` with minimal `prd.md`, `open-questions.md`, `tasks/index.md`, and `log.md`.
 
 2. **Read current state**
-   - Read `prd.md`, `tasks.md`, `log.md` if present.
-   - Read repo `AGENTS.md`, `CLAUDE.md`, README, and linked architecture docs when present.
+   - Read `prd.md`, `open-questions.md`, `tasks/index.md`, `log.md` if present.
+   - Read repo `AGENTS.md`, README, and linked architecture docs when present.
    - Read `../references/work-unit-contract.md`.
 
-3. **Launch flat role-steward task force**
-   Use `pi-subagents` directly. The parent is the only orchestrator; child agents do not spawn subagents.
+3. **Iterate over the plan with the team members**
+   The parent is the only orchestrator; child agents do not spawn subagents. Iterate with the team, including the user, to gather information, build shared understanding, and append open questions if needed so that user can address them and proceed. 
 
-   Run fresh-context role stewards where useful:
-   - `product-owner`
-   - `architect`
-   - `designer` when user-facing UI/UX/brand/copy is involved or unclear
-   - `qa`
+   Run fresh-context subagents to iterate over the plan. Each subagent should:
+   - read the current state of the plan
+   - ask the user for clarification on the open questions
+   - append the open questions to the `open-questions.md` file
+   - return the updated `open-questions.md` file
+
+   Each subagent must follow `../references/role-steward-contract.md` and return `STATUS: READY | NEEDS_INPUT | NEEDS_UPDATE | BLOCKED | NO_GO`.
 
 4. **Decision and knowledge gate before task design**
-   Synthesize blocker questions and repo-knowledge updates from the role stewards before generating work units.
+   Synthesize blocker questions and repo-knowledge updates from the team members before generating work units. If any of the team members will return a prompt to start conversation with the user to gather more details, surface it to the user and wait for confirmation, that it's done. 
 
-   Stop and ask the user when missing decisions would materially change the plan, including:
-   - architecture style or stack when the repo/app has no established architecture
-   - persistence/runtime/deployment choices that affect most units
-   - product scope or primary workflow ambiguity
-   - UI/design/brand direction for user-facing work
-   - security/auth/multi-tenant assumptions
-   - external service access or production safety boundaries
+   After the user answers or returns from a fresh steward session, update or create the relevant repo knowledge docs before finalizing work units, unless the user explicitly says not to. Keep those docs concise and operational.
 
-   Ask only the smallest set of blocking questions. Include your recommended default for each. Do not create a fake-confident task plan when foundational decisions are missing.
-
-   After the user answers, update or create the relevant repo knowledge docs under `docs/knowledge/<domain>/` before finalizing work units, unless the user explicitly says not to. Keep those docs concise and operational.
-
-5. **Design and red-team units**
-   After blocking decisions are resolved or explicitly deferred, the parent synthesizes the role-steward guidance into detailed work units and then self-redteams them for executability.
-
-6. **Write artifacts**
-   - Parent writes/updates `tasks.md` only after synthesizing child outputs.
-   - Preserve useful existing units and statuses where possible.
-   - Do not mark implementation units `done`.
-   - If red-team says `NO-GO`, either fix concrete plan issues or mark blockers clearly.
+5. **Write artifacts**
+   - Parent writes/updates `tasks/index.md` and `tasks/<task-id>.md` only after synthesizing child outputs.
+   - Parent then verifies the task content with the team members and mark it ready only when all the team members are happy with the task content.
+   - Preserve useful existing task and statuses where possible.
+   - Do not mark tasks `done`.
    - Append a concise factory entry to `log.md`.
-   - Write `work-unit-review.md` when red-team feedback is substantial.
-
-7. **Handoff**
-   - Output the shared handoff packet.
-   - Next should usually be: run `work-unit-processor` on the task folder.
 
 ## Work-unit quality bar
 
-A work unit is not good enough if the next worker must infer:
+A task is not good enough if the next worker must infer:
 
 - what files/modules are likely involved
 - what behavior should change
 - what counts as done
 - how to validate it
 - what decisions are already made
-- whether a blocker is product, architecture, access, or implementation
+- whether a blocker is product, architecture, design, quality, access, or implementation
 
-If the factory cannot make a unit executable, set `Status: blocked`, add the missing decision to `Blockers`, and stop.
+If the factory cannot make a task executable, set `Status: blocked`, add the missing decision to `Blockers`, and stop.
 
 Important distinction:
-- `Blockers` are decisions/access/context required before the unit is runnable.
-- `Deferred decisions` are known production choices that do not block the current POC/local unit.
-
-## Minimal routing
-
-Keep v1 routing dumb:
-
-- `Kind`
-- optional `Agent`
-- optional `Review`
-
-Default suggestions for v0 planning:
-
-```txt
-architecture-sensitive unit -> Agent: architect
-product/scope decision     -> Agent: product-owner or Owner: human
-design/UX/copy unit        -> Agent: designer
-quality/test strategy      -> Agent: qa
-implementation unit        -> Agent: <blank for now, future processor decides>
-review unit                -> Agent: qa or architect depending on scope
-decision                   -> Owner: human
-```
-
-Do not add capability graphs, weights, pools, manager trees, or fake worker roles before the four-role team proves useful.
-
-## Output shape
-
-Use `../references/handoff-packet.md`.
+- `Blockers` are decisions/access/context required before the task is runnable.
+- `Deferred decisions` are known production choices that do not block the current POC/local task.

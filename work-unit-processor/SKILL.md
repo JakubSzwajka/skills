@@ -69,15 +69,17 @@ design       -> designer
 test/quality -> qa
 review       -> qa or architect depending on scope
 decision     -> human/block
-implementation -> not automated in v0 unless the unit names an Agent
+implementation -> direct parent execution when `Owner: agent` and `Agent` is blank
 ```
 
    - If `Kind: decision` or `Owner: human`, stop with a human handoff.
-   - If implementation has no `Agent`, stop and ask who should execute it; v0 starts with role stewards, not generic worker roles.
+   - If `Kind: implementation`, `Owner: agent`, and `Agent` is blank, execute the unit directly in the parent session. This is the v0 default; do not block just because no generic worker agent exists yet.
+   - If `Kind: implementation`, `Owner` is missing/unclear, and `Agent` is blank, stop and ask who should execute it.
 
-5. **Delegate**
-   - Use `pi-subagents` directly.
+5. **Execute or delegate**
    - Parent is the only orchestrator.
+   - For direct parent execution, work the selected unit yourself using the normal tools. Stay strictly inside the unit scope.
+   - For delegated steward/review/test/docs units, use `spawn` when available; fallback to `pi-subagents` only when named agents are required and available.
    - Use fresh context unless there is a deliberate reason to fork.
    - Pass the unit text, relevant PRD excerpt, log context, repo rules, expected validation, and handoff packet shape.
    - Child works only the selected unit.
