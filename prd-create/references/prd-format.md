@@ -39,7 +39,7 @@ Populate by scanning the codebase; do not guess.
 
 ## Notes
 - Branch: TBD
-- Notion task: <url or N/A>
+- External task: <Linear issue key + URL, other tracker URL, or N/A>
 - Relevant files: <paths if known>
 - KB links: [[node-name]] or N/A
 ```

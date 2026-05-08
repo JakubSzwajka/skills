@@ -12,9 +12,9 @@ argument-hint: [task-id-or-brief]
 
 # Work Unit Factory
 
-Manufacture detailed work units in order of the plan to be executed by the team.
-Your task is to orchestrate it's creation and communication between the team members. All members are specified in `../agents/**` directory. 
-Choose involved parties smartly basd on the task, context and overall goal.
+Manufacture detailed work units in plan order so the team can execute them.
+Your task is to orchestrate their creation and communication between team members. All members are specified in `../agents/**` directory.
+Choose involved parties smartly based on the task, context, and overall goal.
 
 Canonical output:
 ```txt
@@ -35,14 +35,17 @@ Shared references:
 - `../references/handoff-packet.md`
 
 ## Constraints
-- Use subagents with dedicated skills to communicate with the agents in delegation manner.
-- Be explicit what passing down a task to the agent, with saying what you need, and what handoff format you expect in return.
+- Use spawn `persona` profiles when delegating to agents: `programmer`, `architect`, `designer`, `product-owner`, `qa`. These preload `~/.agents/skills/agents/<persona>/SKILL.md` as the child agent's baseline identity.
+- Implementation work units should set `Agent: programmer` unless there is a deliberate exception. The programmer writes code from approved task context and is not authorized to make product/architecture/design/quality decisions; unresolved decisions become blockers to escalate.
+- Be explicit when passing a task to an agent: state what you need, what scope they may mutate, and what handoff format you expect in return.
+- The parent is the only final writer of work units. During planning, subagents may only append clearly marked discussion/log entries to assigned task artifacts, or return proposed changes for the parent to apply.
 
 ## Workflow
 
-0. **Ensure that all involved agents, have their knowledge pre-requisites met satisfied in the current working context.**
-   - Agents does not work blindly, each of them needs to know how should they do the job. 
-   - Ask each one for confirmation that they are ready to work on the given task. I.e. if architect has all the documentation he needs to work on the task etc. If he will report missing information, treat filling the gaps as a ticket for the user to address.
+0. **Ensure involved agents have their knowledge prerequisites satisfied in the current working context.**
+   - Agents do not work blindly; each one needs enough context to do the job.
+   - Ask each relevant agent to confirm readiness for the given task. For example, confirm whether the architect has all documentation needed to plan safely.
+   - If an agent reports missing information, turn the gap into a user-owned work unit with a copy-pasteable prompt for the relevant steward session.
 
 1. **Locate or create target**
    - If `$ARGUMENTS` names an existing `docs/tasks/active/<YYYY-MM-DD-prd-slug>/`, use it.
@@ -52,16 +55,18 @@ Shared references:
 2. **Read current state**
    - Read `prd.md`, `open-questions.md`, `tasks/index.md`, `log.md` if present.
    - Read repo `AGENTS.md`, README, and linked architecture docs when present.
-   - Read `../references/work-unit-contract.md`.
+   - Read all shared references listed above before delegating or writing tasks.
 
 3. **Iterate over the plan with the team members**
    The parent is the only orchestrator; child agents do not spawn subagents. Iterate with the team, including the user, to gather information, build shared understanding, and append open questions if needed so that user can address them and proceed. 
 
-   Run fresh-context subagents to iterate over the plan. Each subagent should:
+   Run fresh-context subagents to iterate over the plan. Prefer `spawn` with the relevant persona, for example `{ persona: "architect", tools: ["read", "bash"], task: "..." }`. Each subagent should:
    - read the current state of the plan
-   - ask the user for clarification on the open questions
-   - append the open questions to the `open-questions.md` file
-   - return the updated `open-questions.md` file
+   - identify missing decisions, docs, or context
+   - append only clearly marked discussion/log entries to assigned task artifacts when explicitly allowed
+   - return blocking questions, proposed user-owned work units, and any proposed artifact updates for the parent to apply
+
+   Subagents do not ask the user directly. If a gap needs user input, the parent creates a user-owned work unit such as: run this prompt with `architect`, agree on `<doc>`, update `<knowledge path>`, then return the result.
 
    Each subagent must follow `../references/role-steward-contract.md` and return `STATUS: READY | NEEDS_INPUT | NEEDS_UPDATE | BLOCKED | NO_GO`.
 
@@ -72,7 +77,7 @@ Shared references:
 
 5. **Write artifacts**
    - Parent writes/updates `tasks/index.md` and `tasks/<task-id>.md` only after synthesizing child outputs.
-   - Parent then verifies the task content with the team members and mark it ready only when all the team members are happy with the task content.
+   - Parent then verifies task content with relevant team members and marks it ready only when material objections are resolved.
    - Preserve useful existing task and statuses where possible.
    - Do not mark tasks `done`.
    - Append a concise factory entry to `log.md`.

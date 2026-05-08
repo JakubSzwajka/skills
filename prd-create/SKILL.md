@@ -35,7 +35,7 @@ Hard rules:
 - Each subtask must include status, deps, intent, target files/modules, acceptance, verification, evidence, and blockers.
 - A subtask is runnable only when status is `open` or `in_progress`, all deps are `done`, and blockers are empty.
 - Do not mark work `done` without evidence mapped to acceptance criteria.
-- Store operational state only in the repo task artifact, not KB or Notion.
+- Store operational implementation state only in the repo task artifact, not KB or external PM tools. Use the project-declared tracker (Linear for `~/DEV/priv/` projects) only for PM-facing status, links, blockers, and handoff notes.
 - Append meaningful discoveries and progress to `log.md` with `lucy` as author.
 - Do not delete challenge evidence unless explicitly approved.
 

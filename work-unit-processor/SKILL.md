@@ -69,17 +69,18 @@ design       -> designer
 test/quality -> qa
 review       -> qa or architect depending on scope
 decision     -> human/block
-implementation -> direct parent execution when `Owner: agent` and `Agent` is blank
+implementation -> programmer when `Owner: agent` and `Agent` is blank
 ```
 
    - If `Kind: decision` or `Owner: human`, stop with a human handoff.
-   - If `Kind: implementation`, `Owner: agent`, and `Agent` is blank, execute the unit directly in the parent session. This is the v0 default; do not block just because no generic worker agent exists yet.
+   - If `Kind: implementation`, `Owner: agent`, and `Agent` is blank, route to the generic programmer agent.
    - If `Kind: implementation`, `Owner` is missing/unclear, and `Agent` is blank, stop and ask who should execute it.
 
 5. **Execute or delegate**
    - Parent is the only orchestrator.
-   - For direct parent execution, work the selected unit yourself using the normal tools. Stay strictly inside the unit scope.
-   - For delegated steward/review/test/docs units, use `spawn` when available; fallback to `pi-subagents` only when named agents are required and available.
+   - For delegated implementation units, use `spawn` with `{ persona: "programmer" }`. The programmer writes code according to the selected unit, repo knowledge, and existing code patterns; it is **not authorized to make product/architecture/design/quality decisions**. If decisions are missing or ambiguous, it must return `STATUS: BLOCKED` with options/recommendation for parent/user/steward escalation.
+   - For delegated steward/review/test/docs units, use `spawn` with `persona` when available; fallback to `pi-subagents` only when named agents are required and available.
+   - Persona mapping: `programmer` -> `{ persona: "programmer" }`, `architect` -> `{ persona: "architect" }`, `designer` -> `{ persona: "designer" }`, `product-owner` -> `{ persona: "product-owner" }`, `qa` -> `{ persona: "qa" }`.
    - Use fresh context unless there is a deliberate reason to fork.
    - Pass the unit text, relevant PRD excerpt, log context, repo rules, expected validation, and handoff packet shape.
    - Child works only the selected unit.
