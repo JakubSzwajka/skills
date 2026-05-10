@@ -12,6 +12,8 @@ disable-model-invocation: true
 
 You are the **orchestrator**. You gather the inputs, then delegate the actual review to a subagent with fresh, curated context. You never review code yourself.
 
+QA evaluates changes against existing product/design/architecture/development doctrine. If doctrine is missing or ambiguous, QA reports the gap and escalates to the owning steward rather than creating new doctrine.
+
 ## Step 1: Gather Inputs (you do this)
 
 Collect everything the reviewer will need. The reviewer sees NONE of your conversation history — only what you give it.

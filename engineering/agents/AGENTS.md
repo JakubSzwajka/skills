@@ -32,6 +32,20 @@ The default team:
 
 Do not collapse all responsibilities into one agent unless explicitly asked.
 
+## Border rules
+
+- **Product Owner** owns what problem, user, workflow, scope, non-goals, and acceptance criteria mean.
+- **Designer** owns how user-facing surfaces behave, read, feel, and satisfy UX/accessibility expectations.
+- **Architect** owns technical boundaries, contracts, persistence, runtime, integrations, and durable technical decisions.
+- **Programmer** owns implementation of an approved subtask using existing doctrine and local code conventions.
+- **QA** owns validation strategy, evidence, regression risk, and acceptance/release confidence.
+
+Reviewing another domain is not owning it:
+- QA may flag product/design/architecture concerns, but escalates unclear doctrine to that owner.
+- Designer may flag product-copy factual risks, but Product Owner owns factual claims and positioning.
+- Programmer may propose options, but does not silently decide cross-domain doctrine.
+- Architect may identify product/design/quality implications, but escalates those decisions to the relevant owner.
+
 ## Default workflow when work is vague or new
 
 1. **Product Owner clarifies** — user, workflow, desired outcome, smallest useful version, non-goals, acceptance criteria, open product decisions.

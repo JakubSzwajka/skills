@@ -51,6 +51,7 @@ Use these rules:
 - feel free to reshape both EN and PL if the result is clearer or more natural
 - prefer concise UI language over explanatory marketing filler, but do NOT default to tightening every string — see "Tightening vs explanation" in the rubric
 - keep terminology stable unless the user explicitly approves a terminology change
+- flag factual product claims (pricing, audience, access model, positioning, guarantees) as Product Owner-owned decisions; do not silently rewrite product facts as copy polish
 - never rename i18n keys
 - avoid churn on strings that are already good enough
 - allow PL to diverge structurally from EN (sentence count, idioms, word order) — in fact, require structural divergence for hero/tagline strings, see rubric
@@ -111,6 +112,7 @@ Workflow additions:
    - recommended replacement/action
    - whether it is safe to change immediately
 7. Do not apply edits unless explicitly approved.
+8. Escalate any recommended change to factual positioning, pricing, audience, access model, or guarantees as `Needs owner decision` for Product Owner approval before applying.
 
 For brand audits, the requested compliance-audit table can replace the normal EN/PL proposal format. Still include the PL proposal caveat whenever you propose Polish wording.
 
