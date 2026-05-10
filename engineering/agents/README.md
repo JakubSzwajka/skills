@@ -7,7 +7,7 @@ Top-level folders here are explicit-use agent/persona modes — skills that chan
 - `architect/`
 - `designer/`
 - `product-owner/`
-- `programmer/`
+- `developer/`
 - `qa/`
 
 Invoke these personas only when the user explicitly asks for that mode or a workflow deliberately delegates to that persona.

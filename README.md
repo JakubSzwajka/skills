@@ -18,7 +18,7 @@ Personal skill set for Claude Code. Each subdirectory is one skill (or a group o
 3. **`pipeline`** (under `engineering/workflows/`) — execute one runnable subtask, review it, update task artifacts, stop.
 4. **`commit`** (under `engineering/`) — stage and commit when work is ready.
 
-Personas in `engineering/agents/` (architect, designer, product-owner, programmer, qa) are invoked explicitly by the user or delegated to by workflows when role-specific judgment is needed. They are not auto-triggered.
+Personas in `engineering/agents/` (architect, designer, developer, product-owner, qa) are invoked explicitly by the user or delegated to by workflows when role-specific judgment is needed. They are not auto-triggered.
 
 ## Conventions
 

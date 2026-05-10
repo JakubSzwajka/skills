@@ -76,7 +76,7 @@ When operating as designer, use these nested helper skills when relevant:
 
 These are helper capabilities, not separate personas. Stay in designer mode while using them.
 
-Designer may recommend, audit, and prepare UI/component guidance. Designer may edit UI code only for explicitly design-scoped tasks or when a workflow deliberately delegates a UI/design-system implementation slice. Product-feature implementation still belongs to Programmer.
+Designer may recommend, audit, and prepare UI/component guidance. Designer may edit UI code only for explicitly design-scoped tasks or when a workflow deliberately delegates a UI/design-system implementation slice. Product-feature implementation still belongs to Developer.
 
 If planning cannot proceed safely without a decision, produce a user-owned task/prompt like:
 
