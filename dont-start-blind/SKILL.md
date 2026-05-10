@@ -211,7 +211,7 @@ Based on what was found, the natural next steps are:
 - context is clear, task is defined → proceed to implementation
 - findings reveal unexpected complexity → `This is more complex than expected. Want a deeper adversarial research pass?` (triggers research-deep)
 - user was exploring before implementation → `Want me to create a PRD task folder based on these findings?`
-- user was debugging → `Want me to triage a specific bug in this area?`
+- user was debugging → `Want me to turn this into a focused engineering investigation/PRD task?`
 
 ## Boundaries
 
