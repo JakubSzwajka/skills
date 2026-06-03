@@ -7,7 +7,7 @@ Personal skill set for Claude Code. Each subdirectory is one skill (or a group o
 - `engineering/` — engineering-specific skills (agent personas, workflows, docs/PRD, commit).
 - `dont-start-blind/` — orientation pass before execution-heavy work.
 - `explain/` — generate a styled HTML page that visually explains a concept.
-- `grill-me/` — interview the user one question at a time until a plan is solid.
+- `grill-me/` — repo-aware grilling: interview one question at a time, challenge terminology/code/doc conflicts, and capture resolved decisions.
 - `knowledge-base/` — query and compile the Obsidian-backed knowledge graph.
 - `references/` — shared contracts reused by multiple skills (handoff packet, spawned-agent contract, role-steward contract).
 
@@ -23,5 +23,6 @@ Personas in `engineering/agents/` (architect, designer, developer, product-owner
 ## Conventions
 
 - Repo-local durable doctrine lives under `docs/knowledge/<domain>/` (see `references/role-steward-contract.md`).
+- Product/domain language lives in `docs/knowledge/product/glossary.md` when the repo uses the recommended structure.
 - Repo-local execution state lives under `docs/tasks/active/<task-id>/`.
 - Spawned subagents follow `references/spawned-agent-contract.md` and report with `references/handoff-packet.md`.

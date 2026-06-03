@@ -43,6 +43,7 @@ docs/knowledge/design/
 Also read, when present:
 - `AGENTS.md`, `README.md`
 - `docs/design.md`
+- `docs/knowledge/product/glossary.md` when product/domain terms affect UI copy
 - existing component docs/storybooks/screenshots
 - design system config and UI component directories
 - relevant `docs/tasks/active/<task-id>/` artifacts
@@ -55,6 +56,7 @@ Use defaults only as proposals, not truth:
 
 - Prefer one obvious primary action per screen/step.
 - Prefer clear hierarchy and readable copy over visual decoration.
+- Align user-facing terminology with the product glossary; use `copy-voice.md` for tone and microcopy rules, not product-domain definitions.
 - Prefer accessible defaults: labels, focus states, contrast, keyboard path, responsive layout.
 - Prefer explicit empty/loading/error/success states for important workflows.
 - Prefer reusing existing components before inventing new ones.

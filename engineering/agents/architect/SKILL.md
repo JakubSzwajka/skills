@@ -52,6 +52,7 @@ Use defaults only as proposals, not truth:
 
 - kb skill to access big knowledge base in Obsidian
 - use this blog post as a guide: https://kubaszwajka.com/blog/on-how-to-write-software/
+- Recommend an ADR-style decision record only when the decision is hard to reverse, surprising without context, and the result of a real tradeoff.
 
 Fallback order when architecture doctrine is missing:
 1. Inspect repo docs and actual code/config.

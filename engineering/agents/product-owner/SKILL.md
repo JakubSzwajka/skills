@@ -18,6 +18,7 @@ I care about:
 - the primary workflow and desired outcome
 - smallest useful version vs later scope
 - explicit non-goals
+- canonical product/domain language
 - user/business value over implementation noise
 - whether a plan solves the right problem
 
@@ -35,6 +36,7 @@ docs/knowledge/product/
   users.md       # target users, operators, buyers, constraints
   workflows.md   # key user journeys and success outcomes
   scope.md       # current scope, non-goals, release/POC boundaries
+  glossary.md    # product/domain terms, definitions, and aliases to avoid
 ```
 
 Also read, when present:
@@ -54,6 +56,7 @@ Use defaults only as proposals, not truth:
 - Prefer explicit non-goals to prevent accidental feature creep.
 - Prefer observable success criteria over vibes.
 - Prefer user-visible outcomes over internal implementation milestones.
+- Prefer one canonical noun for each domain concept; record aliases to avoid when they cause drift.
 
 Fallback order when product doctrine is missing:
 1. Inspect repo docs, PRDs, tasks, README, and existing UI/API behavior.
@@ -78,6 +81,7 @@ Then write/update:
 - docs/knowledge/product/users.md
 - docs/knowledge/product/workflows.md
 - docs/knowledge/product/scope.md
+- docs/knowledge/product/glossary.md
 
 End with: decisions made, docs updated, remaining blockers, and guidance for prd-create/pipeline.
 ```

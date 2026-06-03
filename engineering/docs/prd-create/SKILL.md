@@ -23,11 +23,11 @@ docs/tasks/active/<YYYY-MM-DD-slug>/
 
 Workflow:
 1. Check `docs/tasks/active/` and `docs/tasks/archive/` for overlapping work.
-2. If problem, goal, scope, or out-of-scope are missing, explicitly use `grill-me`: ask one question at a time, include your recommended answer, and stop once the design is clear enough to draft.
+2. If problem, goal, scope, out-of-scope, product language, or owner decisions are missing, explicitly use `grill-me`: ask one question at a time, include your recommended answer, cross-check repo docs/code when useful, and stop once the design is clear enough to draft.
 3. Create the task folder and write `prd.md` using `references/prd-format.md`.
 4. Decompose into executable subtasks using `references/task-format.md`.
 5. Run the codebase challenge loop using `references/challenge-loop.md`; outcome is GO or NO-GO.
-6. Mechanically fix concrete issues; if the challenge exposes product/scope/design holes, go back to `grill-me` before continuing.
+6. Mechanically fix concrete issues; if the challenge exposes product/scope/design/architecture/domain-language holes, go back to `grill-me` before continuing.
 7. Present folder path, compact task tree, challenge result, and next step.
 
 Hard rules:

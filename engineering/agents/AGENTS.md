@@ -77,7 +77,7 @@ Recommended, not mandatory. If a repo has a clear existing structure, follow it.
 
 ```
 docs/knowledge/
-  product/        vision.md, users.md, workflows.md, scope.md
+  product/        vision.md, users.md, workflows.md, scope.md, glossary.md
   architecture/   principles.md, stack.md, boundaries.md, runtime.md, data.md, integrations.md, decisions.md
   design/         principles.md, brand.md, copy-voice.md, components.md, user-flows.md, ui-patterns.md
   development/    coding-standards.md, repo-structure.md, commands.md, common-patterns.md
@@ -108,6 +108,8 @@ If **no**:
 - keep the detail in task notes or the final report.
 
 Do not pollute durable knowledge with temporary task detail.
+
+Product/domain terminology belongs in `docs/knowledge/product/glossary.md` when it is durable project language. User-facing copy tone and UI wording rules belong in `docs/knowledge/design/copy-voice.md`. Technical tradeoffs and ADR-like decisions belong in `docs/knowledge/architecture/decisions.md`, or in `docs/decisions/` only when the repo already uses that convention.
 
 ## Communication style
 

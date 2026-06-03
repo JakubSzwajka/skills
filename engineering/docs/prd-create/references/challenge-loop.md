@@ -8,6 +8,7 @@ Gather:
 - full `prd.md`
 - full `tasks.md`
 - architecture rules from already-loaded context, `AGENTS.md`, README, or nearby docs when present
+- relevant repo doctrine from `docs/knowledge/` when present, especially product glossary, architecture decisions, design copy voice, and quality validation docs
 
 If architecture rules are not found, append to `log.md`:
 
@@ -23,7 +24,8 @@ Prompt shape:
 
 ```txt
 You are a PRD challenger. Stress-test this PRD against the actual codebase.
-Verify claims, module targets, dependencies, boundaries, tests, collateral, and completion criteria.
+Verify claims, module targets, dependencies, boundaries, terminology, tests, collateral, and completion criteria.
+Flag contradictions between PRD wording, repo doctrine, docs, and actual code behavior.
 Cite concrete files/lines. Look for simpler alternatives and hidden coupling.
 Write the full verdict to: <task-folder>/challenge-r<N>.md
 Return only the verdict line in chat.
@@ -48,17 +50,17 @@ Missing from PRD:
 Suggested changes:
 - <specific edits to prd.md/tasks.md>
 
-Design holes needing grill-me:
-- <product/scope/design question that cannot be mechanically resolved, or "None">
+Decision holes needing grill-me:
+- <product/scope/design/architecture/domain-language question that cannot be mechanically resolved, or "None">
 ```
 
 ## Convergence
 
 - `GO` → present result.
 - `NO-GO` with only mechanical issues → fix concrete issues, append log entry, and re-challenge the fixed areas.
-- `NO-GO` with product/scope/design holes → return to `grill-me`: ask one question at a time, include your recommended answer, then update PRD/tasks and re-challenge.
+- `NO-GO` with decision holes → return to `grill-me`: ask one question at a time, include your recommended answer, cross-check code/docs when useful, then update PRD/tasks/docs and re-challenge.
 
 Limits:
 - Maximum 3 challenge rounds before escalating to the user with the remaining blockers.
 - Do not delete challenge files unless explicitly approved.
-- Record verdicts, fixes, and grill-me decisions in `log.md`.
+- Record verdicts, fixes, and grill-me decisions in `log.md`; propose durable `docs/knowledge/` updates when the decision is repo doctrine.

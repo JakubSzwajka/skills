@@ -26,6 +26,7 @@ docs/knowledge/
     users.md
     workflows.md
     scope.md
+    glossary.md
   architecture/
     principles.md
     boundaries.md
@@ -71,7 +72,7 @@ When required knowledge is missing or incomplete:
 4. Each blocking question must include a recommended default, why it matters, and which repo doc should be created or updated after the answer.
 5. Distinguish blocking decisions from deferred decisions.
 6. If a gap needs longer decision ping-pong, recommend the relevant steward session (`product-owner`, `architect`, `designer`, or `qa`) and include a copy-pasteable `Fresh steward session prompt` the parent can give the user.
-7. The prompt must ask the fresh steward session to interview/grill the user, accept links/docs/screens/examples, converge on shared decisions, save/update the canonical owned docs listed above, and return guidance for `prd-create`/`pipeline`.
+7. The prompt must ask the fresh steward session to interview/grill the user, accept links/docs/screens/examples, challenge terminology drift, cross-check code/docs, converge on shared decisions, save/update the canonical owned docs listed above, and return guidance for `prd-create`/`pipeline`.
 
 Subagents do not ask the user directly. They report questions and fresh-session prompts to the parent orchestrator, which asks the user or hands off the prompt. The parent must preserve these prompts as copy-paste blocks when planning is blocked; summarizing them into single questions is not enough.
 
@@ -106,7 +107,7 @@ Fresh steward session prompt:
 ~~~txt
 @<steward> / grill-me <domain>
 
-We need to resolve missing <domain> doctrine for <task/repo>. Please interview me until we have enough shared understanding to plan PRD subtasks safely. Ask follow-up questions, accept links/docs/screens/examples I provide, challenge defaults, then write/update the canonical `docs/knowledge/<domain>/` files for your steward role. Do not create feature-specific knowledge docs unless I explicitly ask for them.
+We need to resolve missing <domain> doctrine for <task/repo>. Please interview me until we have enough shared understanding to plan PRD subtasks safely. Ask one question at a time, include your recommended answer, accept links/docs/screens/examples I provide, challenge terminology drift, test concrete scenarios, and cross-check claims against code/docs. Then write/update the canonical `docs/knowledge/<domain>/` files for your steward role. Do not create feature-specific knowledge docs unless I explicitly ask for them.
 
 Known context:
 - <brief summary>

@@ -32,7 +32,7 @@ Workflow:
 4. Check architecture rules from loaded repo docs/AGENTS/README; include them in child prompts when defined. Use the shared spawned-agent contract in `../../../references/spawned-agent-contract.md` for all delegated work.
 5. Pick exactly one next runnable subtask using `references/pass-execution.md`; if several are runnable, choose the lowest-risk/highest-dependency-unlocking task and say why.
 6. Execute that one subtask: pre-read targets, spawn one implementation agent, collect report, spot-check diffs/checks, update `tasks.md` and `log.md`.
-7. If a design/product decision appears, use `grill-me`: ask one question at a time with your recommended answer, then update task artifacts and stop.
+7. If a product/design/architecture/quality/domain-language decision or code-vs-doc contradiction appears, use `grill-me`: ask one question at a time with your recommended answer, cross-check repo docs/code when useful, then update task artifacts or propose durable `docs/knowledge/` updates and stop.
 8. Run the review gate for this subtask using `references/review-handoff.md`; fix/re-review up to 3 loops, then pause if still not ready.
 9. Produce a compact pass summary using `../../../references/handoff-packet.md`, append the same operational state to `log.md`, and stop. Goal runner is responsible for invoking the next pass.
 
