@@ -1,13 +1,12 @@
 {
   "name": "engineering",
-  "description": "Engineering personas (architect, designer, developer, product-owner, qa), doc/PRD/research/repo-learning workflows, pipeline orchestration, and commit flow. Loaded in place as an @skills-dir plugin; each skill is registered from its existing nested location so relative cross-references (AGENTS.md, ../../references/, persona helper skills) stay intact.",
+  "description": "Engineering personas (architect, designer, developer, product-owner, qa), doc/PRD/research/repo-learning workflows, and commit flow. Loaded in place as an @skills-dir plugin; each skill is registered from its existing nested location so relative cross-references (AGENTS.md, ../../references/, persona helper skills) stay intact.",
   "skills": [
     "./commit",
     "./docs/prd-create",
     "./docs/repo-learnings",
     "./docs/research-deep",
     "./docs/update-docs",
-    "./workflows/pipeline",
     "./agents/architect",
     "./agents/designer",
     "./agents/developer",
