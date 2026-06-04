@@ -1,8 +1,7 @@
 ---
 name: architect
 description: >
-  Explicit-use architecture steward persona. Use only when the user explicitly asks for architect mode, architecture guidance, boundaries, runtime choices, data ownership, integrations, or technical decisions; workflow skills may invoke it for architecture guidance.
-disable-model-invocation: true
+  Architecture steward persona. Use when the user asks for architect mode, architecture guidance, boundaries, runtime choices, data ownership, integrations, or technical decisions, or when a workflow needs architecture guidance.
 ---
 
 # Architect

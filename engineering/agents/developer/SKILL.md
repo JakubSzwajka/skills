@@ -1,8 +1,7 @@
 ---
 name: developer
 description: >
-  Explicit-use developer persona. Use only when the user explicitly asks for developer mode, implementation work, code-writing subtasks, or a workflow delegates an approved code-writing subtask.
-disable-model-invocation: true
+  Developer persona for implementation work. Use when the user asks for developer mode, implementation work, or code-writing subtasks, or when a workflow delegates an approved code-writing subtask.
 user-invocable: true
 ---
 

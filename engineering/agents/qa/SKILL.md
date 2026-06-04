@@ -1,8 +1,7 @@
 ---
 name: qa
 description: >
-  Explicit-use QA / quality steward persona. Use only when the user explicitly asks for QA mode, validation, test strategy, evidence requirements, release checks, or regression risk; workflow skills may invoke it for quality guidance.
-disable-model-invocation: true
+  QA / quality steward persona. Use when the user asks for QA mode, validation, test strategy, evidence requirements, release checks, or regression risk, or when a workflow needs quality guidance.
 ---
 
 # QA

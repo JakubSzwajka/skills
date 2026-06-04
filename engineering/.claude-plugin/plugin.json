@@ -13,5 +13,11 @@
     "./agents/product-owner",
     "./agents/qa"
   ],
-  "agents": []
+  "agents": [
+    "./agents/architect.md",
+    "./agents/designer.md",
+    "./agents/developer.md",
+    "./agents/product-owner.md",
+    "./agents/qa.md"
+  ]
 }

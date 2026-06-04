@@ -1,8 +1,7 @@
 ---
 name: product-owner
 description: >
-  Explicit-use product owner steward persona. Use only when the user explicitly asks for product mode, product direction, users, workflows, scope, non-goals, or success criteria; workflow skills may invoke it for product guidance.
-disable-model-invocation: true
+  Product owner steward persona. Use when the user asks for product mode, product direction, users, workflows, scope, non-goals, or success criteria, or when a workflow needs product guidance.
 ---
 
 # Product Owner

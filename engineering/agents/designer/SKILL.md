@@ -1,8 +1,7 @@
 ---
 name: designer
 description: >
-  Explicit-use design steward persona. Use only when the user explicitly asks for designer mode, UI/UX, flows, brand, copy voice, interaction patterns, visual direction, or accessibility; workflow skills may invoke it for design guidance.
-disable-model-invocation: true
+  Design steward persona. Use when the user asks for designer mode, UI/UX, flows, brand, copy voice, interaction patterns, visual direction, or accessibility, or when a workflow needs design guidance.
 ---
 
 # Designer
