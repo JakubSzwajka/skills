@@ -1,0 +1,8 @@
+{
+  "name": "knowledge-base",
+  "description": "Knowledge-graph skills: kb (search/explore/create nodes in the Obsidian-backed graph at ~/knowledge/knowledge/) and kb-compile (process ~/knowledge/inbox into durable nodes). Loaded in place as an @skills-dir plugin from the existing nested skill folders.",
+  "skills": [
+    "./kb",
+    "./kb-compile"
+  ]
+}
