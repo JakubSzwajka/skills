@@ -1,0 +1,28 @@
+{
+  "skill_name": "prd-create",
+  "notes": "Grounded in the order-buddy repo. eval-0 is a real prd-create output used as a gold answer key; eval-1/eval-2 are synthetic but in-scope features. Baseline = no skill (raw Claude asked for a PRD + task breakdown). Runs execute in clean git worktrees of order-buddy at HEAD 82c67ce.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "admin-detail-page",
+      "prompt": "Our admin Queue opens full request detail in a side drawer, and that drawer has become the whole operator workbench - customer media, contact, requested services, status update, quote draft editing, quote send, quote URL, and quote history. It's too crowded, and because the selected request lives in React state the detail isn't URL-addressable (no reload, no shareable link, no back/forward). I want to migrate it to a dedicated, deep-linkable page at /admin/cases/:caseId (keep the UUID, current API stays), following the approved prototype I'm attaching. Queue stays the triage surface; the page should clearly separate \"what the customer requested\" from the \"quote draft\", keep activity/timeline secondary, and preserve all existing quote/status/media behavior including mobile at 390px. No backend schema changes. Write me a PRD and task breakdown.",
+      "files": ["../prd-create-workspace/inputs/admin-request-detail-prototype.html"],
+      "gold_reference": "/Users/kuba.szwajka/DEV/priv/order-buddy/docs/tasks/active/2026-06-05-admin-request-detail-page-migration/",
+      "assertions": []
+    },
+    {
+      "id": 1,
+      "name": "customer-quote-accept-decline",
+      "prompt": "Customers get a quote link but there's no real review page yet. I want to build the customer-facing quote page: they open a scoped quote link, see the services they requested, their uploaded photos, the itemized quote lines with the total, and the quote message/expiry - then accept or decline the offer as one whole thing. Expired or already-decided quotes should show the right read-only state. This is one whole-offer decision - no partial line acceptance, no payments/checkout, no customer-operator messaging or counter-offers (all explicit MVP non-goals). No new third-party integrations. Write a PRD and task breakdown.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "service-catalog-draft-publish",
+      "prompt": "Operators need to manage the service catalog as a draft and publish it. They edit a draft service tree (categories + priced service items), then publish it; hosted forms always serve the active published version, and - critically - existing submitted requests and already-sent quotes must keep the historical snapshot of the catalog they were created against, so old cases never change retroactively. Publishing should be safe to repeat. Keep it to catalog draft/publish + snapshot integrity: no automatic/AI pricing beyond operator-set catalog prices, no payments, no public API. Write a PRD and task breakdown.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}

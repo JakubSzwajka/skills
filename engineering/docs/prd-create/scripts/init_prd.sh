@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
-# Create a new PRD directory with a README.md from the template.
-# Usage: init_prd.sh <slug> [--dir <prds-directory>]
+# Scaffold a prd-create task folder with prd.md / tasks.md / log.md skeletons.
+# Usage: init_prd.sh <slug> [--dir <tasks-active-directory>]
 #
 # Examples:
-#   init_prd.sh email-notifications
-#   init_prd.sh email-notifications --dir docs/prds
-
+#   init_prd.sh admin-detail-page
+#   init_prd.sh admin-detail-page --dir docs/tasks/active
+#
+# Creates: <dir>/<YYYY-MM-DD>-<slug>/{prd.md,tasks.md,log.md}
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TEMPLATE="$SCRIPT_DIR/../assets/templates/prd-readme.md"
-NOTEBOOK_TEMPLATE="$SCRIPT_DIR/../assets/templates/notebook.md"
+TPL="$SCRIPT_DIR/../assets/templates"
 
 SLUG=""
-PRD_DIR="docs/prds"
-
+PRD_DIR="docs/tasks/active"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dir) PRD_DIR="$2"; shift 2 ;;
@@ -24,21 +23,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SLUG" ]]; then
-  echo "Usage: init_prd.sh <slug> [--dir <prds-directory>]" >&2
+  echo "Usage: init_prd.sh <slug> [--dir <tasks-active-directory>]" >&2
   exit 1
 fi
 
-TARGET="$PRD_DIR/$SLUG"
-
+DATE="$(date +%Y-%m-%d)"
+TARGET="$PRD_DIR/${DATE}-${SLUG}"
 if [[ -d "$TARGET" ]]; then
-  echo "PRD directory already exists: $TARGET" >&2
+  echo "Task folder already exists: $TARGET" >&2
   exit 1
 fi
 
 mkdir -p "$TARGET"
-DATE=$(date +%Y-%m-%d)
-sed "s/{YYYY-MM-DD}/$DATE/" "$TEMPLATE" > "$TARGET/README.md"
-cp "$NOTEBOOK_TEMPLATE" "$TARGET/notebook.md"
+cp "$TPL/prd-readme.md" "$TARGET/prd.md"
+cp "$TPL/tasks.md"      "$TARGET/tasks.md"
+cp "$TPL/notebook.md"   "$TARGET/log.md"
 
-echo "Created PRD: $TARGET/README.md"
-echo "Created notebook: $TARGET/notebook.md"
+echo "Created task folder: $TARGET"
+echo "  - prd.md   (fill using references/prd-format.md)"
+echo "  - tasks.md (decompose using references/task-format.md)"
+echo "  - log.md   (continuity notebook)"
+echo "Validate when drafted: python3 $SCRIPT_DIR/validate_prd.py $TARGET"

@@ -1,43 +1,39 @@
----
-status: draft
-date: {YYYY-MM-DD}
-author: "{who captured this}"
----
-
 # {Title — short description of the change}
 
 ## Problem
+{What's broken, missing, or suboptimal, from the user's perspective. Why now?}
 
-{What's broken, missing, or suboptimal? Describe from the user's perspective. Why does this matter now? 3-8 sentences max.}
+## Goal
+{What success looks like in user/product terms.}
 
-## Proposed Solution
+## Scope
+- {Included behavior/change}
 
-{High-level sketch of what we'll build or change. No implementation details — just the shape of the solution. What will be different when this is done? 3-8 sentences max.}
+## Acceptance Criteria
+- {Observable requirement that can be verified against artifacts}
+- {Observable requirement that can be verified against artifacts}
 
 ## Key Cases
-
-{Bullet list of the main scenarios this change needs to handle. These are NOT user stories yet — just the high-level cases we know about. They'll be expanded into detailed stories later.}
-
-- {Case 1}
-- {Case 2}
-- {Case 3}
+- {Primary scenario to handle}
 
 ## Out of Scope
+- {Explicit non-goal}
 
-{What this PRD explicitly does NOT cover. Prevents scope creep when coming back to flesh out stories.}
+## Stop Conditions
+- Ask user if {decision or tradeoff appears}
+- Stop if {external dependency/blocker appears}
+- Move to review when {handoff condition is reached}
 
-- {Not doing X}
-- {Not doing Y}
+## Collateral
+Populate by scanning the codebase; do not guess.
+- **Tests:** {coverage expected / infra status}
+- **Docs:** {README/API/docs needing updates}
+- **Config:** {env/config changes}
+- **Observability:** {logs/metrics/tracing/alerts}
+- **Schema:** {tables/columns/migrations/data implications}
 
-## Open Questions
-
-{Things we don't know yet that will need answers before or during implementation.}
-
-- {Question 1}
-- {Question 2}
-
-## References
-
-{Links to related ADRs, issues, docs, conversations, or external resources.}
-
-- {Reference 1}
+## Notes
+- Branch: TBD
+- External task: {issue identifier + URL, tracker URL, or N/A}
+- Relevant files: {paths if known}
+- KB links: [[node-name]] or N/A

@@ -23,6 +23,8 @@ Overall status: open
 - notes: <2-5 sentences or bullets with concrete guidance>
 ```
 
+Emit **all eight fields on every subtask**, even when a field is empty (`evidence:` blank, `blockers: []`). It's tempting to drop them on later tasks once the pattern is established, but the pipeline reads these fields to decide runnability: a missing `blockers` is ambiguous (it can't distinguish "no blockers" from "not yet assessed"), and a missing `evidence` slot removes the place a later agent records proof before `done`. `scripts/validate_prd.py` fails the artifact if any are missing, so keep them present from the first draft.
+
 Allowed statuses:
 - `open` — queued, not started
 - `in_progress` — actively being worked on

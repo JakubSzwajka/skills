@@ -24,11 +24,12 @@ docs/tasks/active/<YYYY-MM-DD-slug>/
 Workflow:
 1. Check `docs/tasks/active/` and `docs/tasks/archive/` for overlapping work.
 2. If problem, goal, scope, out-of-scope, product language, or owner decisions are missing, explicitly use `grill-me`: ask one question at a time, include your recommended answer, cross-check repo docs/code when useful, and stop once the design is clear enough to draft.
-3. Create the task folder and write `prd.md` using `references/prd-format.md`.
+3. Create the task folder and write `prd.md` using `references/prd-format.md`. `scripts/init_prd.sh <slug>` scaffolds the folder + skeletons if you want a starting point.
 4. Decompose into executable subtasks using `references/task-format.md`.
-5. Run the codebase challenge loop using `references/challenge-loop.md`; outcome is GO or NO-GO.
-6. Mechanically fix concrete issues; if the challenge exposes product/scope/design/architecture/domain-language holes, go back to `grill-me` before continuing.
-7. Present folder path, compact task tree, challenge result, and next step.
+5. Validate the artifact: run `python3 scripts/validate_prd.py <task-folder>` (or the `validate_prd.sh` shim) and fix every error before continuing. It checks the `prd.md` sections + Collateral keys and that every subtask carries all 8 fields with a valid status. Don't skip the empty-looking fields: a subtask that omits `blockers:` or `evidence:` is ambiguous to the AFK/pipeline — it can't tell "no blockers" from "not yet assessed", so the subtask isn't safely runnable. The validator catches exactly these omissions.
+6. Run the codebase challenge loop using `references/challenge-loop.md`; outcome is GO or NO-GO.
+7. Mechanically fix concrete issues; if the challenge exposes product/scope/design/architecture/domain-language holes, go back to `grill-me` before continuing.
+8. Present folder path, compact task tree, challenge result, and next step.
 
 Hard rules:
 - Downstream pipeline/AFK workflows must be able to execute `tasks.md` without inventing policy.

@@ -1,14 +1,14 @@
-# Notebook
+# Log
 
-Shared scratchpad for agents working on this PRD. Read before starting a task. Append notes as you go.
+Continuity notebook for this PRD. Read before starting a task; append discoveries, decisions, and progress as you go. Author entries as `lucy`.
 
 ---
 
 <!--
-Suggested note format (not enforced):
+Suggested entry format (not enforced):
 
-### [Task N] Short title
-- **Found:** what you discovered
-- **Decision:** what you chose and why
+### {YYYY-MM-DD} [Task N] Short title — lucy
+- **Found:** what you discovered in the codebase
+- **Decision:** what you chose and why (record resolved owner decisions here)
 - **Watch out:** gotchas for future agents
 -->
