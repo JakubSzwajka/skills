@@ -9,6 +9,7 @@ Personal skill set for Claude Code. Each subdirectory is one skill (or a group o
 - `explain/` — generate a styled HTML page that visually explains a concept.
 - `grill-me/` — repo-aware grilling: interview one question at a time, challenge terminology/code/doc conflicts, and capture resolved decisions.
 - `knowledge-base/` — query and compile the Obsidian-backed knowledge graph.
+- `ceo/` — bring in the CEO: bridge any repo into the private career operating center (`~/DEV/priv/career`), adopt its doctrine to answer career/content/portfolio questions and harvest public-safe evidence back into its artifacts.
 - `references/` — shared contracts reused by multiple skills (handoff packet, spawned-agent contract, role-steward contract).
 
 ## Typical engineering flow
