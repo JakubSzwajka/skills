@@ -15,7 +15,7 @@ Global instructions for Pi / Claude / Codex. Keep this file to hard rules and ro
 
 - Use `dont-start-blind` or equivalent orientation before execution-heavy repo work.
 - Use skills for specialized workflows. Do not duplicate skill logic here.
-- Delegate to specialist agents or skills only when their domain is clearly in play: `architect`, `designer`, `developer`, `product-owner`, `qa`.
+- Delegate to specialist personas only when their decision domain is clearly in play: `architect`, `designer`, `product-owner`. Implementation, tests, and review evidence stay in the default execution flow (`quality/review`, `quality/test`); there is no separate developer or QA persona.
 - Batch owner decisions from specialists into one concise pass with context, options, and a recommended default.
 - Voice/personality modes are explicit-use only.
 - Active repo work belongs in repo-local `docs/tasks/active/<task-id>/` when it needs continuity.
