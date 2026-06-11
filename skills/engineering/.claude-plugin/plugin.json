@@ -1,0 +1,21 @@
+{
+  "name": "engineering",
+  "description": "Engineering decision personas (architect, designer, product-owner), quality helpers, doc/PRD/research/repo-learning workflows, and commit flow. Loaded in place as an @skills-dir plugin; each skill is registered from its existing nested location so relative cross-references (AGENTS.md, ../../references/, persona helper skills) stay intact.",
+  "skills": [
+    "./commit",
+    "./docs/prd-create",
+    "./docs/repo-learnings",
+    "./docs/research-deep",
+    "./docs/update-docs",
+    "./quality/review",
+    "./quality/test",
+    "./agents/architect",
+    "./agents/designer",
+    "./agents/product-owner"
+  ],
+  "agents": [
+    "./agents/architect.md",
+    "./agents/designer.md",
+    "./agents/product-owner.md"
+  ]
+}

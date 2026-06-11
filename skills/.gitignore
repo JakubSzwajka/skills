@@ -1,0 +1,7 @@
+__pycache__/
+node_modules/
+
+.DS_Store
+
+# skill eval run artifacts (workspaces produced by skill-creator)
+*-workspace/

@@ -1,7 +1,34 @@
-__pycache__/
-node_modules/
-
+# macOS metadata
 .DS_Store
+.AppleDouble
+.LSOverride
 
-# skill eval run artifacts (workspaces produced by skill-creator)
+# Local tool and editor state
+.claude/
+.obsidian/
+.vscode/
+.idea/
+.skill-lock.json
+skills/.claude/
+skills/skills-lock.json
+
+# Dependencies and runtime caches
+node_modules/
+**/node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Generated skill/eval artifacts
 *-workspace/
+outputs/
+review.html
+*.log
+
+# Secrets and per-machine environment
+.env
+.env.*
+!.env.example
