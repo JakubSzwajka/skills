@@ -63,4 +63,4 @@ End when the blocking branch is resolved or when the next question would be non-
 - decisions made
 - docs updated or proposed updates
 - remaining blockers
-- next workflow step (`prd-create`, `pipeline`, role steward, or implementation)
+- next workflow step (`prd-create`, role steward, or implementation)

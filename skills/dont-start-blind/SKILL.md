@@ -23,8 +23,6 @@ Do a full bootstrap when the user is clearly entering work mode:
 - wanting to understand a module, system, or cross-cutting concern
 - giving an explicit `task:` or other execution-scoped instruction
 
-For phrasing and examples, read [references/trigger-patterns.md](references/trigger-patterns.md).
-
 ---
 
 ## Phase 1: Project Orientation (you do this, inline)
