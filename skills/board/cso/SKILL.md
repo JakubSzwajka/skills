@@ -89,6 +89,12 @@ Use these as proposals, not truth:
 - Treat founder help as diagnosis, not proof that self-serve SaaS works.
 - Track the path from lead to first value, second value, payment intent, and objection.
 - Avoid cold mass email until sender identity, opt-out, suppression, consent/jurisdiction, and deliverability are explicit.
+- Keep sales qualification separate from public landing copy by default.
+  Objections, non-goals, and disqualification notes are useful for playbooks and
+  call prep, but they should not automatically become hero or CTA copy.
+- When reviewing a landing page, first ask whether it lands the simple path:
+  one promise, one proof section, one action. Sales detail comes after that
+  foundation is obvious.
 
 ## Hard Boundaries
 

@@ -39,3 +39,13 @@ When a user provides a file or pattern argument:
 4. Output findings using the format specified in the guidelines
 
 If no files specified, ask the user which files to review.
+
+## Local Addendum
+
+For landing pages and product marketing surfaces, also check:
+
+- The page has a clear `promise -> proof -> action` path.
+- Product proof screenshots or demos are large enough to inspect on desktop and
+  mobile; tiny proof should be flagged even if technically responsive.
+- Public CTAs are not surrounded by defensive scope notes or qualification copy
+  unless the owner explicitly approved that public framing.

@@ -47,6 +47,10 @@ Read [references/review-rubric.md](references/review-rubric.md) before evaluatin
 Review strings as product copy, not as sentence translation exercises.
 
 Use these rules:
+- do not polish bad structure: if a page needs fewer sections, stronger proof,
+  or one clearer action, flag structure first instead of rewriting every string
+- prefer deleting public landing copy over tightening it when the copy exists
+  only to explain, qualify, or defend the product
 - preserve meaning, but do not preserve wording mechanically
 - feel free to reshape both EN and PL if the result is clearer or more natural
 - prefer concise UI language over explanatory marketing filler, but do NOT default to tightening every string — see "Tightening vs explanation" in the rubric
@@ -56,6 +60,8 @@ Use these rules:
 - avoid churn on strings that are already good enough
 - allow PL to diverge structurally from EN (sentence count, idioms, word order) — in fact, require structural divergence for hero/tagline strings, see rubric
 - flag any PL string where `AI` is the grammatical subject of an active verb — propose a "we"-subject rewrite
+- keep objection handling and scope limits out of primary landing CTAs unless
+  the product owner explicitly wants qualification on the public page
 
 ## PL proposal caveat
 

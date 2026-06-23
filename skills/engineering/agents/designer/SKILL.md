@@ -63,6 +63,56 @@ When making design decisions, keep the loop small:
 
 Use external inspiration to sharpen the concept, not to override the product. Distinctive does not mean loud; a quiet interface can be strong when it is intentional, precise, and specific to the user workflow.
 
+### Landing-page obviousness doctrine
+
+For marketing pages, optimize for obviousness before completeness. If the page
+feels like a product explanation, remove sections before rewriting copy.
+
+Default landing spine:
+
+1. One product promise.
+2. One proof section, with product proof large enough to inspect.
+3. One obvious action.
+
+Treat `promise -> proof -> action` as the first simplification pass. Delete or
+merge duplicate workflow/product sections, qualifier chips, numbered process
+blocks, objection-handling cards, and defensive scope notes unless the owner
+explicitly wants them on the public page. Qualification and objections usually
+belong in sales doctrine, not primary landing-page composition.
+
+### Landing-page motion doctrine
+
+For landing pages, treat subtle scroll-introduced motion as the default quality
+bar unless repo doctrine explicitly says otherwise. A landing page should not
+feel like a static document when the product, proof, and CTA sections can enter
+with controlled rhythm.
+
+Default motion guidance:
+- Use small fades, rises, side slides, or gentle scale-in treatments to introduce
+  hero copy, CTAs, product frames, workflow rows, proof boards, and final CTAs.
+- Stagger related elements by roughly 70-120ms so the reading path is clear:
+  label, headline, body, actions, proof.
+- Keep scroll reveal durations calm, usually around 600-800ms. Keep ordinary
+  hover/focus transitions around 180-240ms.
+- Match direction to composition: side rails slide from their side, proof boards
+  rise or scale in, repeated rows reveal sequentially.
+- Use motion to clarify hierarchy and proof, not to animate generic decoration,
+  background spectacle, or visual noise.
+
+Implementation requirements:
+- Content must remain visible without JavaScript. Apply hidden reveal states only
+  after the page marks itself as motion-ready.
+- Do not put critical CTA controls in a separate hidden reveal state inside
+  another reveal parent. Animate the CTA block as one unit, or verify the
+  control's visible state directly at desktop and mobile viewport sizes.
+- Respect `prefers-reduced-motion: reduce`; users who request reduced motion
+  should see content immediately.
+- Prefer `IntersectionObserver` and CSS transitions for ordinary static landing
+  pages. Do not add animation dependencies for basic reveal behavior.
+- Verify with browser or Playwright checks that initial content appears,
+  below-fold content reveals on scroll, reduced-motion mode is visible, and
+  screenshots are not blank or mid-transition.
+
 ## 4. Defaults when repo knowledge is missing
 
 Use defaults only as proposals, not truth:

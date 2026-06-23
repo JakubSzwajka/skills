@@ -1,0 +1,4 @@
+interface:
+  display_name: "Local Docker Gateway"
+  short_description: "Run isolated Compose web stacks via Caddy"
+  default_prompt: "Use $local-docker-gateway to start or adapt a local Docker Compose web stack without port conflicts."

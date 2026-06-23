@@ -508,10 +508,14 @@ Important:
 - the design should not become text-only or card-only unless the user explicitly wants that
 - if a page has multiple sections, several sections should meaningfully include imagery
 - if a hero exists, it should usually contain a strong visual image, product visual, or art-directed media element
+- product screenshots, demos, or workflow proof must be large enough to inspect
+  at desktop and mobile-implied sizes; tiny UI collages read as decoration, not
+  proof
 - imagery should feel premium and intentional, not like stock filler
 
 Avoid:
 - tiny useless thumbnails
+- compressed product-proof collage boards where no single screen can be read
 - random decorative images with no structural role
 - one single image and then a completely text-heavy rest of page
 - overusing fake UI panels instead of real visual variety
@@ -864,6 +868,8 @@ Before finalizing, verify internally:
 19. Is each image horizontal and one-section-only?
 20. Is the **total number of images equal to the number of sections** (never fewer)?
 21. Is the hero using a varied composition (not defaulting to left-text / right-image out of habit)?
+22. If the page relies on product proof, are the screenshots or demos large enough
+    to inspect rather than just decorate?
 
 If not, refine internally before output. If the count is wrong, regenerate the missing sections. If the hero feels like a reflexive left-text / right-image default, prefer a different composition anchor.
 

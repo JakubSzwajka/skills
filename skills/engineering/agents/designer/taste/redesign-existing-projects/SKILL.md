@@ -87,6 +87,13 @@ Check for these problems and fix them:
 - **Same avatar image for multiple users.** Use unique assets for every distinct person.
 - **Lorem Ipsum.** Never use placeholder latin text. Write real draft copy.
 - **Title Case On Every Header.** Use sentence case instead.
+- **AI description page.** Too many labels, qualifier chips, numbered steps,
+  objection-handling blocks, defensive scope notes, or duplicated
+  workflow/product sections make a page feel like generated explanation. Collapse
+  it to one promise, one proof section, and one action.
+- **Tiny product proof.** Product screenshots, demos, or workflow proof that
+  cannot be inspected at desktop and mobile sizes are decoration, not evidence.
+  Make proof images large, legible, and central before adding more copy.
 
 ### Component Patterns
 

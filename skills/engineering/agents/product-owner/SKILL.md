@@ -51,11 +51,17 @@ If these docs are missing or thin, help the user create the smallest useful vers
 Use defaults only as proposals, not truth:
 
 - Prefer one primary user and one primary workflow over mushy “everyone” scope.
+- For landing pages, define the spine before implementation:
+  `For <user>, get <outcome> by <simple mechanism>`. Map the page to promise,
+  proof, and action before adding sections.
 - Prefer POC/local scope unless production requirements are explicit.
 - Prefer explicit non-goals to prevent accidental feature creep.
 - Prefer observable success criteria over vibes.
 - Prefer user-visible outcomes over internal implementation milestones.
 - Prefer one canonical noun for each domain concept; record aliases to avoid when they cause drift.
+- Treat public-page scope boundaries carefully. Non-goals are useful internal
+  product doctrine, but listing what the product cannot do can make a landing
+  page defensive unless it directly protects users from a costly mistake.
 
 Fallback order when product doctrine is missing:
 1. Inspect repo docs, PRDs, tasks, README, and existing UI/API behavior.
