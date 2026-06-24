@@ -12,7 +12,7 @@ description: >
 
 # Dont Start Blind
 
-Orient before acting. Two phases: lightweight project orientation (inline), then codebase exploration (subagent) when there's code to understand.
+Orient before acting. The output is a working brief that answers: what work is in flight, what state it is in, which constraints apply, whether code exploration is needed, and what blocks safe execution.
 
 ## When to trigger
 
@@ -29,7 +29,7 @@ For phrasing and examples, read [references/trigger-patterns.md](references/trig
 
 ## Phase 1: Project Orientation (you do this, inline)
 
-Cheap and fast. Gather project state that frames the work.
+Keep this pass cheap. Gather only enough state to choose the correct next action.
 
 ### 1. Infer the thread
 
@@ -46,7 +46,14 @@ From the user message, current repo/cwd, git branch, recent file activity, and a
 
 ### 3. What to gather
 
-Only what's likely to change the next move:
+Gather facts that answer one of these questions:
+- Which repo, branch, task folder, ticket, or PRD owns this work?
+- What did the last accepted plan or log say to do next?
+- Which durable product, architecture, design, or quality constraints apply?
+- Is codebase exploration required before acting?
+- What conflict or missing input would make execution unsafe?
+
+Relevant facts usually include:
 - likely thread / repo / task folder
 - active work in `docs/tasks/active/`
 - recent decisions, pauses, blockers, or accepted tradeoffs from `log.md`
@@ -56,7 +63,7 @@ Only what's likely to change the next move:
 - obvious risks, contradictions, or stale assumptions
 - what is still missing before safe execution
 
-Do not dump every remembered fact. That is hoarding with extra steps.
+Omit facts that do not affect task selection, constraints, exploration, blockers, or the next action.
 
 ### 4. How to inspect repo-local task context
 
@@ -119,8 +126,8 @@ systemPrompt: |
   Use `read` to examine source files. Use `bash` for grep, find, and
   git commands only — never run anything that writes to disk.
 
-  Be concrete: cite file paths and line numbers. Be concise: insights
-  the caller needs, not exhaustive listings.
+  Cite file paths and line numbers for every finding that affects the next
+  implementation step. Omit repo inventory that does not change the answer.
 task: |
   ## Codebase Exploration
 
@@ -213,18 +220,11 @@ Based on what was found, the natural next steps are:
 - user was exploring before implementation → `Want me to create a PRD task folder based on these findings?`
 - user was debugging → `Want me to turn this into a focused engineering investigation/PRD task?`
 
-## Boundaries
+## Exit Criteria
 
-This skill does not:
-- create a new memory system
-- require a specific retrieval backend
-- scan or retrieve experience/memory files (that's the activation layer's job)
-- replace planning, implementation, or review skills
-- force a giant summary when a tiny orientation pass is enough
-
-This skill does:
-- make prior context actually enter the room before execution
-- prefer repo-local task artifacts over central tracking fantasies
-- explore unfamiliar code areas so the main agent has a clear map
-- surface missing or conflicting context early
-- reduce blind restarts and fake amnesia
+Stop orientation when the brief identifies:
+- the likely work item or says inference is weak
+- relevant task/knowledge/docs read, or `none found`
+- whether Phase 2 ran, was skipped, or is blocked
+- concrete blockers or `none`
+- the next action: ask, explore, plan, implement, review, or stop
