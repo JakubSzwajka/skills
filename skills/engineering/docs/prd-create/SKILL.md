@@ -21,21 +21,37 @@ docs/tasks/active/<YYYY-MM-DD-slug>/
   log.md    # continuity notebook
 ```
 
+Ready checklist before handoff:
+- Overlap checked.
+- 10-step `grill-me` alignment completed; deeper branches closed or listed as blockers.
+- `prd.md` follows `references/prd-format.md`.
+- `tasks.md` follows `references/task-format.md`.
+- Final validation ladder is present.
+- Required checkpoint/final review gates are present.
+- `validate_prd.py` passes.
+- Challenge loop is `GO`, or remaining blockers are listed.
+
 Workflow:
 1. Check `docs/tasks/active/` and `docs/tasks/archive/` for overlapping work.
-2. If problem, goal, scope, out-of-scope, product language, or owner decisions are missing, explicitly use `grill-me`: ask one question at a time, include your recommended answer, cross-check repo docs/code when useful, and stop once the design is clear enough to draft.
-3. Create the task folder and write `prd.md` using `references/prd-format.md`. `scripts/init_prd.sh <slug>` scaffolds the folder + skeletons if you want a starting point.
-4. Decompose into executable subtasks using `references/task-format.md`.
-5. Validate the artifact: run `python3 scripts/validate_prd.py <task-folder>` (or the `validate_prd.sh` shim) and fix every error before continuing. It checks the `prd.md` sections + Collateral keys and that every subtask carries all 8 fields with a valid status. Don't skip the empty-looking fields: a subtask that omits `blockers:` or `evidence:` is ambiguous to downstream execution/AFK workflows — they can't tell "no blockers" from "not yet assessed", so the subtask isn't safely runnable. The validator catches exactly these omissions.
-6. Run the codebase challenge loop using `references/challenge-loop.md`; outcome is GO or NO-GO.
-7. Mechanically fix concrete issues; if the challenge exposes product/scope/design/architecture/domain-language holes, go back to `grill-me` before continuing.
-8. Present folder path, compact task tree, challenge result, and next step.
+2. Always run a mandatory `grill-me` alignment session before finalizing the PRD artifact, even when the user's initial request appears complete. Apparent alignment is not enough.
+   - Minimum: 10 focused alignment steps/questions.
+   - Ask one question at a time, include your recommended answer and a short reason, and cross-check repo docs/code when useful.
+   - Cover, at minimum: problem, primary user/workflow, goal/success, included scope, out-of-scope, product/domain language, acceptance criteria, edge cases, existing-system constraints, and stop conditions.
+   - If any answer opens a deeper branch, follow that branch before treating the PRD as aligned. Ten steps is a floor, not a cap.
+   - Do not finalize the PRD while material product, design, architecture, quality, or domain-language decisions remain unresolved.
+3. Create the task folder and write `prd.md` using `references/prd-format.md`. `scripts/init_prd.sh <slug>` scaffolds the folder + skeletons if you want a starting point. Record the alignment decisions in `prd.md` and/or `log.md` as appropriate.
+4. Decompose the implementation into executable subtasks using `references/task-format.md`.
+5. Add explicit late validation subtasks using the repo's real scripts, docs, Compose files, and CI conventions. Cover static/local health, automated tests, and runtime/manual verification or justified equivalents. Use `engineering:local-docker-gateway` for Docker Compose web stacks when feasible.
+6. Add review gates using `references/task-format.md`: count only meaningful implementation subtasks, excluding validation, review, release, and bookkeeping tasks. For now, add one checkpoint review after the first 4 implementation subtasks when there are more than 4, and always add a final review after final validation.
+7. Validate the artifact: run `python3 scripts/validate_prd.py <task-folder>` (or the `validate_prd.sh` shim) and fix every error before continuing.
+8. Run the codebase challenge loop using `references/challenge-loop.md`; outcome is GO or NO-GO.
+9. Mechanically fix concrete issues; if the challenge exposes product/scope/design/architecture/domain-language holes, go back to `grill-me` before continuing.
+10. Present folder path, compact task tree, challenge result, and next step.
 
 Hard rules:
-- Downstream execution/AFK workflows must be able to execute `tasks.md` without inventing policy.
-- Each subtask must include status, deps, intent, target files/modules, acceptance, verification, evidence, and blockers.
-- A subtask is runnable only when status is `open` or `in_progress`, all deps are `done`, and blockers are empty.
-- Do not mark work `done` without evidence mapped to acceptance criteria.
+- A user request to create/write a PRD means create the PRD artifact; do not skip PRD creation because the work seems small.
+- Mandatory `grill-me` alignment, final validation, and review gates are part of PRD creation, not optional polish.
+- Downstream execution/AFK workflows must be able to execute `tasks.md` without inventing policy: every subtask has all 8 fields, runnability is explicit, and `done` requires evidence mapped to acceptance.
 - Store operational implementation state only in the repo task artifact, not KB or external PM tools. Use any project-declared tracker only for PM-facing status, links, blockers, and handoff notes.
 - Append meaningful discoveries and progress to `log.md` with `lucy` as author.
 - Do not delete challenge evidence unless explicitly approved.
