@@ -9,7 +9,7 @@ Personal skill set for Claude Code. Each subdirectory is one skill (or a group o
 - `explain/` — generate a styled HTML page that visually explains a concept.
 - `grill-me/` — repo-aware grilling: interview one question at a time, challenge terminology/code/doc conflicts, and capture resolved decisions.
 - `knowledge-base/` — query and compile the Obsidian-backed knowledge graph.
-- `board/` — board-level personas: CEO for portfolio/career operating-center decisions, CSO for founder-led sales/ICP/GTM, and CTO for technical discipline/repo health.
+- `board/` — explicit board escalation lenses: CEO for portfolio/career capture, CSO for founder-led sales/ICP/GTM, and CTO for post-merge or cross-repo technical discipline.
 - `references/` — shared contracts reused by multiple skills (handoff packet, spawned-agent contract, role-steward contract).
 
 ## Typical engineering flow

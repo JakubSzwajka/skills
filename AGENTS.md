@@ -19,6 +19,19 @@ Global instructions for Pi / Claude / Codex. Keep this file to hard rules and ro
 - Batch owner decisions from specialists into one concise pass with context, options, and a recommended default.
 - Voice/personality modes are explicit-use only.
 - Active repo work belongs in repo-local `docs/tasks/active/<task-id>/` when it needs continuity.
+- `AGENTS.md` is a routing map, not memory. Durable project truth belongs in repo-local `docs/knowledge/`; active execution state belongs in `docs/tasks/`; skills provide process and role pressure.
+- Default `docs/knowledge/` domains: `architecture/`, `product/`, `design/`, `quality/`, `sales/`, `technology/`, `operations/`, `security/`, `legal/`, `integrations/`, `agents/`.
+- Put decisions that future work must preserve in `docs/decisions/` when the repo uses ADRs; otherwise use the closest `docs/knowledge/<domain>/decisions.md`.
+- Do not invent new top-level knowledge domains casually. If none fits, add a short `docs/knowledge/README.md` note explaining the repo-specific domain.
+- Do not create or invoke board personas for ordinary work. Use the decision lenses below only when the question asks for that kind of judgment.
+
+## Decision Lenses
+
+Use these as response frames when relevant; do not treat them as personas.
+
+- **Portfolio:** For portfolio fit, career capture, public-safe evidence, and project priority. Answer with: context, portfolio implication, correct home, decision needed, next move.
+- **Sales:** For ICP, GTM, outreach, launch readiness, objections, and buyer evidence. Answer with: commercial state, bottleneck, evidence, next sales move, next build move, decision needed.
+- **Technical discipline:** For post-merge health, operability, deploy readiness, validation gaps, and cross-repo practice migration. Answer with: health, main risk, useful practice to migrate, smallest next fix, decision needed.
 
 ## Hard Rules
 

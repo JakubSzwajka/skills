@@ -1,5 +1,0 @@
-{
-  "name": "board",
-  "description": "Board-level personas for cross-project portfolio, sales, GTM, technical discipline, and business operating-system decisions.",
-  "skills": ["./ceo", "./cso", "./cto"]
-}

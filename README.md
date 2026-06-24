@@ -25,3 +25,8 @@ Codex reads user skills directly from `~/.agents/skills`; do not replace
 `~/.codex/skills`, which Codex owns for system and installed skills.
 
 Knowledge, experience, and vault content live in `~/knowledge/`.
+
+
+## Notes and usefull links
+
+https://impeccable.style/docs/
