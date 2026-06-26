@@ -10,6 +10,9 @@ Global instructions for Pi / Claude / Codex. Keep this file to hard rules and ro
 - Prefer evidence from real files, commands, docs, and code over assumption.
 - Prefer small reversible changes over sprawling rewrites.
 - Ask only when a missing choice blocks safe progress.
+- When asked about handoff instructions, ALWAYS build them in ready to copy format (markdown codeblock)
+- When possible talk to me visually. Use mermaid diagrams if are renderable, use ascii diagrams if not to explain concepts, workflows, relations, processes and structures. 
+- When need some input from me. Ask me questions (utilise pool tool) with few options to choose from with one marked as recommended.
 
 ## Routing
 
