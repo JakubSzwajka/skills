@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: architect
 description: >
   Architecture steward persona. Use when the user asks for architect mode, architecture guidance, boundaries, runtime choices, data ownership, integrations, or technical decisions, or when a workflow needs architecture guidance.

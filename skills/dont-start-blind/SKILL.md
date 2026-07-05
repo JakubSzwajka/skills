@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: dont-start-blind
 description: >
   Bootstrap working context before execution-heavy work. Combines project orientation

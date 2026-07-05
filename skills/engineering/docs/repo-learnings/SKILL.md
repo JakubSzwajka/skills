@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: repo-learnings
 description: Capture durable lessons from current work so future agents are faster and less likely to repeat corrections. Use when the user asks for repo learnings, says to remember something for future agents, asks to update AGENTS.md with lessons, or after a meaningful correction reveals a repo-specific convention, source of truth, validation command, workflow rule, or recurring mistake.
 ---

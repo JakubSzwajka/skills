@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: kb-compile
 description: Process material from ~/knowledge/inbox, extract durable concepts, create knowledge nodes, optionally write extraction reports, and archive the processed source into ~/knowledge/sources. Use when Kuba asks to parse inbox material, process a course/article/repo dump, or extract knowledge from newly dropped source files.
 ---

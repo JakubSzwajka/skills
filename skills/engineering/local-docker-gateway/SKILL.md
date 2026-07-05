@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: local-docker-gateway
 description: Run many isolated local Docker Compose web application stacks on one machine without port conflicts. Use when starting, adapting, or troubleshooting Compose-based frontend/backend/database/cache stacks for local agents, when avoiding fixed host ports, when wiring browser-to-backend env vars, or when exposing a stack through the shared Caddy Docker Proxy gateway at project.localhost.
 ---

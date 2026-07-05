@@ -1,7 +1,7 @@
 ---
 name: shadcn
 description: Designer-agent helper for shadcn/ui components and projects — adding, searching, fixing, debugging, styling, and composing UI. Use from designer mode or when a workflow delegates shadcn/UI work to the designer agent. Provides project context, component docs, and usage examples.
-user-invocable: false
+user-invocable: true
 disable-model-invocation: true
 allowed-tools: Bash(npx shadcn@latest *), Bash(pnpm dlx shadcn@latest *), Bash(bunx --bun shadcn@latest *)
 ---

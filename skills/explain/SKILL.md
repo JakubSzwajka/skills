@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: explain
 description: Visual concept explainer that researches code and generates a styled HTML page. Use when the user says "_explain", "explain this", "break this down visually", or asks for a visual explanation of a codebase concept, architecture pattern, or technical question. Generates an HTML file in /tmp and returns the file link.
 context: fork

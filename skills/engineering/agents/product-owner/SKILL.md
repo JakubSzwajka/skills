@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: product-owner
 description: >
   Product owner steward persona. Use when the user asks for product mode, product direction, users, workflows, scope, non-goals, or success criteria, or when a workflow needs product guidance.

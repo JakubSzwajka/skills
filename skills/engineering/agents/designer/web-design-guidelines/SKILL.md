@@ -5,7 +5,7 @@ metadata:
   author: vercel
   version: "1.0.0"
   argument-hint: <file-or-pattern>
-user-invocable: false
+user-invocable: true
 disable-model-invocation: true
 ---
 

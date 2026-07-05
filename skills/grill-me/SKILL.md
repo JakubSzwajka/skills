@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: grill-me
 description: Interview the user relentlessly about a plan, design, or missing repo doctrine until reaching shared understanding. Stress-test against existing docs, code, terminology, and decisions; capture resolved outcomes in task artifacts or canonical docs. Use when user wants to stress-test a plan, get grilled on their design, resolve product/design/architecture/domain-language gaps, or mentions "grill me".
 ---

@@ -1,7 +1,7 @@
 ---
 name: copy-curator
 description: Designer-agent helper for reviewing and improving AI-generated product copy in local i18n JSON files. Use from designer mode or when a workflow delegates copy review to the designer agent for localization QA, EN/PL tone cleanup, awkward translation review, and detecting hardcoded user-visible strings outside the i18n layer.
-user-invocable: false
+user-invocable: true
 disable-model-invocation: true
 ---
 

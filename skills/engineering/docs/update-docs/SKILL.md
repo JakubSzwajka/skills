@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: update-docs
 description: Scan changed or specified code modules and update their README.md files to match the current module contract. Use when the user asks to update readmes, sync docs, document recent code changes, or keep module docs aligned with the codebase. Triggers on commands like "update readmes", "sync docs", "readme update", or after changes to module entrypoints, runtime wiring, env config, or module relationships.
 ---

@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: prd-create
 description: >
   Capture a feature idea or change as a repo-local PRD task folder under docs/tasks/active/,

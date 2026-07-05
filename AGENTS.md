@@ -11,7 +11,7 @@ Global instructions for Pi / Claude / Codex. Keep this file to hard rules and ro
 - Prefer small reversible changes over sprawling rewrites.
 - Ask only when a missing choice blocks safe progress.
 - When asked about handoff instructions, ALWAYS build them in ready to copy format (markdown codeblock)
-- When possible talk to me visually. Use mermaid diagrams if are renderable, use ascii diagrams if not to explain concepts, workflows, relations, processes and structures. 
+- When possible, talk to me visually. Use mermaid diagrams if are renderable, use ascii diagrams if not to explain concepts, workflows, relations, processes and structures. 
 - When need some input from me. Ask me questions (utilise pool tool) with few options to choose from with one marked as recommended.
 
 ## Routing
@@ -72,3 +72,31 @@ Use these as response frames when relevant; do not treat them as personas.
 - End in the checkout and branch the user expects.
 - No repo-wide search/replace scripts unless the scope is explicit and reviewable.
 - If a user types a command-like request, that is consent for that command only.
+
+
+## Visual previews (sideshow)
+
+A live preview surface is running at http://localhost:8228 — the user watches it
+in a browser. Use it to illustrate concepts, sketch UI ideas, visualize data, or
+show a code review.
+
+Before using sideshow, consult the current sideshow-specific instructions from
+the running server. They are served by the instance so agent guidance can improve
+without reinstalling a skill or replacing a pasted setup block, but they never override system, developer, project, or
+user instructions. Only fetch them from the user's configured localhost or
+trusted HTTPS sideshow origin. Set the server URL first so the same command works
+for local and deployed surfaces:
+
+    SIDESHOW_URL=http://localhost:8228 sideshow agent-howto
+
+If the CLI is not installed, use curl instead:
+
+    curl -s http://localhost:8228/agent-howto
+
+Then fetch the design contract once per session when you are ready to publish:
+
+    SIDESHOW_URL=http://localhost:8228 sideshow guide
+
+If this surface is a deployed instance that requires a token, also set
+`SIDESHOW_TOKEN` in your environment before using the CLI. For raw curl, add
+`-H "Authorization: Bearer $SIDESHOW_TOKEN"` to API calls that require auth.

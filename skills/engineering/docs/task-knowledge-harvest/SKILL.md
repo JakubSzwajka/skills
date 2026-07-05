@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: task-knowledge-harvest
 description: Harvest durable repo knowledge from completed PRDs, linked PRs, and task artifacts, verify implemented active work against code, update docs/knowledge, then archive or clean up stale task folders. Use when the user asks to squeeze completed PRDs into docs/knowledge, harvest lessons from archived tasks or PRs, archive implemented active tasks, clean docs/tasks, or remove old PRDs after knowledge capture.
 ---

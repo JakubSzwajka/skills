@@ -1,4 +1,5 @@
 ---
+user-invocable: true
 name: research-deep
 description: >
   Two-phase adversarial research skill. Phase 1: parallel subagents explore a concept from
