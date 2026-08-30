@@ -1,0 +1,175 @@
+<title>Block Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+__CSS__
+</style>
+<div class="wrap">
+<header class="masthead">
+  <div class="stamp">visualize skill <div class="stamp">selftest &middot; 21 Aug 2026</div>middot; block gallery</div>
+  <h1>Every block, once, so the CSS has been seen</h1>
+  <p class="thesis">This page exists to prove the stylesheet renders. If a block looks
+  wrong here it will look wrong everywhere, and <strong>the fix belongs in base.css</strong>.</p>
+  <nav class="contents" aria-label="Contents">
+    <a href="#s1"><span class="n">01 &middot; data</span><span class="t">Bars, meters, stats</span></a>
+    <a href="#s2"><span class="n">02 &middot; shape</span><span class="t">SVG and charts</span></a>
+    <a href="#s3"><span class="n">03 &middot; prose</span><span class="t">Cards, compare, tables</span></a>
+    <a href="#s4"><span class="n">04 &middot; live</span><span class="t">Tabs, chips, stepper</span></a>
+  </nav>
+</header>
+<nav class="rail" aria-label="Jump"><a href="#s1">data</a><a href="#s2">shape</a><a href="#s3">prose</a><a href="#s4">live</a></nav>
+
+<section id="s1">
+  <div class="sec-head"><div class="sec-tag">01 &middot; data</div><h2>Two line items are 80% of the bill</h2></div>
+  <p>Prose first, then one carrier. <span class="c">inline code</span> sits in the sentence.</p>
+  <div class="stats">
+    <div class="stat on"><span class="v">19</span><span class="l">workflows</span><span class="d up">+4 since June</span></div>
+    <div class="stat"><span class="v">2.4s</span><span class="l">p95 load</span><span class="d">unchanged</span></div>
+    <div class="stat warn"><span class="v">0</span><span class="l">tests on billing</span><span class="d down">was 11</span></div>
+    <div class="stat bad"><span class="v">15h</span><span class="l">outage</span><span class="d down">25 Jul</span></div>
+  </div>
+  <div class="bars">
+    <div class="bar"><span class="bl">Hosting</span><span class="bt"><i style="width:72%"></i></span><span class="bv">431 zl</span></div>
+    <div class="bar warn"><span class="bl">Stripe fees</span><span class="bt"><i style="width:41%"></i></span><span class="bv">246 zl</span></div>
+    <div class="bar flat"><span class="bl">Domains and a long label that wraps</span><span class="bt"><i style="width:8%"></i></span><span class="bv">48 zl</span></div>
+  </div>
+  <div class="meter"><i style="width:62%" data-s="1"></i><i style="width:23%" data-s="3"></i><i style="width:15%" data-s="0"></i></div>
+  <div class="key"><span><i class="s1"></i>Shipped 62%</span><span><i class="s3"></i>In review 23%</span><span><i class="flat"></i>Untouched 15%</span></div>
+  <div class="callout"><div class="h">What breaks if you skip this</div>
+    <p>The migration drops <span class="c">quotes.token</span>. Any deploy still reading it 500s.</p></div>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><div class="sec-tag">02 &middot; shape</div><h2>Four boxes and an arrow beat a paragraph</h2></div>
+  <figure class="wide">
+    <svg viewBox="0 0 900 240" role="img" aria-label="Customer reaches the product, which calls Resend and Clerk.">
+      <defs><marker id="t1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker></defs>
+      <rect class="zone" x="250" y="20" width="420" height="200" rx="3"/>
+      <rect class="node" x="30" y="50" width="130" height="56" rx="2"/>
+      <text class="lbl" x="95" y="74" text-anchor="middle">Customer</text>
+      <text class="sub" x="95" y="91" text-anchor="middle">no account</text>
+      <rect class="node-on" x="330" y="80" width="200" height="90" rx="2"/>
+      <text class="lbl" x="430" y="120" text-anchor="middle">the product</text>
+      <text class="sub-on" x="430" y="138" text-anchor="middle">one workspace each</text>
+      <rect class="node-warn" x="720" y="50" width="150" height="56" rx="2"/>
+      <text class="lbl-sm" x="795" y="74" text-anchor="middle">Resend</text>
+      <text class="sub-warn" x="795" y="91" text-anchor="middle">no retry</text>
+      <rect class="node-store" x="720" y="150" width="150" height="56" rx="2"/>
+      <text class="lbl-sm" x="795" y="182" text-anchor="middle">Postgres</text>
+      <path class="edge" marker-end="url(#t1)" d="M160,78 H245 V125 H330"/>
+      <text class="elabel" x="218" y="70" text-anchor="middle">sends a request</text>
+      <path class="edge-warn" marker-end="url(#t1)" d="M530,105 H630 V78 H720"/>
+      <path class="edge-dash" d="M530,150 H630 V178 H720"/>
+    </svg>
+    <figcaption>The customer signs in for none of it. Counted from <span class="c">apps/api/src</span>.</figcaption>
+  </figure>
+  <figure class="wide">
+    <svg viewBox="0 0 900 320" role="img" aria-label="Signups per month, March peaks at 300.">
+      <line class="gridline" x1="56" y1="140" x2="880" y2="140"/>
+      <text class="tick" x="48" y="144" text-anchor="end">200</text>
+      <rect class="plot-flat" x="87" y="200" width="102" height="60"/>
+      <text class="val" x="138" y="192" text-anchor="middle">100</text>
+      <rect class="plot-flat" x="252" y="140" width="102" height="120"/>
+      <text class="val" x="303" y="132" text-anchor="middle">200</text>
+      <rect class="plot-1" x="417" y="80" width="102" height="180"/>
+      <text class="val" x="468" y="72" text-anchor="middle">300</text>
+      <rect class="plot-warn" x="582" y="170" width="102" height="90"/>
+      <text class="val" x="633" y="162" text-anchor="middle">150</text>
+      <rect class="plot-flat" x="747" y="188" width="102" height="72"/>
+      <text class="val" x="798" y="180" text-anchor="middle">120</text>
+      <line class="axis" x1="56" y1="260" x2="880" y2="260"/>
+      <text class="tick" x="138" y="278" text-anchor="middle">Jan</text>
+      <text class="tick" x="303" y="278" text-anchor="middle">Feb</text>
+      <text class="tick" x="468" y="278" text-anchor="middle">Mar</text>
+      <text class="tick" x="633" y="278" text-anchor="middle">Apr</text>
+      <text class="tick" x="798" y="278" text-anchor="middle">May</text>
+    </svg>
+    <figcaption>April is the drop worth explaining, not March.</figcaption>
+  </figure>
+  <div class="flow"><span>form</span><span class="arw">&rarr;</span><span>queue</span><span class="arw">&rarr;</span><span class="on">quote</span><span class="arw">&rarr;</span><span class="warn">payment &mdash; not built</span></div>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><div class="sec-tag">03 &middot; prose</div><h2>Cards, comparison, tables, tree</h2></div>
+  <div class="cards">
+    <article class="card"><div><span class="role">core</span><h3>service-offering</h3></div>
+      <div><div class="heading">Owns</div><ul class="yes"><li>Catalogs, items, prices.</li><li>The snapshot frozen at submit.</li></ul></div>
+      <div class="no-block"><div class="heading">Refuses</div><ul class="no"><li>Quote amounts.</li><li>Branding.</li></ul></div></article>
+    <article class="card secondary"><div><span class="role">supporting</span><h3>notifications</h3></div>
+      <div><div class="heading">Owns</div><ul class="yes"><li>The outbox.</li></ul></div>
+      <div class="no-block"><div class="heading">Refuses</div><ul class="no"><li>Deciding when to send.</li></ul></div></article>
+    <article class="card warn"><div><span class="role">problem</span><h3>plans</h3></div>
+      <div><div class="heading">Owns</div><ul class="yes"><li>Nothing anyone calls.</li></ul></div>
+      <div class="no-block"><div class="heading">Refuses</div><ul class="no"><li>Being deleted, so far.</li></ul></div></article>
+  </div>
+  <div class="compare">
+    <div class="side"><div class="side-head">Stay on Easytools</div><ul><li>5% of every sale.</li><li>Zero build time.</li></ul></div>
+    <div class="side on"><div class="side-head">Stripe plus a bridge</div><ul><li>About 19 zl a month, flat.</li><li>Two weeks of work.</li></ul></div>
+  </div>
+  <ol class="steps"><li><b>Freeze the schema.</b> Nothing lands until the migration merges.</li>
+    <li class="warn"><b>Back up first.</b> The migration drops a column with data in it.</li></ol>
+  <ol class="timeline">
+    <li><span class="when">25 Jul 2026</span><b>Swarm manager stalls</b><p>Sixty seconds was enough to take prod down for fifteen hours.</p></li>
+    <li class="warn"><span class="when">26 Jul</span><b>Monitoring moved off the manager</b><p>It had shared a failure domain with the thing it watched.</p></li>
+  </ol>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Path</th><th>Files</th><th>What lives here</th><th>Never</th></tr></thead>
+    <tbody><tr><td class="path">apps/api</td><td class="num">286</td><td class="what">Every write in the product.</td><td class="no">UI code.</td></tr>
+    <tr><td class="path">apps/site</td><td class="num up">+42</td><td class="what">Marketing, prerendered.</td><td class="no">Postgres.</td></tr></tbody>
+    <tfoot><tr><td>Total</td><td class="num">1 204</td><td></td><td></td></tr></tfoot>
+  </table></div>
+  <div class="tbl-wrap"><table class="matrix">
+    <thead><tr><th class="rowhead">Workflow</th><th>auth</th><th>plans</th><th>media</th></tr></thead>
+    <tbody><tr><th>submit-request</th><td class="full"></td><td class="off"></td><td class="part"></td></tr>
+    <tr><th>send-quote</th><td class="both"></td><td class="off"></td><td class="risk"></td></tr></tbody>
+  </table></div>
+  <div class="key"><span><i class="on"></i>calls</span><span><i class="hollow"></i>reads only</span><span><i class="warn"></i>writes across a boundary</span></div>
+  <div class="ledger"><div class="row"><div class="who">service-offering</div>
+    <div class="what"><div class="tags"><span class="tag">catalogs</span><span class="tag on">items</span><span class="tag warn">catalog_media</span></div>
+    <div class="fine">The only table two modules write.</div></div></div>
+    <div class="row flat"><div class="who">plans</div><div class="what">Nothing.</div></div></div>
+  <div class="tree">
+    <div class="row head"><span>path</span><span>what it is</span><span>files</span></div>
+    <div class="row"><span class="p">├── apps/</span><span class="n">every deployable</span><span class="ct">412</span></div>
+    <div class="row warn"><span class="p">│   └── legacy/</span><span class="n">frozen, do not extend</span><span class="ct">37</span></div>
+    <div class="row flat"><span class="p">└── dist/</span><span class="n">build output</span><span class="ct none">&mdash;</span></div>
+  </div>
+  <blockquote class="quote"><p>Every module writes down what it refuses to do.</p><cite>docs/architecture/boundaries.md, line 14</cite></blockquote>
+  <div class="codeblock"><div class="cb-head">apps/api/src/app.ts</div><pre><code>const app = build({ logger: true });
+app.register(routes, { prefix: "/api" });</code></pre></div>
+  <div class="note"><div class="h">The load-bearing bit</div><p>Accent means the argument. Orange means it bites.</p></div>
+  <div class="aside"><div class="h">Context</div><p>Grey is for what you are not arguing about.</p></div>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><div class="sec-tag">04 &middot; live</div><h2>Interactivity only where there is a choice</h2></div>
+  <div class="tabs" data-tabs>
+    <div class="tabstrip" role="tablist"><button data-tab="now" class="on" aria-selected="true">Today</button><button data-tab="after" aria-selected="false">After the change</button></div>
+    <div data-panel="now"><p>Panel one. Today the queue is manual.</p></div>
+    <div data-panel="after" hidden><p>Panel two. After the change a cron drains it.</p></div>
+  </div>
+  <div class="chips" data-filter="#grid"><button data-tag="*" class="on">All</button><button data-tag="risk">Risk</button><button data-tag="cost">Cost</button></div>
+  <p><span data-filter-count>3</span> shown</p>
+  <div class="cards" id="grid">
+    <article class="card" data-tags="risk"><h3>one</h3><p>Risk only.</p></article>
+    <article class="card" data-tags="cost"><h3>two</h3><p>Cost only.</p></article>
+    <article class="card" data-tags="risk cost"><h3>three</h3><p>Both.</p></article>
+  </div>
+  <div class="stepper" data-stepper>
+    <div data-step><p>Step one of the walkthrough.</p></div>
+    <div data-step hidden><p>Step two of the walkthrough.</p></div>
+    <div data-step hidden><p>Step three of the walkthrough.</p></div>
+    <div class="stepnav"><button data-prev>Back</button><span data-pos></span><button data-next>Next</button></div>
+  </div>
+  <details class="disclose"><summary>Every row, if you want it</summary><div class="body"><p>Hidden detail.</p></div></details>
+</section>
+
+<footer class="colophon">
+  <div><strong>Built from</strong> — nothing. This page is a stylesheet test.</div>
+  <div><strong>Not covered</strong> — real content.</div>
+</footer>
+</div>
+<script>
+__JS__
+</script>

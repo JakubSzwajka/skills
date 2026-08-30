@@ -30,3 +30,47 @@ Knowledge, experience, and vault content live in `~/knowledge/`.
 ## Notes and usefull links
 
 https://impeccable.style/docs/
+
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> draft: operator/system creates ✅
+    draft --> draft: operator edits ✅
+    draft --> sent: operator sends ✅
+    sent --> accepted: CUSTOMER accepts ✅
+    sent --> declined: CUSTOMER declines ✅
+
+    sent --> cancelled: operator withdraw ❌ MISSING
+    sent --> expired: expiry job / on-read ❌ MISSING
+    draft --> cancelled: discard draft ❌ MISSING
+
+    accepted --> [*]
+    declined --> [*]
+
+    classDef live fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef dead fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    class draft,sent,accepted,declined live
+    class expired,cancelled dead
+```
+
+```mermaid
+flowchart LR
+    subgraph Q["QUOTE machine"]
+      qs["sent"]
+      qa["accepted"]
+      qd["declined"]
+    end
+    subgraph C["CASE machine"]
+      cq["quoted"]
+      ca["accepted"]
+      cd["declined"]
+      cc["closed"]
+    end
+    qs -->|customer accepts| qa
+    qs -->|customer declines| qd
+    qa -. "✅ syncs case" .-> ca
+    qd -. "✅ syncs case" .-> cd
+    cd -. "❌ nothing flows back" .-> qs
+    cc -. "❌ nothing flows back" .-> qs
+```

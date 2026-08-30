@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ryan Review"
-  short_description: "Pre-review PRs with Ryan-style depth"
-  default_prompt: "Use $ryan-review to pre-review my Illuminate PR before Ryan reviews it."

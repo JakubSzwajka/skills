@@ -1,0 +1,31 @@
+/* Design tokens. System font, neutral surfaces, one restrained accent. */
+
+:root {
+  --font-system:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+    sans-serif;
+
+  --radius-small: 8px;
+  --radius-medium: 10px;
+  --radius-large: 12px;
+
+  --color-background: #f5f5f4;
+  --color-surface: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-text: #1c1c1e;
+  --color-text-secondary: rgba(28, 28, 30, 0.6);
+  --color-accent: #3b6ef6;
+  --color-accent-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #1e1e1f;
+    --color-surface: #2a2a2c;
+    --color-border: rgba(255, 255, 255, 0.14);
+    --color-text: #f2f2f3;
+    --color-text-secondary: rgba(242, 242, 243, 0.6);
+    --color-accent: #6d94ff;
+    --color-accent-text: #10131c;
+  }
+}

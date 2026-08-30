@@ -1,0 +1,73 @@
+<!--
+  visualize — page shell.
+
+  Copy this file to the working path, replace every {{SLOT}}, inline
+  assets/base.css into <style>, and delete whatever the subject does not earn.
+  No <!doctype>, <html>, <head> or <body>: the Artifact wrapper supplies them,
+  and a local browser renders the fragment fine.
+
+  Pick one font pairing from SKILL.md and paste its href below.
+  Google Fonts is the only external host the Artifact CSP allows.
+-->
+
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{GOOGLE_FONTS_URL}}">
+
+<style>
+{{BASE_CSS}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="stamp">{{SUBJECT}} &middot; {{DATE}}</div>
+  <h1>{{TITLE}}</h1>
+  <p class="thesis">{{THESIS}}</p>
+
+  <nav class="contents" aria-label="Contents">
+    <a href="#s1"><span class="n">01 &middot; {{KIND}}</span><span class="t">{{SHORT_TITLE}}</span></a>
+    <!-- one per section -->
+  </nav>
+</header>
+
+<!-- Optional. Drop the rail on pages with fewer than six sections. -->
+<nav class="rail" aria-label="Jump to section">
+  <a href="#s1">{{SHORT_LABEL}}</a>
+</nav>
+
+{{SECTIONS}}
+
+<footer class="colophon">
+  <div><strong>Built from</strong> — {{SOURCES}}, {{DATE}}.</div>
+  <div><strong>Not covered</strong> — {{GAPS}}.</div>
+  <div><strong>Shaky</strong> — {{LOW_CONFIDENCE_CLAIMS}}.</div>
+</footer>
+
+</div>
+
+<!-- Only if the page uses data-tabs / data-filter / data-stepper. -->
+<script>
+{{INTERACTIVE_JS}}
+</script>
+
+<!--
+  ============ SECTION SKELETON — copy, do not import ============
+
+  <section id="s1">
+    <div class="sec-head">
+      <div class="sec-tag">01 &middot; {{KIND}}</div>
+      <h2>{{TITLE_THAT_STATES_THE_FINDING}}</h2>
+    </div>
+    <p>{{THE_POINT_IN_ONE_PARAGRAPH}}</p>
+
+    …exactly one carrier: figure | .bars | .stats | .cards | .compare |
+      .timeline | .steps | .tbl-wrap | .ledger | .tree | .quote
+
+    …then at most one .callout or .note if something bites.
+  </section>
+
+  Every block's copy-paste HTML lives in reference/blocks.md.
+  ================================================================
+-->

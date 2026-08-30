@@ -1,0 +1,80 @@
+<!--
+  repo-atlas — page shell for index.html
+
+  Copy this file, replace every {{SLOT}}, inline assets/base.css into the
+  <style> block, and publish. No <!doctype>, <html>, <head> or <body> tags:
+  the Artifact wrapper supplies them.
+
+  Font link: pick one pairing from SKILL.md and paste its <link> line below.
+  Google Fonts is the ONLY external host the Artifact CSP allows.
+-->
+
+<title>{{REPO_NAME}} Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{GOOGLE_FONTS_URL}}">
+
+<style>
+{{BASE_CSS}}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="stamp">{{REPO_SLUG}} &middot; {{FILE_COUNT}} tracked files &middot; commit {{SHORT_SHA}}</div>
+  <h1>{{REPO_NAME}} Atlas</h1>
+  <p class="thesis">{{THESIS}}</p>
+
+  <nav class="contents" aria-label="Contents">
+    {{CONTENTS_LINKS}}
+  </nav>
+</header>
+
+<!-- Sticky lane rail. Keep it to the section anchors that actually exist. -->
+<nav class="rail" aria-label="Jump to section">
+  {{RAIL_LINKS}}
+</nav>
+
+<!-- ============ LANE A — where things are ============ -->
+{{LANE_A_SECTIONS}}
+
+<!-- ============ LANE B — how it runs ============ -->
+{{LANE_B_SECTIONS}}
+
+<footer class="colophon">
+  <div><strong>Counted</strong> from {{COMMANDS_USED}} at commit {{SHORT_SHA}}, {{DATE}}. Tracked files only.</div>
+  <div><strong>Not covered</strong> — {{KNOWN_GAPS}}</div>
+  <div><strong>Kind</strong> — truth, not law. When the structure changes, this changes with it.</div>
+</footer>
+
+</div>
+
+<!--
+  Section skeletons to copy from. Delete the ones the repo does not earn.
+
+  <section id="a1">
+    <div class="sec-head">
+      <div class="sec-tag">A1 &middot; entry</div>
+      <h2>{{TITLE}}</h2>
+    </div>
+    <p>{{FINDING_FIRST_PARAGRAPH}}</p>
+    ...one of: .tree | .tbl-wrap | .cards | figure | .callout | .note
+  </section>
+
+  Tree row:
+  <div class="row prose"><span class="p">├── README.md</span><span class="n">note</span><span class="ct">12</span></div>
+  Classes: prose | gate | machine | (none = code). Use .ct.none and an em dash for "not a directory".
+
+  Table row:
+  <tr><td class="path">apps/api</td><td class="num">286</td><td class="what">…</td><td class="no">…</td></tr>
+
+  Matrix cell:
+  <td class="ask"></td> | <td class="tell"></td> | <td class="both"></td> | <td class="off"></td>
+
+  Owns/refuses card:
+  <article class="card">
+    <div><span class="role">core</span><h3>module-name</h3></div>
+    <div><div class="heading">Owns</div><ul class="owns"><li>…</li></ul></div>
+    <div class="refuses-block"><div class="heading">Refuses</div><ul class="refuses"><li>…</li></ul></div>
+  </article>
+-->

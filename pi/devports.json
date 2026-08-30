@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "name": "Leftovers — working directory is gone",
+      "note": "the repo or worktree was deleted; nothing will ever clean these up",
+      "when": {
+        "cwdGone": true
+      }
+    },
+    {
+      "name": "Forgotten dev servers — up over a day",
+      "when": {
+        "dev": true,
+        "olderThanDays": 1
+      }
+    },
+    {
+      "name": "Tunnels and agents",
+      "when": {
+        "cmd": "cloudflared|ngrok|localtunnel|agent-browser|mcp"
+      }
+    },
+    {
+      "name": "Running dev servers",
+      "when": {
+        "dev": true
+      }
+    },
+    {
+      "name": "Apps and system"
+    }
+  ]
+}
