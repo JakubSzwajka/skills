@@ -28,10 +28,24 @@ line of information, each a coloured block. This replaces that with a fixed grid
 | arguments | cwd-relative path, then `~`; long values truncated in the middle |
 | summary | right-aligned: lines, hits, files, `+added -removed`, `failed`, `≥n` when truncated |
 | duration | right-aligned, measured from `tool_execution_start` to `tool_execution_end` |
+| tone | how bright the row is — see below |
 
-Colour carries meaning instead of filling the row: failures are red end to end, everything else is
-a neutral line. `ctrl+o` expands every tool output at once (it is a global toggle, so rows carry no
-per-row hint); expanded output is indented under the gutter and capped at 400 lines.
+## Tone
+
+Colour carries meaning instead of filling the row. Rows are ranked by how much they should cost
+you to read, so a run of lookups sinks into the background and a file mutation is what the eye
+lands on:
+
+| Tone | Tools | Reads as |
+|---|---|---|
+| `mutate` | `write`, `edit` | bold light name, accent arguments — the loudest row |
+| `run` | `bash` | bold light name, light arguments |
+| `read` | `read`, `grep`, `find`, `ls` | muted throughout, the same grey as a hidden thinking run |
+| `quiet` | every tool owned by another extension | dim throughout |
+| error | any failed call | red from gutter to summary, whatever the tone |
+
+`ctrl+o` expands every tool output at once (it is a global toggle, so rows carry no per-row hint);
+expanded output is indented under the gutter and capped at 400 lines.
 
 ## Files
 
@@ -41,7 +55,7 @@ per-row hint); expanded output is indented under the gutter and capped at 400 li
 | `row.ts` | the grid: columns, truncation, colours, the `CompactLine` component |
 | `command.ts` | reading a shell command the way a person skims it |
 | `transcript.ts` | the render patches: foreign rows, gap trimming, flush thinking runs |
-| `index.test.ts` | 28 tests |
+| `index.test.ts` | 30 tests |
 
 ## The three surfaces it touches
 

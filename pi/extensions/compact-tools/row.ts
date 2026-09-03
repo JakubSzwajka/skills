@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import { relative } from "node:path";
-import type { Theme } from "@earendil-works/pi-coding-agent";
+import type { Theme, ThemeColor } from "@earendil-works/pi-coding-agent";
 import { Text, type Component } from "@earendil-works/pi-tui";
 
 export const GUTTER = "┊ ";
@@ -15,11 +15,25 @@ export const MAX_EXPANDED_LINES = 400;
 const DROP_DURATION_BELOW = 52;
 const DROP_SUMMARY_BELOW = 38;
 
+/**
+ * How loudly a row speaks. A run of lookups should read as background the eye skips,
+ * a file mutation should be the thing it lands on.
+ */
+export type Tone = "mutate" | "run" | "read" | "quiet";
+
+const TONES: Record<Tone, { name: ThemeColor; args: ThemeColor; bold: boolean }> = {
+  mutate: { name: "toolTitle", args: "accent", bold: true },
+  run: { name: "toolTitle", args: "text", bold: true },
+  read: { name: "muted", args: "muted", bold: false },
+  quiet: { name: "dim", args: "dim", bold: false },
+};
+
 export interface LineParts {
   name: string;
   args: string;
   summary?: string;
   duration?: string;
+  tone?: Tone;
   isError?: boolean;
 }
 
@@ -101,10 +115,12 @@ export function plainLine(parts: LineParts, width: number): string {
 
 export function colorLine(parts: LineParts, width: number, theme: Theme): string {
   const f = fitLine(parts, width);
+  const tone = TONES[parts.tone ?? "run"];
+  const name = tone.bold ? theme.bold(f.name) : f.name;
 
   let line = theme.fg(parts.isError ? "error" : "dim", f.gutter);
-  line += theme.fg(parts.isError ? "error" : "toolTitle", theme.bold(f.name)) + " ";
-  line += theme.fg(parts.isError ? "error" : "accent", f.args);
+  line += theme.fg(parts.isError ? "error" : tone.name, name) + " ";
+  line += theme.fg(parts.isError ? "error" : tone.args, f.args);
   line += f.pad;
   if (f.summaryCell) line += theme.fg(parts.isError ? "error" : "muted", f.summaryCell);
   line += f.gap;

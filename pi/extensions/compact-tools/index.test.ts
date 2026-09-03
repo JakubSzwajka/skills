@@ -12,6 +12,7 @@ import {
   stripBlankEdges,
   stripRenderer,
 } from "./transcript.ts";
+import { colorLine } from "./row.ts";
 import compactTools, {
   THINKING_LABEL,
   condenseCommand,
@@ -372,4 +373,58 @@ test("the hidden thinking label wears the same gutter as a tool row", () => {
   } as any);
 
   assert.deepEqual(labels, ["┊ Thinking..."]);
+});
+
+test("tone maps a tool to how loudly its row speaks", () => {
+  const colours = (parts: any) => {
+    const seen: string[] = [];
+    const probe = { ...theme, fg: (colour: string, text: string) => (seen.push(colour), text) } as any;
+    colorLine(parts, 70, probe);
+    return seen;
+  };
+
+  assert.deepEqual(colours({ name: "write", args: "a.ts", tone: "mutate", summary: "1 line" }).slice(0, 3), [
+    "dim",
+    "toolTitle",
+    "accent",
+  ]);
+  assert.deepEqual(colours({ name: "read", args: "a.ts", tone: "read", summary: "1 line" }).slice(0, 3), [
+    "dim",
+    "muted",
+    "muted",
+  ]);
+  assert.deepEqual(colours({ name: "todo", args: "x", tone: "quiet", summary: "ok" }).slice(0, 3), [
+    "dim",
+    "dim",
+    "dim",
+  ]);
+  assert.deepEqual(colours({ name: "$", args: "npm test", tone: "run", isError: true }).slice(0, 3), [
+    "error",
+    "error",
+    "error",
+  ]);
+});
+
+test("every presenter declares a tone, and foreign rows are quiet", () => {
+  const { tools } = registerTools();
+  const tones = new Map<string, string>();
+  for (const [name, tool] of tools) {
+    const line = tool.renderCall({ path: "a.ts", command: "ls", pattern: "x" }, theme, {
+      args: {},
+      cwd: "/work",
+      state: {},
+      lastComponent: undefined,
+    } as any);
+    tones.set(name, line.parts.tone);
+  }
+
+  assert.deepEqual([...tones.entries()].sort(), [
+    ["bash", "run"],
+    ["edit", "mutate"],
+    ["find", "read"],
+    ["grep", "read"],
+    ["ls", "read"],
+    ["read", "read"],
+    ["write", "mutate"],
+  ]);
 });

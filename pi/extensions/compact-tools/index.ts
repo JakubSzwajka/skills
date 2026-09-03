@@ -21,6 +21,7 @@ import {
   GUTTER,
   outputComponent,
   shortenPath,
+  type Tone,
   unit,
 } from "./row.ts";
 
@@ -49,6 +50,7 @@ interface ToolResultShape {
 
 interface ToolPresenter {
   name: string;
+  tone: Tone;
   describe: (args: any, cwd: string) => string;
   summarize?: (result: ToolResultShape, context: RenderContext<RowState>) => string;
   body?: (result: ToolResultShape, context: RenderContext<RowState>) => string;
@@ -66,6 +68,7 @@ function truncated(details: unknown): boolean {
 const presenters: Record<string, ToolPresenter> = {
   read: {
     name: "read",
+    tone: "read",
     describe: (args, cwd) => {
       let label = shortenPath(args?.path ?? "", cwd);
       if (args?.offset || args?.limit) {
@@ -81,6 +84,7 @@ const presenters: Record<string, ToolPresenter> = {
   },
   bash: {
     name: "$",
+    tone: "run",
     describe: (args, cwd) => condenseCommand(args?.command ?? "", cwd),
     summarize: (result, context) => {
       if (context.isError) return "failed";
@@ -90,6 +94,7 @@ const presenters: Record<string, ToolPresenter> = {
   },
   edit: {
     name: "edit",
+    tone: "mutate",
     describe: (args, cwd) => shortenPath(args?.path ?? "", cwd),
     summarize: (result, context) => {
       if (context.isError) return "failed";
@@ -106,12 +111,14 @@ const presenters: Record<string, ToolPresenter> = {
   },
   write: {
     name: "write",
+    tone: "mutate",
     describe: (args, cwd) => shortenPath(args?.path ?? "", cwd),
     summarize: (result, context) =>
       context.isError ? "failed" : `${countLines(context.args?.content ?? "")} written`,
   },
   grep: {
     name: "grep",
+    tone: "read",
     describe: (args, cwd) => {
       let label = collapseWhitespace(args?.pattern ?? "");
       if (args?.glob) label += ` ${args.glob}`;
@@ -122,6 +129,7 @@ const presenters: Record<string, ToolPresenter> = {
   },
   find: {
     name: "find",
+    tone: "read",
     describe: (args, cwd) => {
       const pattern = args?.pattern ?? "";
       return args?.path ? `${pattern} in ${shortenPath(args.path, cwd)}` : pattern;
@@ -130,6 +138,7 @@ const presenters: Record<string, ToolPresenter> = {
   },
   ls: {
     name: "ls",
+    tone: "read",
     describe: (args, cwd) => shortenPath(args?.path ?? ".", cwd),
     summarize: (result) => unit(countLines(resultText(result)), "entry", "entries", truncated(result.details)),
   },
@@ -227,7 +236,7 @@ export default function (pi: ExtensionAPI): void {
         theme = rowTheme;
         const line = context.lastComponent instanceof CompactLine ? context.lastComponent : new CompactLine();
         line.theme = rowTheme;
-        line.parts = { name: presenter.name, args: presenter.describe(args ?? {}, context.cwd) };
+        line.parts = { name: presenter.name, tone: presenter.tone, args: presenter.describe(args ?? {}, context.cwd) };
         context.state.line = line;
         return line;
       },

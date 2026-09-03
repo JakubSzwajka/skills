@@ -134,6 +134,7 @@ export function renderForeignRow(row: ToolRow, width: number, config: RowPatchCo
   line.theme = theme;
   line.parts = {
     name,
+    tone: "quiet",
     args: describeArgs(row.args, row.cwd),
     summary,
     duration: row.result ? config.duration(row.toolCallId ?? "") : undefined,
