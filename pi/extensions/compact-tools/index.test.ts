@@ -383,6 +383,12 @@ test("the hidden thinking label wears the same gutter as a tool row", () => {
   assert.deepEqual(labels, ["┊ Thinking..."]);
 });
 
+test("only a file mutation is bright; running a command is not", () => {
+  const bright = plainLine({ name: "write", args: "a.ts", tone: "mutate" }, 60);
+  const quiet = plainLine({ name: "$", args: "git status", tone: "read" }, 60);
+  assert.equal(bright.length, quiet.length);
+});
+
 test("tone maps a tool to how loudly its row speaks", () => {
   const colours = (parts: any) => {
     const seen: string[] = [];
@@ -406,7 +412,7 @@ test("tone maps a tool to how loudly its row speaks", () => {
     "dim",
     "dim",
   ]);
-  assert.deepEqual(colours({ name: "$", args: "npm test", tone: "run", isError: true }).slice(0, 3), [
+  assert.deepEqual(colours({ name: "$", args: "npm test", tone: "read", isError: true }).slice(0, 3), [
     "error",
     "error",
     "error",
@@ -427,7 +433,7 @@ test("every presenter declares a tone, and foreign rows are quiet", () => {
   }
 
   assert.deepEqual([...tones.entries()].sort(), [
-    ["bash", "run"],
+    ["bash", "read"],
     ["edit", "mutate"],
     ["find", "read"],
     ["grep", "read"],

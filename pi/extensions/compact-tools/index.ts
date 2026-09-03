@@ -84,7 +84,7 @@ const presenters: Record<string, ToolPresenter> = {
   },
   bash: {
     name: "$",
-    tone: "run",
+    tone: "read",
     describe: (args, cwd) => condenseCommand(args?.command ?? "", cwd),
     summarize: (result, context) => {
       if (context.isError) return "failed";

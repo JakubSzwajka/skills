@@ -19,11 +19,10 @@ const DROP_SUMMARY_BELOW = 38;
  * How loudly a row speaks. A run of lookups should read as background the eye skips,
  * a file mutation should be the thing it lands on.
  */
-export type Tone = "mutate" | "run" | "read" | "quiet";
+export type Tone = "mutate" | "read" | "quiet";
 
 const TONES: Record<Tone, { name: ThemeColor; args: ThemeColor; bold: boolean }> = {
   mutate: { name: "toolTitle", args: "accent", bold: true },
-  run: { name: "toolTitle", args: "text", bold: true },
   read: { name: "muted", args: "muted", bold: false },
   quiet: { name: "dim", args: "dim", bold: false },
 };
@@ -115,7 +114,7 @@ export function plainLine(parts: LineParts, width: number): string {
 
 export function colorLine(parts: LineParts, width: number, theme: Theme): string {
   const f = fitLine(parts, width);
-  const tone = TONES[parts.tone ?? "run"];
+  const tone = TONES[parts.tone ?? "read"];
   const name = tone.bold ? theme.bold(f.name) : f.name;
 
   let line = theme.fg(parts.isError ? "error" : "dim", f.gutter);

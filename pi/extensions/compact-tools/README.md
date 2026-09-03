@@ -34,13 +34,13 @@ line of information, each a coloured block. This replaces that with a fixed grid
 
 Colour carries meaning instead of filling the row. Rows are ranked by how much they should cost
 you to read, so a run of lookups sinks into the background and a file mutation is what the eye
-lands on:
+lands on. Bash sits with the lookups: `git status`, `gh auth status` and `sed -n` are reading,
+and a command that does change something announces it through its summary and duration anyway.
 
 | Tone | Tools | Reads as |
 |---|---|---|
-| `mutate` | `write`, `edit` | bold light name, accent arguments — the loudest row |
-| `run` | `bash` | bold light name, light arguments |
-| `read` | `read`, `grep`, `find`, `ls` | muted throughout, the same grey as a hidden thinking run |
+| `mutate` | `write`, `edit` | bold light name, accent arguments — the only bright row |
+| `read` | `read`, `grep`, `find`, `ls`, `bash` | muted throughout, the same grey as a hidden thinking run |
 | `quiet` | every tool owned by another extension | dim throughout |
 | error | any failed call | red from gutter to summary, whatever the tone |
 
