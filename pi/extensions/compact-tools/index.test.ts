@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { homedir } from "node:os";
 import test from "node:test";
-import { ToolExecutionComponent } from "@earendil-works/pi-coding-agent";
+import { initTheme, ToolExecutionComponent } from "@earendil-works/pi-coding-agent";
 import { AssistantMessageComponent } from "@earendil-works/pi-coding-agent";
 import {
   describeArgs,
@@ -19,6 +19,7 @@ import compactTools, {
   formatDuration,
   middleTruncate,
   plainLine,
+  durationLabel,
   separate,
   shortenPath,
   splitCommands,
@@ -237,21 +238,28 @@ test("truncated results are marked as a lower bound", () => {
   assert.match(lines[0]!, /≥2 hits$/);
 });
 
-test("duration comes from execution events, not only from the wrapped execute", () => {
-  const { tools, events } = registerTools();
-  events.get("tool_execution_start")!({ toolCallId: "evented" });
-  trackStart("evented");
-  trackEnd("evented");
-  events.get("tool_execution_end")!({ toolCallId: "evented" });
+test("a real tool row, driven end to end, reports its duration", async () => {
+  initTheme("dark");
+  const { tools } = registerTools();
+  const definition = tools.get("ls");
+  const toolCallId = "call_live|fc_live";
+  const args = { path: "." };
 
-  const lines = renderRow(
-    tools.get("ls"),
-    { path: "." },
-    { content: [{ type: "text", text: "index.ts\n" }], details: {} },
-    renderContext({ toolCallId: "evented" }),
-  );
+  const row = new ToolExecutionComponent("ls", toolCallId, args, {}, definition, { requestRender() {} } as any, process.cwd());
+  row.markExecutionStarted();
+  const result = await definition.execute(toolCallId, args, undefined, undefined, { cwd: process.cwd() } as any);
+  row.updateResult({ ...result, isError: false });
 
-  assert.match(lines[0]!, /\d+\.\ds$/);
+  const rendered = row.render(90).map((line: string) => line.replace(/\x1b\[[0-9;]*m/g, "").replace(/\s+$/, ""));
+  assert.equal(rendered.length, 1);
+  assert.match(rendered[0]!, /^ ┊ ls {7}\. +\d+ entries {4}\d+\.\ds$/);
+});
+
+test("timing is keyed by the id the row renders under, not by an event id", () => {
+  trackStart("row-id");
+  trackEnd("row-id");
+  assert.match(durationLabel("row-id")!, /^\d+\.\ds$/);
+  assert.equal(durationLabel("row-id|provider-suffix"), undefined);
 });
 
 test("describeArgs skims a foreign tool's arguments in a readable order", () => {

@@ -27,7 +27,7 @@ line of information, each a coloured block. This replaces that with a fixed grid
 | name | eight characters, `$` for bash; longer names push their arguments right |
 | arguments | cwd-relative path, then `~`; long values truncated in the middle |
 | summary | right-aligned: lines, hits, files, `+added -removed`, `failed`, `≥n` when truncated |
-| duration | right-aligned, measured from `tool_execution_start` to `tool_execution_end` |
+| duration | right-aligned, stamped on the row itself between execution start and result |
 | tone | how bright the row is — see below |
 
 ## Tone
@@ -55,7 +55,7 @@ expanded output is indented under the gutter and capped at 400 lines.
 | `row.ts` | the grid: columns, truncation, colours, the `CompactLine` component |
 | `command.ts` | reading a shell command the way a person skims it |
 | `transcript.ts` | the render patches: foreign rows, gap trimming, flush thinking runs |
-| `index.test.ts` | 30 tests |
+| `index.test.ts` | 31 tests, including one that drives a real `ToolExecutionComponent` end to end |
 
 ## The three surfaces it touches
 
@@ -71,6 +71,12 @@ instead, which reads `toolName`, `args`, `result` and `getTextOutput()` off the 
 same grid. Arguments are skimmed generically: known keys first (`path`, `command`, `subject`,
 `agent`, `action`, `id`, `status`, …), booleans shown by name when true, values joined with `·`.
 Rows carrying images, hidden rows, and rows we own fall through to the original renderer.
+
+Durations are stamped by wrapping `markExecutionStarted` and `updateResult` on the row, not by
+listening to `tool_execution_start`/`tool_execution_end`. The event carries a provider-composed
+tool call id (`call_x|fc_y` on the OpenAI Responses API) which is not guaranteed to be the string
+the row renders under, and when the two disagree every duration silently reads as unknown. Keyed
+by `this.toolCallId`, the lookup cannot miss. Replayed history has no timing and shows none.
 
 **Assistant prose** gets a `---` rule above and below through `registerMarkdownTransformer`, which
 is public API and needs no patch. The trailing rule is added only once streaming ends, so nothing

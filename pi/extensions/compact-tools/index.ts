@@ -202,6 +202,8 @@ export default function (pi: ExtensionAPI): void {
     theme: () => theme,
     owns: (name) => name in presenters,
     duration: durationLabel,
+    onStart: trackStart,
+    onEnd: trackEnd,
   });
   patchAssistantMessages();
 
@@ -209,8 +211,6 @@ export default function (pi: ExtensionAPI): void {
     theme = ctx?.ui?.theme ?? theme;
     ctx?.ui?.setHiddenThinkingLabel?.(THINKING_LABEL);
   });
-  pi.on("tool_execution_start", (event: any) => trackStart(event.toolCallId));
-  pi.on("tool_execution_end", (event: any) => trackEnd(event.toolCallId));
 
   pi.registerMarkdownTransformer((markdown: string, context: any) =>
     separate(markdown, context.messageType, context.isStreaming),
@@ -223,14 +223,8 @@ export default function (pi: ExtensionAPI): void {
       ...base,
       renderShell: "self",
 
-      async execute(toolCallId, params, signal, onUpdate, ctx) {
-        trackStart(toolCallId);
-        try {
-          return await definitionFor(name, ctx.cwd).execute(toolCallId, params, signal, onUpdate, ctx);
-        } finally {
-          trackEnd(toolCallId);
-        }
-      },
+      execute: (toolCallId, params, signal, onUpdate, ctx) =>
+        definitionFor(name, ctx.cwd).execute(toolCallId, params, signal, onUpdate, ctx),
 
       renderCall(args, rowTheme, context: RenderContext<RowState>) {
         theme = rowTheme;

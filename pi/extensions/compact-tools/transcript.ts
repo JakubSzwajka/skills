@@ -111,6 +111,13 @@ export interface RowPatchConfig {
   /** Tools this extension renders through the public renderCall/renderResult API. */
   owns: (toolName: string) => boolean;
   duration: (toolCallId: string) => string | undefined;
+  /**
+   * Timing is stamped from the row itself rather than from tool_execution_* events: the event id
+   * and the id a row renders under are not guaranteed to be the same string, and when they differ
+   * every duration silently reads as unknown.
+   */
+  onStart: (toolCallId: string) => void;
+  onEnd: (toolCallId: string) => void;
 }
 
 export function renderForeignRow(row: ToolRow, width: number, config: RowPatchConfig): string[] | undefined {
@@ -158,6 +165,26 @@ export function patchToolRows(config: RowPatchConfig): boolean {
   prototype!.render = function render(this: ToolRow, width: number): string[] {
     return renderForeignRow(this, width, config) ?? stripped.call(this, width);
   };
+
+  const timed = prototype as unknown as {
+    markExecutionStarted?: (this: ToolRow) => void;
+    updateResult?: (this: ToolRow, result: unknown, isPartial?: boolean) => void;
+  };
+  const originalStart = timed.markExecutionStarted;
+  if (typeof originalStart === "function") {
+    timed.markExecutionStarted = function markExecutionStarted(this: ToolRow) {
+      config.onStart(this.toolCallId ?? "");
+      return originalStart.call(this);
+    };
+  }
+  const originalUpdate = timed.updateResult;
+  if (typeof originalUpdate === "function") {
+    timed.updateResult = function updateResult(this: ToolRow, result: unknown, isPartial = false) {
+      if (!isPartial) config.onEnd(this.toolCallId ?? "");
+      return originalUpdate.call(this, result, isPartial);
+    };
+  }
+
   patched = true;
   return true;
 }
