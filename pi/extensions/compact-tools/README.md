@@ -51,11 +51,18 @@ expanded output is indented under the gutter and capped at 400 lines.
 
 | File | Job |
 |---|---|
-| `index.ts` | per-tool presenters for the seven built-ins, timing, the prose separator |
-| `row.ts` | the grid: columns, truncation, colours, the `CompactLine` component |
+| `index.ts` | wiring: registers the tools, the transformer and the patches |
+| `presenters.ts` | how each built-in tool describes and summarises itself |
+| `row.ts` | the grid: columns, truncation, tone, the `CompactLine` component |
 | `command.ts` | reading a shell command the way a person skims it |
-| `transcript.ts` | the render patches: foreign rows, gap trimming, flush thinking runs |
-| `index.test.ts` | 31 tests, including one that drives a real `ToolExecutionComponent` end to end |
+| `foreign-row.ts` | drawing a row for a tool owned by another extension |
+| `blank-edges.ts` | trimming the blank lines that frame every transcript item |
+| `patch.ts` | wrapping the two pi components, and only those |
+| `timing.ts` | duration stamps, keyed by the id a row renders under |
+
+Each module owns one thing and is tested beside it: `row.test.ts`, `command.test.ts`,
+`blank-edges.test.ts`, `foreign-row.test.ts`, `timing.test.ts`, and `index.test.ts` for
+registration plus two rows driven end to end through a real `ToolExecutionComponent`.
 
 ## The three surfaces it touches
 
@@ -92,7 +99,7 @@ reasoning itself and the label is unused.
 
 Every transcript item emits its own leading blank line, and the default tool shell adds a padded
 row above and below its content. Neither is reachable from the extension API, so
-`transcript.ts` wraps `ToolExecutionComponent.prototype.render`: it either renders a foreign row
+`patch.ts` wraps `ToolExecutionComponent.prototype.render`: it either renders a foreign row
 as our grid line, or trims the blank lines framing whatever the original renderer produced. Blank
 lines *inside* an expanded output are kept, and escape sequences carried by a dropped line — the
 OSC 133 shell-integration zone markers live on the first line — are moved onto the kept text.
@@ -104,7 +111,7 @@ build stops exporting `ToolExecutionComponent` or renames `render`, `patchToolRo
 ## Tests
 
 ```bash
-node --test index.test.ts
+node --test ./*.test.ts
 ```
 
 Resolution of `@earendil-works/*` comes from the symlinks in `../node_modules/@earendil-works/`

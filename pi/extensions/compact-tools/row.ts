@@ -74,8 +74,13 @@ export function countLines(value: string): number {
   return trimmed ? trimmed.split("\n").length : 0;
 }
 
-export function unit(count: number, singular: string, plural = `${singular}s`, atLeast = false): string {
-  return `${atLeast ? "≥" : ""}${count} ${count === 1 ? singular : plural}`;
+export function unit(
+  count: number,
+  singular: string,
+  options: { plural?: string; atLeast?: boolean } = {},
+): string {
+  const word = count === 1 ? singular : (options.plural ?? `${singular}s`);
+  return `${options.atLeast ? "≥" : ""}${count} ${word}`;
 }
 
 interface FittedLine {
