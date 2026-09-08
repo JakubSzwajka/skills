@@ -14,8 +14,8 @@
 
 // Type-only import on purpose: pi and orca-managed pi ship the same extension API under
 // different package names, so a runtime import of this package would break under OMP.
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { Key, matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
+import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
+import { Key, matchesKey, truncateToWidth, type Component, type TUI } from "@earendil-works/pi-tui";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -309,7 +309,33 @@ function table(groups: Group[]): string {
 
 type Line = { kind: "header"; group: Group; index: number } | { kind: "row"; row: Row };
 
-class PortList {
+const MAX_VISIBLE_LINES = 9;
+export const DEVPORTS_WIDGET_KEY = "devports:list";
+
+/** Flatten controls in config-supplied labels before they reach the terminal. */
+function sanitizeDisplay(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "")
+    .replace(/\x1b[P_X^][\s\S]*?\x1b\\/g, "")
+    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "")
+    .replace(/\x1b[@-_]/g, "")
+    .replace(/\u009d[^\u0007\u009c]*(?:\u0007|\u009c)/g, "")
+    .replace(/[\u0090\u0098\u009e\u009f][\s\S]*?\u009c/g, "")
+    .replace(/\u009b[0-?]*[ -/]*[@-~]/g, "")
+    .replace(/\t/g, "    ")
+    .replace(/\r\n?|\n/g, " ")
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, "");
+}
+
+interface PortListDependencies {
+  scan: () => Row[];
+  killPids: (pids: number[]) => { killed: number[]; failed: number[] };
+  loadGroups: () => { groups: GroupRule[]; error?: string };
+}
+
+const PORT_LIST_DEPENDENCIES: PortListDependencies = { scan, killPids, loadGroups };
+
+export class PortList implements Component {
   private rows: Row[] = [];
   private groups: Group[] = [];
   private lines: Line[] = [];
@@ -327,11 +353,12 @@ class PortList {
   private cachedLines?: string[];
 
   constructor(
-    private theme: any,
-    private height: () => number,
-    private onClose: (killed: string[]) => void,
+    private readonly tui: TUI,
+    private readonly theme: Theme,
+    private readonly onClose: (killed: string[]) => void,
+    private readonly dependencies: PortListDependencies = PORT_LIST_DEPENDENCIES,
   ) {
-    const cfg = loadGroups();
+    const cfg = dependencies.loadGroups();
     this.rules = cfg.groups;
     this.status = cfg.error ?? "";
     this.refresh();
@@ -352,7 +379,7 @@ class PortList {
   }
 
   refresh(): void {
-    this.rows = scan();
+    this.rows = this.dependencies.scan();
     const live = new Set(this.rows.map((r) => r.pid));
     for (const pid of [...this.selectedPids]) if (!live.has(pid)) this.selectedPids.delete(pid);
     this.armed = null;
@@ -360,8 +387,9 @@ class PortList {
   }
 
   private rowsShown(): number {
-    // header + blank + status + hint lines cost about 7 rows
-    return Math.max(4, Math.min(this.lines.length, this.height() - 9));
+    // Keep the temporary widget small even on a tall terminal.
+    const terminalRows = this.tui?.terminal?.rows ?? 30;
+    return Math.max(1, Math.min(this.lines.length || 1, MAX_VISIBLE_LINES, terminalRows - 10));
   }
 
   private currentGroup(): Group | undefined {
@@ -384,17 +412,17 @@ class PortList {
       this.cursor = Math.max(0, this.cursor - 1);
       this.armed = null;
     } else if (matchesKey(data, Key.down)) {
-      this.cursor = Math.min(this.lines.length - 1, this.cursor + 1);
+      this.cursor = Math.max(0, Math.min(this.lines.length - 1, this.cursor + 1));
       this.armed = null;
-    } else if (matchesKey(data, Key.escape) || data === "q") {
+    } else if (matchesKey(data, Key.escape) || matchesKey(data, "q")) {
       this.onClose(this.killedNotes);
       return;
-    } else if (data === " ") {
+    } else if (matchesKey(data, Key.space)) {
       const line = this.lines[this.cursor];
       if (line?.kind === "row") this.toggle([line.row.pid]);
       else if (line?.kind === "header") this.toggle([...new Set(line.group.rows.map((r) => r.pid))]);
       this.armed = null;
-      this.cursor = Math.min(this.lines.length - 1, this.cursor + 1);
+      this.cursor = Math.max(0, Math.min(this.lines.length - 1, this.cursor + 1));
     } else if (matchesKey(data, Key.enter) || matchesKey(data, Key.left) || matchesKey(data, Key.right)) {
       const g = this.currentGroup();
       if (g) {
@@ -403,24 +431,24 @@ class PortList {
         this.cursor = this.lines.findIndex((l) => l.kind === "header" && l.group.rule.name === g.rule.name);
         this.rebuild();
       }
-    } else if (data === "a") {
+    } else if (matchesKey(data, "a")) {
       const g = this.currentGroup();
       if (g) this.toggle([...new Set(g.rows.map((r) => r.pid))]);
-    } else if (data === "c") {
+    } else if (matchesKey(data, "c")) {
       this.selectedPids.clear();
       this.armed = null;
       this.status = "selection cleared";
-    } else if (data === "s") {
+    } else if (matchesKey(data, "s")) {
       this.staleOnly = !this.staleOnly;
       this.cursor = 0;
       this.offset = 0;
       this.armed = null;
       this.status = this.staleOnly ? "showing stale only" : "showing everything";
       this.rebuild();
-    } else if (data === "r") {
+    } else if (matchesKey(data, "r")) {
       this.refresh();
       this.status = "rescanned";
-    } else if (data === "k") {
+    } else if (matchesKey(data, "k")) {
       this.doKill();
     } else {
       return;
@@ -430,6 +458,7 @@ class PortList {
     if (this.cursor < this.offset) this.offset = this.cursor;
     if (this.cursor >= this.offset + shown) this.offset = this.cursor - shown + 1;
     this.invalidate();
+    this.tui.requestRender();
   }
 
   private doKill(): void {
@@ -459,7 +488,7 @@ class PortList {
         return [pid, r ? `:${r.port} ${shortCmd(r.cmd).slice(0, 50)}` : `pid ${pid}`];
       }),
     );
-    const { killed, failed } = killPids(targets);
+    const { killed, failed } = this.dependencies.killPids(targets);
     for (const pid of killed) this.killedNotes.push(labels.get(pid) ?? `pid ${pid}`);
     this.selectedPids.clear();
     this.armed = null;
@@ -473,6 +502,7 @@ class PortList {
   render(width: number): string[] {
     if (this.cachedLines && this.cachedWidth === width) return this.cachedLines;
     const t = this.theme;
+    const contentWidth = Math.max(1, width);
     const out: string[] = [];
     const staleCount = this.rows.filter(isStale).length;
 
@@ -502,9 +532,9 @@ class PortList {
         const picked = [...pids].filter((p) => this.selectedPids.has(p)).length;
         const box = picked === 0 ? "[ ]" : picked === pids.size ? "[x]" : "[~]";
         const arrow = this.collapsed.has(g.rule.name) ? "▸" : "▾";
-        let head = `${caret}${box} ${arrow} ${g.rule.name} ${t.fg("dim", `(${g.rows.length})`)}`;
-        if (g.rule.note) head += t.fg("dim", ` — ${g.rule.note}`);
-        out.push(here ? t.bg("selectedBg", truncateToWidth(head, width - 1)) : truncateToWidth(head, width - 1));
+        let head = `${caret}${box} ${arrow} ${sanitizeDisplay(g.rule.name)} ${t.fg("dim", `(${g.rows.length})`)}`;
+        if (g.rule.note) head += t.fg("dim", ` — ${sanitizeDisplay(g.rule.note)}`);
+        out.push(here ? t.bg("selectedBg", truncateToWidth(head, contentWidth)) : truncateToWidth(head, contentWidth));
         continue;
       }
 
@@ -518,10 +548,10 @@ class PortList {
         r.age.padEnd(13);
       const cwd = shortCwd(r.cwd);
       const rest = cwd ? `${shortCmd(r.cmd)}  ${t.fg("dim", cwd)}` : shortCmd(r.cmd);
-      let text = truncateToWidth(left + rest, width - 1);
+      let text = truncateToWidth(left + rest, contentWidth);
       if (r.cwdGone) text = t.fg("warning", text);
       else if (!r.dev) text = t.fg("muted", text);
-      if (here) text = t.bg("selectedBg", truncateToWidth(text, width - 1));
+      if (here) text = t.bg("selectedBg", truncateToWidth(text, contentWidth));
       out.push(text);
     }
 
@@ -537,9 +567,10 @@ class PortList {
         t.fg("dim", ` cwd deleted · · over a day · groups: ${CONFIG_LABEL}`),
     );
 
-    this.cachedLines = out;
+    const border = t.fg("accent", "─".repeat(contentWidth));
+    this.cachedLines = [border, ...out.map((line) => truncateToWidth(line, contentWidth, "")), border];
     this.cachedWidth = width;
-    return out;
+    return this.cachedLines;
   }
 
   invalidate(): void {
@@ -550,6 +581,60 @@ class PortList {
 
 // ---------------------------------------------------------------- wiring
 
+export function openPortList(
+  ctx: ExtensionContext & { ui: any },
+  dependencies: PortListDependencies = PORT_LIST_DEPENDENCIES,
+): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    let list: PortList | undefined;
+    let settled = false;
+    let unsubscribe = () => {};
+    let subscriptionReady = false;
+    let cleanupRequested = false;
+
+    const cleanup = () => {
+      cleanupRequested = true;
+      if (subscriptionReady) unsubscribe();
+      try { ctx.ui.setWidget(DEVPORTS_WIDGET_KEY, undefined); } catch { /* best-effort cleanup */ }
+    };
+    const done = (killed: string[]) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(killed);
+    };
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
+    try {
+      ctx.ui.setWidget(
+        DEVPORTS_WIDGET_KEY,
+        (tui: TUI, theme: Theme) => {
+          list = new PortList(tui, theme, done, dependencies);
+          return list;
+        },
+        { placement: "aboveEditor" },
+      );
+      unsubscribe = ctx.ui.onTerminalInput((data: string) => {
+        try {
+          list?.handleInput(data);
+        } catch (error) {
+          fail(error);
+        }
+        return { consume: true };
+      });
+      subscriptionReady = true;
+      if (cleanupRequested) unsubscribe();
+    } catch (error) {
+      fail(error);
+    }
+  });
+}
+
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("ports", {
     description: "Browse listening ports by group; select and kill forgotten dev servers",
@@ -558,17 +643,7 @@ export default function (pi: ExtensionAPI) {
         ctx.ui.notify("/ports needs the TUI", "warning");
         return;
       }
-      const killed = await ctx.ui.custom<string[]>((tui: any, theme: any, _kb: any, done: any) => {
-        const list = new PortList(theme, () => tui?.terminal?.rows ?? 30, done);
-        return {
-          render: (width: number) => list.render(width),
-          handleInput: (data: string) => {
-            list.handleInput(data);
-            tui.requestRender();
-          },
-          invalidate: () => list.invalidate(),
-        };
-      });
+      const killed = await openPortList(ctx);
 
       if (killed && killed.length > 0) {
         ctx.ui.notify(`Killed ${killed.length}: ${killed.join("; ")}`, "info");

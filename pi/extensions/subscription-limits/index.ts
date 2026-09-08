@@ -1,5 +1,5 @@
 import {
-  BorderedLoader,
+  DynamicBorder,
   type ExtensionAPI,
   type ExtensionCommandContext,
 } from "@earendil-works/pi-coding-agent"
@@ -8,6 +8,7 @@ import {
   matchesKey,
   truncateToWidth,
   type Component,
+  type TUI,
 } from "@earendil-works/pi-tui"
 import {
   parseClaudeLimits,
@@ -21,6 +22,10 @@ type Theme = ExtensionCommandContext["ui"]["theme"]
 type RequestAuth = NonNullable<Awaited<ReturnType<ExtensionCommandContext["modelRegistry"]["getProviderAuth"]>>>
 
 const REQUEST_TIMEOUT_MS = 12_000
+const MIN_WIDGET_CONTENT_LINES = 5
+const MAX_WIDGET_CONTENT_LINES = 30
+const RESERVED_TERMINAL_LINES = 8
+export const SUBSCRIPTION_LIMITS_WIDGET_KEY = "subscription-limits:dashboard"
 
 function decodeJwtPayload(token: string): Record<string, unknown> | undefined {
   try {
@@ -189,111 +194,231 @@ function plainText(providers: ProviderLimits[]): string {
   return lines.join("\n")
 }
 
-class LimitsDashboard implements Component {
+export class LimitsWidget implements Component {
+  private readonly border: DynamicBorder
+  private providers: ProviderLimits[] | undefined
+  private scrollOffset = 0
+  private scrollableLines = 0
+  private viewportLines = 1
+
   constructor(
-    private readonly providers: ProviderLimits[],
+    private readonly tui: TUI,
     private readonly theme: Theme,
     private readonly close: () => void,
-  ) {}
+  ) {
+    this.border = new DynamicBorder((text: string) => theme.fg("accent", text))
+  }
+
+  setProviders(providers: ProviderLimits[]): void {
+    this.providers = providers
+    this.scrollOffset = 0
+    this.invalidate()
+    this.tui.requestRender()
+  }
 
   handleInput(data: string): void {
-    if (data === "q" || matchesKey(data, Key.escape) || matchesKey(data, Key.enter)) this.close()
+    if (
+      matchesKey(data, "q")
+      || matchesKey(data, Key.escape)
+      || (this.providers !== undefined && matchesKey(data, Key.enter))
+      || matchesKey(data, Key.ctrl("c"))
+    ) {
+      this.close()
+      return
+    }
+
+    const page = Math.max(1, this.viewportLines - 1)
+    let nextOffset = this.scrollOffset
+    if (matchesKey(data, Key.up)) nextOffset--
+    else if (matchesKey(data, Key.down)) nextOffset++
+    else if (matchesKey(data, Key.pageUp)) nextOffset -= page
+    else if (matchesKey(data, Key.pageDown)) nextOffset += page
+    else if (matchesKey(data, Key.home)) nextOffset = 0
+    else if (matchesKey(data, Key.end)) nextOffset = this.scrollableLines
+    else return
+
+    const maxOffset = Math.max(0, this.scrollableLines - this.viewportLines)
+    const boundedOffset = Math.max(0, Math.min(nextOffset, maxOffset))
+    if (boundedOffset === this.scrollOffset) return
+    this.scrollOffset = boundedOffset
+    this.tui.requestRender()
   }
 
   render(width: number): string[] {
     const usable = Math.max(20, width - 2)
     const barWidth = usable >= 70 ? 20 : usable >= 48 ? 12 : 8
-    const lines: string[] = [
+    const header = [
       this.theme.fg("accent", this.theme.bold("Subscription limits")),
       this.theme.fg("dim", "Provider-reported usage. Refreshes each time you open /limits."),
       "",
     ]
+    const body: string[] = []
 
-    for (const [index, provider] of this.providers.entries()) {
-      const heading = provider.subtitle
-        ? `${provider.title} · ${provider.subtitle}`
-        : provider.title
-      lines.push(this.theme.bold(heading))
+    if (!this.providers) {
+      body.push("Checking subscription limits…", "")
+    } else {
+      for (const [index, provider] of this.providers.entries()) {
+        const heading = provider.subtitle ? `${provider.title} · ${provider.subtitle}` : provider.title
+        body.push(this.theme.bold(heading))
 
-      if (provider.error) {
-        lines.push(`  ${this.theme.fg("warning", provider.error)}`)
-      } else if (provider.windows.length === 0) {
-        lines.push(`  ${this.theme.fg("muted", "No quota windows returned")}`)
-      } else {
-        for (const window of provider.windows) {
-          const percent = percentText(window.usedPercent).padStart(4)
-          if (usable >= 62) {
-            const labelWidth = Math.min(28, Math.max(18, usable - barWidth - 28))
-            const label = window.label.length > labelWidth
-              ? `${window.label.slice(0, Math.max(1, labelWidth - 1))}…`
-              : window.label.padEnd(labelWidth)
-            lines.push(`  ${label} ${bar(window, barWidth, this.theme)} ${this.theme.bold(percent)}`)
-            lines.push(`  ${"".padEnd(labelWidth)} ${this.theme.fg("dim", resetText(window))}`)
-          } else {
-            lines.push(`  ${window.label}  ${this.theme.bold(percent)}`)
-            lines.push(`  ${bar(window, barWidth, this.theme)}  ${this.theme.fg("dim", resetText(window))}`)
+        if (provider.error) {
+          body.push(`  ${this.theme.fg("warning", provider.error)}`)
+        } else if (provider.windows.length === 0) {
+          body.push(`  ${this.theme.fg("muted", "No quota windows returned")}`)
+        } else {
+          for (const window of provider.windows) {
+            const percent = percentText(window.usedPercent).padStart(4)
+            if (usable >= 62) {
+              const labelWidth = Math.min(28, Math.max(18, usable - barWidth - 28))
+              const label = window.label.length > labelWidth
+                ? `${window.label.slice(0, Math.max(1, labelWidth - 1))}…`
+                : window.label.padEnd(labelWidth)
+              body.push(`  ${label} ${bar(window, barWidth, this.theme)} ${this.theme.bold(percent)}`)
+              body.push(`  ${"".padEnd(labelWidth)} ${this.theme.fg("dim", resetText(window))}`)
+            } else {
+              body.push(`  ${window.label}  ${this.theme.bold(percent)}`)
+              body.push(`  ${bar(window, barWidth, this.theme)}  ${this.theme.fg("dim", resetText(window))}`)
+            }
           }
         }
+        for (const note of provider.notes) body.push(`  ${this.theme.fg("muted", note)}`)
+        if (index < this.providers.length - 1) body.push("")
       }
-
-      for (const note of provider.notes) lines.push(`  ${this.theme.fg("muted", note)}`)
-      if (index < this.providers.length - 1) lines.push("")
+      body.push("")
     }
 
-    lines.push("", this.theme.fg("dim", "Enter/q/esc close"))
-    return lines.map((line) => truncateToWidth(line, width, ""))
+    const terminalRows = this.tui.terminal.rows
+    const contentLineLimit = Math.max(
+      MIN_WIDGET_CONTENT_LINES,
+      Math.min(MAX_WIDGET_CONTENT_LINES, terminalRows - RESERVED_TERMINAL_LINES),
+    )
+    this.scrollableLines = body.length
+    this.viewportLines = Math.max(1, contentLineLimit - header.length - 1)
+    const maxOffset = Math.max(0, body.length - this.viewportLines)
+    this.scrollOffset = Math.min(this.scrollOffset, maxOffset)
+
+    const visibleBody = body.slice(this.scrollOffset, this.scrollOffset + this.viewportLines)
+    const hasOverflow = body.length > this.viewportLines
+    const position = `${this.scrollOffset + 1}-${this.scrollOffset + visibleBody.length}/${body.length}`
+    const controls = this.providers
+      ? hasOverflow
+        ? `↑↓/pgup/pgdn scroll · ${position} · Enter/q/esc close`
+        : "Enter/q/esc close"
+      : "q/esc cancel"
+    const lines = [...header, ...visibleBody, this.theme.fg("dim", controls)]
+
+    return [
+      ...this.border.render(width),
+      ...lines.map((line) => truncateToWidth(line, width, "")),
+      ...this.border.render(width),
+    ]
   }
 
-  invalidate(): void {}
+  invalidate(): void {
+    this.border.invalidate()
+  }
 }
 
-async function showLimits(ctx: ExtensionCommandContext): Promise<void> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(new Error("Request timed out")), REQUEST_TIMEOUT_MS)
+function openLimitsWidget(ctx: ExtensionCommandContext, requestTimeoutMs: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController()
+    let widget: LimitsWidget | undefined
+    let loaded: ProviderLimits[] | undefined
+    let settled = false
+    let loading = true
+    let unsubscribe = () => {}
+    let subscriptionReady = false
+    let cleanupRequested = false
 
-  let providers: ProviderLimits[] | null = null
-  try {
-    if (ctx.mode === "tui") {
-      providers = await ctx.ui.custom<ProviderLimits[] | null>((tui, theme, _keybindings, done) => {
-        const loader = new BorderedLoader(tui, theme, "Checking subscription limits…")
-        let closed = false
-        const finish = (value: ProviderLimits[] | null) => {
-          if (closed) return
-          closed = true
-          done(value)
-        }
-        loader.onAbort = () => {
-          controller.abort(new Error("Cancelled"))
-          finish(null)
-        }
-        void loadAllLimits(ctx, controller.signal)
-          .then(finish)
-          .catch(() => finish(null))
-        return loader
-      })
-    } else {
-      providers = await loadAllLimits(ctx, controller.signal)
+    const cleanup = () => {
+      cleanupRequested = true
+      clearTimeout(timeout)
+      if (loading && !controller.signal.aborted) controller.abort(new Error("Cancelled"))
+      if (subscriptionReady) unsubscribe()
+      try { ctx.ui.setWidget(SUBSCRIPTION_LIMITS_WIDGET_KEY, undefined) } catch { /* best-effort cleanup */ }
     }
+    const finish = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }
+    const fail = (error: unknown) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(error)
+    }
+    const timeout = setTimeout(() => {
+      if (settled || !loading) return
+      finish()
+      ctx.ui.notify("Subscription limit request timed out.", "warning")
+    }, requestTimeoutMs)
+
+    try {
+      ctx.ui.setWidget(
+        SUBSCRIPTION_LIMITS_WIDGET_KEY,
+        (tui, theme) => {
+          widget = new LimitsWidget(tui, theme, finish)
+          if (loaded) widget.setProviders(loaded)
+          return widget
+        },
+        { placement: "aboveEditor" },
+      )
+      unsubscribe = ctx.ui.onTerminalInput((data) => {
+        try { widget?.handleInput(data) } catch (error) { fail(error) }
+        return { consume: true }
+      })
+      subscriptionReady = true
+      if (cleanupRequested) unsubscribe()
+    } catch (error) {
+      fail(error)
+      return
+    }
+
+    void loadAllLimits(ctx, controller.signal).then((providers) => {
+      if (settled) return
+      loading = false
+      clearTimeout(timeout)
+      if (providers.length === 0) {
+        finish()
+        ctx.ui.notify("No Codex, Claude, or OpenRouter credentials are configured.", "warning")
+        return
+      }
+      loaded = providers
+      widget?.setProviders(providers)
+    }).catch((error) => {
+      if (settled) return
+      fail(error)
+    })
+  })
+}
+
+export async function showLimits(
+  ctx: ExtensionCommandContext,
+  requestTimeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<void> {
+  if (ctx.mode === "tui") {
+    await openLimitsWidget(ctx, requestTimeoutMs)
+    return
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(new Error("Request timed out")), requestTimeoutMs)
+  let providers: ProviderLimits[]
+  try {
+    providers = await loadAllLimits(ctx, controller.signal)
   } finally {
     clearTimeout(timeout)
   }
 
-  if (!providers) return
   if (providers.length === 0) {
     ctx.ui.notify("No Codex, Claude, or OpenRouter credentials are configured.", "warning")
     return
   }
-
-  if (ctx.mode !== "tui") {
-    const text = plainText(providers)
-    if (ctx.hasUI) ctx.ui.notify(text, "info")
-    else console.log(text)
-    return
-  }
-
-  await ctx.ui.custom<void>((_tui, theme, _keybindings, done) =>
-    new LimitsDashboard(providers, theme, done),
-  )
+  const text = plainText(providers)
+  if (ctx.hasUI) ctx.ui.notify(text, "info")
+  else console.log(text)
 }
 
 export default function subscriptionLimits(pi: ExtensionAPI): void {
