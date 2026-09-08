@@ -1,0 +1,128 @@
+{
+  "title": "Choose the visual world",
+  "question": "Pick the visual language for three structural HTML prototypes. The prototypes will still disagree about the generation flow.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Darkroom Workbench",
+      "kicker": "THE ROLL",
+      "lineage": "photographic darkrooms and proofing stations",
+      "thesis": "The prompt is the enlarger, the active batch is the developing tray, and the library is the contact sheet beside it.",
+      "palette": ["#171715", "#f1eee6", "#ff593d", "#8f938b"],
+      "materials": ["matte charcoal", "proof paper", "red safe-light signal"],
+      "viewport": "A persistent workbench keeps the full setup above a broad contact sheet, with the active batch developing in place.",
+      "risk": "A dark scene can feel heavy if the library loses enough breathing room.",
+      "raised": [
+        {"from": "Cloud Quarry", "raise": "The workbench owns the whole window as one coherent environment."},
+        {"from": "ASCII Render", "raise": "Job state changes alter the image area itself, not just a status label."}
+      ],
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "full controls", "x": 0, "y": 0, "w": 12, "h": 3, "accent": true},
+        {"label": "active batch", "x": 0, "y": 3, "w": 5, "h": 7},
+        {"label": "contact sheet", "x": 5, "y": 3, "w": 7, "h": 7}
+      ]}
+    },
+    {
+      "id": "model-pick",
+      "label": "Contact Sheet",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "photographer proof sheets and macOS Quick Look",
+      "thesis": "The library is one calm sheet of images, with a precise generation strip always ready at its edge.",
+      "palette": ["#f4f3ef", "#181817", "#2f6fed", "#c9c7c0"],
+      "materials": ["uncoated proof stock", "thin registration marks"],
+      "viewport": "A large chronological image field leads, while the complete generation setup stays in a narrow fixed strip.",
+      "risk": "This is the most familiar option and may feel less singular.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "library", "x": 0, "y": 0, "w": 9, "h": 10},
+        {"label": "generation strip", "x": 9, "y": 0, "w": 3, "h": 10, "accent": true}
+      ]}
+    },
+    {
+      "id": "challenger-origami",
+      "label": "Fold Sequence",
+      "verdict": "competitive",
+      "lineage": "single-sheet origami instruction sequences",
+      "thesis": "One generation moves through setup, queue, development, and result without hiding the whole sheet of choices.",
+      "palette": ["#f7f4ed", "#cf3e32", "#22211f", "#c7b995"],
+      "materials": ["washi field", "crease lines", "one gold active mark"],
+      "viewport": "The setup occupies one continuous horizontal sheet; submission folds it into an active batch while history remains below.",
+      "case": "The state transition is exceptionally clear, but the paper metaphor is less native to image making.",
+      "risk": "The fold idea becomes decoration if its state transition is not exact.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "setup sequence", "x": 0, "y": 0, "w": 12, "h": 4, "accent": true},
+        {"label": "history", "x": 0, "y": 4, "w": 12, "h": 6}
+      ]}
+    },
+    {
+      "id": "challenger-crouwel",
+      "label": "Working Grid",
+      "verdict": "competitive",
+      "lineage": "Wim Crouwel construction grids",
+      "thesis": "Every control, job, and image snaps to one visible working grid so the whole batch reads at a glance.",
+      "palette": ["#f5f3eb", "#151515", "#1463ff", "#bbc9e8"],
+      "materials": ["construction grid", "registration blue"],
+      "viewport": "A compact top control band and large results grid share the same strict cells.",
+      "case": "The hierarchy is strong and minimal, though the graphic voice may compete with personal images.",
+      "risk": "Visible structure can become visual noise in a dense library.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "controls", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true},
+        {"label": "results grid", "x": 0, "y": 2, "w": 12, "h": 8}
+      ]}
+    },
+    {
+      "id": "challenger-teletext",
+      "label": "Teletext Service",
+      "verdict": "declined",
+      "lineage": "broadcast teletext magazines",
+      "thesis": "Providers and batches become directly keyed pages in a rigid broadcast index.",
+      "palette": ["#000000", "#ffff00", "#00ffff", "#ff3030"],
+      "materials": ["bitmap cells", "flat phosphor color"],
+      "viewport": "A numbered generation page sits above a keyed history index.",
+      "case": "Direct addressing is fast, but the command grammar makes a personal visual library harder to scan.",
+      "risk": "Retro character overwhelms the images.",
+      "kept": "Every action gets a direct, unambiguous address."
+    },
+    {
+      "id": "challenger-atlas",
+      "label": "Star Atlas",
+      "verdict": "declined",
+      "lineage": "celestial chart plates",
+      "thesis": "Generation batches become plotted fields with provider and status encoded as marks.",
+      "palette": ["#07172b", "#f3f0dc", "#e16a3d", "#7185a0"],
+      "materials": ["navy chart ground", "coordinate hairlines"],
+      "viewport": "The library fills the window as a navigable field around the current batch.",
+      "case": "Browsing gains atmosphere but loses the obvious prompt-to-result path.",
+      "risk": "The visual metaphor obscures routine controls.",
+      "kept": "Image importance should read through scale before labels."
+    },
+    {
+      "id": "challenger-cloud",
+      "label": "Cloud Quarry",
+      "verdict": "declined",
+      "lineage": "surreal impossible work sites",
+      "thesis": "Prompts cut image blocks out of a live field and queue them for assembly.",
+      "palette": ["#edf1f3", "#2797db", "#555c63", "#c8d0d6"],
+      "materials": ["cumulus mass", "cut blue voids"],
+      "viewport": "A spatial work site shows references, prompts, and results as moving blocks.",
+      "case": "The scene is memorable but does not identify with a small personal desktop utility.",
+      "risk": "The concept adds interaction cost to every ordinary action.",
+      "kept": "Commit the entire window to one environment rather than stacking generic cards."
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": false},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A neutral sidebar, prompt modal, and rounded gallery cards executed cleanly.",
+    "palette": ["#f5f5f4", "#ffffff", "#3b6ef6", "#1c1c1e"],
+    "materials": ["system surfaces", "thin borders"],
+    "viewport": "Navigation sits left, history fills the center, and generation opens in a modal.",
+    "risk": "It repeats the structure that currently makes generation feel separate and unclear.",
+    "wireframe": {"cols": 12, "rows": 10, "regions": [
+      {"label": "sidebar", "x": 0, "y": 0, "w": 2, "h": 10},
+      {"label": "gallery", "x": 2, "y": 0, "w": 10, "h": 10}
+    ]}
+  },
+  "steer": true
+}

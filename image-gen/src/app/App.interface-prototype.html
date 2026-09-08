@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Gen interface prototypes</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f3ef;
+      --paper-raised: #fbfaf7;
+      --ink: #191918;
+      --muted: #666762;
+      --faint: #a5a69f;
+      --line: #cdcec8;
+      --line-strong: #959790;
+      --blue: #175ce6;
+      --blue-dark: #1047b4;
+      --blue-soft: #e2eaff;
+      --red: #c33d31;
+      --green: #326943;
+      --focus: #0d52de;
+      --switcher: #181817;
+      --switcher-ink: #faf9f4;
+      --radius: 12px;
+      --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; margin: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--ui);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+    ::selection { background: var(--blue); color: white; }
+
+    :focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--focus) 48%, transparent);
+      outline-offset: 2px;
+    }
+
+    button, label { -webkit-tap-highlight-color: transparent; }
+
+    .prototype-note {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      z-index: 30;
+      transform: translateX(-50%);
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      background: rgba(24,24,23,.9);
+      color: #f8f7f3;
+      font-size: 11px;
+      letter-spacing: .02em;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      pointer-events: none;
+    }
+
+    .variant { display: none; min-height: 100vh; padding-bottom: 92px; }
+    .variant.is-active { display: block; }
+
+    .app-bar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-raised);
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 680; }
+
+    .brand-mark {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+    }
+
+    .brand-mark i { background: currentColor; border-radius: 2px; }
+    .brand-mark i:nth-child(4) { background: var(--blue); }
+
+    .app-tools { display: flex; align-items: center; gap: 4px; }
+
+    .plain-button, .quiet-button, .icon-text-button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .plain-button {
+      padding: 7px 10px;
+      border-radius: 7px;
+      color: var(--muted);
+    }
+
+    .plain-button:hover { background: #e9e8e3; color: var(--ink); }
+
+    .section-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 680;
+      letter-spacing: -.015em;
+    }
+
+    .section-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+    .field-name {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+    }
+
+    .prompt {
+      width: 100%;
+      min-height: 126px;
+      resize: vertical;
+      padding: 13px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: var(--paper-raised);
+      color: var(--ink);
+      line-height: 1.45;
+      caret-color: var(--blue);
+    }
+
+    .prompt::placeholder { color: #777972; opacity: 1; }
+
+    .reference-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .reference {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #e5e5e0;
+    }
+
+    .reference img { width: 100%; height: 100%; display: block; object-fit: cover; }
+
+    .reference button {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(20,20,19,.82);
+      color: white;
+      cursor: pointer;
+      line-height: 16px;
+    }
+
+    .add-reference {
+      min-width: 94px;
+      min-height: 54px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .add-reference:hover { border-style: solid; color: var(--ink); background: #ecebe6; }
+
+    .choices { display: grid; gap: 10px; }
+    .choice-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+    .toggle-pair, .count-control { display: inline-flex; gap: 3px; }
+
+    .toggle, .count-button {
+      min-height: 32px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--paper-raised);
+      cursor: pointer;
+    }
+
+    .toggle[aria-pressed="true"], .count-button[aria-pressed="true"] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: white;
+    }
+
+    .job-count { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    .generate-button {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--blue);
+      border-radius: 9px;
+      background: var(--blue);
+      color: white;
+      font-weight: 680;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(21,21,20,.16);
+      transition: background 160ms ease-out, transform 160ms ease-out, box-shadow 160ms ease-out;
+    }
+
+    .generate-button:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 7px 18px rgba(21,21,20,.2); }
+    .generate-button:active { transform: translateY(0); box-shadow: none; }
+    .generate-button:disabled { background: #8a9bc0; border-color: #8a9bc0; cursor: wait; box-shadow: none; transform: none; }
+
+    .sheet-grid { display: grid; gap: 12px; }
+
+    .image-cell {
+      position: relative;
+      min-width: 0;
+      margin: 0;
+    }
+
+    .image-frame {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: #dfdfd9;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+    }
+
+    .image-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .image-cell figcaption {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 1px 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .image-cell figcaption strong { max-width: 72%; overflow: hidden; color: var(--ink); font-weight: 560; text-overflow: ellipsis; white-space: nowrap; }
+    .provider-dot { color: var(--blue); font-weight: 700; }
+
+    .selected .image-frame { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+    .image-actions {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 150ms ease-out, transform 150ms ease-out;
+    }
+
+    .image-cell:hover .image-actions, .image-cell:focus-within .image-actions { opacity: 1; transform: translateY(0); }
+
+    .image-actions button {
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 6px;
+      background: rgba(20,20,19,.84);
+      color: white;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .developing {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      background: #e8e8e2;
+      overflow: hidden;
+    }
+
+    .developing::before {
+      content: "";
+      width: 48%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #b8c9f5;
+      filter: blur(18px);
+      animation: develop 2.8s cubic-bezier(.16,1,.3,1) infinite alternate;
+    }
+
+    .developing .job-copy {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      color: #3d4c70;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .developing button, .cancel-batch {
+      padding: 5px 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--paper-raised);
+      color: var(--ink);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .developing.status-failed::before { background: #e4b7b1; animation: none; filter: blur(10px); }
+    .developing.status-failed .job-copy { color: #7a261f; }
+    .developing.status-cancelled::before { background: #cfcfc9; animation: none; filter: blur(10px); }
+    .developing.status-cancelled .job-copy { color: var(--muted); }
+    .job-slot figcaption { display: flex; justify-content: space-between; gap: 8px; padding-top: 7px; color: var(--muted); font-size: 11px; }
+    .job-slot figcaption strong { color: var(--ink); font-weight: 600; }
+    .run-status { display: flex; align-items: center; gap: 9px; }
+
+    @keyframes develop {
+      from { transform: scale(.6); opacity: .45; filter: blur(22px); }
+      to { transform: scale(1.7); opacity: .85; filter: blur(8px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
+    }
+
+    .studio-layout { min-height: calc(100vh - 56px); display: grid; grid-template-columns: minmax(0, 1fr) 356px; }
+
+    .studio-library { padding: 30px clamp(22px, 3vw, 46px) 46px; min-width: 0; }
+
+    .library-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+    .view-switch { display: flex; align-items: center; gap: 2px; }
+    .view-switch button { padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+    .view-switch button[aria-pressed="true"] { background: #e4e3de; color: var(--ink); }
+
+    .studio-sheet { grid-template-columns: repeat(4, minmax(120px, 1fr)); }
+
+    .studio-rail {
+      padding: 28px 24px 112px;
+      border-left: 1px solid var(--line-strong);
+      background: #eeede8;
+    }
+
+    .studio-rail .section-title { margin-bottom: 24px; }
+    .studio-rail .field { margin-bottom: 22px; }
+    .studio-rail .choices { margin-bottom: 20px; }
+    .rail-foot { margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+    .bench-layout { padding-bottom: 36px; }
+
+    .bench {
+      display: grid;
+      grid-template-columns: minmax(340px, 1.35fr) minmax(170px, .55fr) minmax(220px, .65fr) minmax(220px, .62fr);
+      gap: 0;
+      border-bottom: 1px solid var(--line-strong);
+      background: #ecebe6;
+    }
+
+    .bench > * { min-width: 0; padding: 25px 24px 26px; border-right: 1px solid var(--line); }
+    .bench > *:last-child { border-right: 0; }
+    .bench .prompt { min-height: 108px; }
+    .bench .field-name { margin-bottom: 10px; }
+    .bench-controls { display: flex; flex-direction: column; justify-content: space-between; }
+    .bench-action { display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+    .bench-total { font-size: 28px; font-weight: 690; letter-spacing: -.025em; }
+    .bench-total small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; }
+
+    .active-strip { padding: 22px clamp(22px, 3vw, 46px); border-bottom: 1px solid var(--line); background: var(--paper-raised); }
+    .strip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 12px; }
+    .strip-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .result-strip { display: grid; grid-template-columns: repeat(4, minmax(100px, 178px)); gap: 10px; }
+    .result-strip .image-frame, .result-strip .developing { aspect-ratio: 4 / 3; }
+
+    .bench-history { padding: 28px clamp(22px, 3vw, 46px); }
+    .bench-history .library-heading { margin-bottom: 18px; }
+    .bench-sheet { grid-template-columns: repeat(6, minmax(100px, 1fr)); }
+
+    .ledger-layout { max-width: 1520px; margin: 0 auto; padding: 28px clamp(20px, 3.4vw, 52px) 48px; }
+
+    .ledger-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+    .ledger-heading .section-title { font-size: 21px; }
+
+    .generation-row {
+      display: grid;
+      grid-template-columns: 180px minmax(300px, 1fr) 250px 200px;
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--paper-raised);
+    }
+
+    .generation-row > * { min-width: 0; padding: 20px; border-right: 1px solid var(--line); }
+    .generation-row > *:last-child { border-right: 0; }
+    .generation-row .prompt { min-height: 112px; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 17px; }
+    .generation-row .reference-row { margin-top: 18px; }
+    .generation-row .reference { width: 44px; height: 44px; }
+    .generation-row .add-reference { min-width: 70px; min-height: 44px; }
+    .generation-row .generate-button { margin-top: auto; }
+    .generation-meta { display: flex; flex-direction: column; justify-content: space-between; }
+    .generation-summary { font-size: 26px; font-weight: 690; letter-spacing: -.025em; }
+    .generation-summary small { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0; line-height: 1.45; }
+
+    .ledger-date {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .date-mark { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .ledger-sheet { grid-template-columns: repeat(5, minmax(110px, 1fr)); }
+
+    /* Prototype switcher is deliberately outside the proposed product UI. */
+    .prototype-switcher {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      z-index: 40;
+      transform: translateX(-50%);
+      width: min(620px, calc(100vw - 28px));
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      background: var(--switcher);
+      color: var(--switcher-ink);
+      box-shadow: 0 12px 34px rgba(0,0,0,.25);
+    }
+
+    .prototype-switcher > button {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 9px;
+      background: #2c2c2a;
+      color: white;
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    .prototype-switcher > button:hover { background: #3b3b38; }
+    .switcher-copy { min-width: 0; text-align: center; }
+    .switcher-copy strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .switcher-copy span { display: block; margin-top: 2px; overflow: hidden; color: #adafaa; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 86px;
+      z-index: 35;
+      max-width: 300px;
+      padding: 10px 12px;
+      border: 1px solid #263b69;
+      border-radius: 9px;
+      background: #15213c;
+      color: #eaf0ff;
+      box-shadow: 0 10px 28px rgba(20,20,19,.2);
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 180ms ease-out, transform 180ms ease-out;
+    }
+
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1120px) {
+      .studio-sheet { grid-template-columns: repeat(3, minmax(110px, 1fr)); }
+      .bench { grid-template-columns: 1.2fr .8fr; }
+      .bench-action { grid-column: 1 / -1; flex-direction: row; align-items: end; border-top: 1px solid var(--line); }
+      .bench-action .generate-button { width: 230px; }
+      .bench-sheet { grid-template-columns: repeat(4, minmax(100px, 1fr)); }
+      .generation-row { grid-template-columns: 160px 1fr 220px; }
+      .generation-meta { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 220px; align-items: center; border-top: 1px solid var(--line); }
+      .generation-meta .generate-button { margin: 0; }
+      .ledger-date { grid-template-columns: 130px 1fr; }
+      .ledger-sheet { grid-template-columns: repeat(4, minmax(100px, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      .prototype-note { display: none; }
+      .app-bar { height: 50px; padding: 0 14px; }
+      .plain-button { padding-inline: 7px; }
+      .studio-layout { display: flex; flex-direction: column; }
+      .studio-rail { order: -1; border-left: 0; border-bottom: 1px solid var(--line-strong); padding: 20px 16px; }
+      .studio-library { padding: 22px 16px 34px; }
+      .studio-sheet { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .studio-rail .choices { grid-template-columns: 1fr; }
+      .bench { display: block; }
+      .bench > * { border-right: 0; border-bottom: 1px solid var(--line); padding: 19px 16px; }
+      .bench-action { display: block; }
+      .bench-action .generate-button { width: 100%; margin-top: 14px; }
+      .active-strip, .bench-history { padding-inline: 16px; }
+      .result-strip { grid-template-columns: repeat(2, 1fr); }
+      .bench-sheet { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+      .ledger-layout { padding: 20px 14px 40px; }
+      .generation-row { display: block; }
+      .generation-row > * { border-right: 0; border-bottom: 1px solid var(--line); padding: 17px 15px; }
+      .generation-meta { display: block; }
+      .generation-meta .generate-button { margin-top: 14px; }
+      .ledger-date { display: block; }
+      .date-mark { margin-bottom: 12px; }
+      .ledger-sheet { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
+      .library-heading, .ledger-heading { align-items: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-note">Throwaway interface prototype</div>
+
+  <section class="variant" data-variant="a" aria-label="Variant A, Studio rail">
+    <header class="app-bar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Image Gen</div>
+      <div class="app-tools"><button class="plain-button">History</button><button class="plain-button">Settings</button></div>
+    </header>
+    <div class="studio-layout">
+      <main class="studio-library">
+        <div class="library-heading">
+          <div><h1 class="section-title">Library</h1><p class="section-subtitle">8 images · newest first</p></div>
+          <div class="view-switch"><button aria-pressed="true">Images</button><button aria-pressed="false">Batches</button></div>
+        </div>
+        <div class="sheet-grid studio-sheet" data-gallery></div>
+      </main>
+      <aside class="studio-rail">
+        <h2 class="section-title">Make images</h2>
+        <div class="field">
+          <span class="field-name">References</span>
+          <div class="reference-row">
+            <div class="reference"><img src="prototype-assets/sample-02.png" alt="Selected pineapple character reference" /><button aria-label="Remove reference">×</button></div>
+            <button class="add-reference" data-add-reference>Paste image</button>
+          </div>
+        </div>
+        <label class="field"><span class="field-name">Prompt</span><textarea class="prompt" data-prompt>A small low-poly pineapple character carrying a blue messenger bag, soft studio light, plain warm backdrop.</textarea></label>
+        <div class="choices">
+          <div class="choice-line"><span class="field-name" style="margin:0">Providers</span><div class="toggle-pair"><button class="toggle" aria-pressed="true" data-provider>OpenAI</button><button class="toggle" aria-pressed="true" data-provider>Antigravity</button></div></div>
+          <div class="choice-line"><span class="field-name" style="margin:0">Images each</span><div class="count-control" data-count><button class="count-button" aria-pressed="false">1</button><button class="count-button" aria-pressed="true">2</button><button class="count-button" aria-pressed="false">3</button></div></div>
+        </div>
+        <div class="job-count" data-job-count>2 providers × 2 images · 4 jobs</div>
+        <button class="generate-button" data-generate>Generate 4 images</button>
+        <p class="rail-foot">⌘ Enter to generate<br />Jobs run one at a time per provider.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="variant" data-variant="b" aria-label="Variant B, Workbench">
+    <header class="app-bar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Image Gen</div>
+      <div class="app-tools"><button class="plain-button">Library</button><button class="plain-button">Settings</button></div>
+    </header>
+    <main class="bench-layout">
+      <section class="bench" aria-label="Generation workbench">
+        <label><span class="field-name">Prompt</span><textarea class="prompt" data-prompt>A small low-poly pineapple character carrying a blue messenger bag, soft studio light, plain warm backdrop.</textarea></label>
+        <div>
+          <span class="field-name">References</span>
+          <div class="reference-row">
+            <div class="reference"><img src="prototype-assets/sample-02.png" alt="Selected pineapple character reference" /><button aria-label="Remove reference">×</button></div>
+            <button class="add-reference" data-add-reference>Paste image</button>
+          </div>
+        </div>
+        <div class="bench-controls">
+          <div>
+            <span class="field-name">Providers</span>
+            <div class="toggle-pair"><button class="toggle" aria-pressed="true" data-provider>OpenAI</button><button class="toggle" aria-pressed="true" data-provider>Antigravity</button></div>
+          </div>
+          <div>
+            <span class="field-name">Images each</span>
+            <div class="count-control" data-count><button class="count-button" aria-pressed="false">1</button><button class="count-button" aria-pressed="true">2</button><button class="count-button" aria-pressed="false">3</button></div>
+          </div>
+        </div>
+        <div class="bench-action">
+          <div class="bench-total" data-total>4 images<small>2 providers × 2 images</small></div>
+          <button class="generate-button" data-generate>Generate 4 images</button>
+        </div>
+      </section>
+      <section class="active-strip">
+        <div class="strip-head"><div><h2 class="section-title">On the bench</h2><p>Latest batch stays here while it runs.</p></div><p data-run-status>Ready for a new batch</p></div>
+        <div class="result-strip" data-active-strip>
+          <figure class="image-cell"><div class="image-frame"><img src="prototype-assets/sample-02.png" alt="Blue-haired pineapple character" /></div><figcaption><strong>OpenAI · 1</strong><span>Done</span></figcaption></figure>
+          <figure class="image-cell"><div class="image-frame"><img src="prototype-assets/sample-04.png" alt="Image generation icon" /></div><figcaption><strong>Antigravity · 1</strong><span>Done</span></figcaption></figure>
+        </div>
+      </section>
+      <section class="bench-history">
+        <div class="library-heading"><div><h2 class="section-title">Previous work</h2><p class="section-subtitle">Grouped by batch</p></div><div class="view-switch"><button aria-pressed="true">Images</button><button aria-pressed="false">Batches</button></div></div>
+        <div class="sheet-grid bench-sheet" data-gallery></div>
+      </section>
+    </main>
+  </section>
+
+  <section class="variant" data-variant="c" aria-label="Variant C, Inline batch">
+    <header class="app-bar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Image Gen</div>
+      <div class="app-tools"><button class="plain-button">All images</button><button class="plain-button">Settings</button></div>
+    </header>
+    <main class="ledger-layout">
+      <div class="ledger-heading"><div><h1 class="section-title">Image ledger</h1><p class="section-subtitle">Generate at the top. Results join the record below.</p></div><div class="view-switch"><button aria-pressed="true">Recent</button><button aria-pressed="false">Batches</button></div></div>
+      <section class="generation-row" aria-label="New generation">
+        <div>
+          <span class="field-name">References</span>
+          <div class="reference-row">
+            <div class="reference"><img src="prototype-assets/sample-02.png" alt="Selected pineapple character reference" /><button aria-label="Remove reference">×</button></div>
+            <button class="add-reference" data-add-reference>Paste</button>
+          </div>
+        </div>
+        <label><span class="field-name">New generation</span><textarea class="prompt" data-prompt>A small low-poly pineapple character carrying a blue messenger bag, soft studio light, plain warm backdrop.</textarea></label>
+        <div class="choices">
+          <div><span class="field-name">Providers</span><div class="toggle-pair"><button class="toggle" aria-pressed="true" data-provider>OpenAI</button><button class="toggle" aria-pressed="true" data-provider>Antigravity</button></div></div>
+          <div><span class="field-name">Images each</span><div class="count-control" data-count><button class="count-button" aria-pressed="false">1</button><button class="count-button" aria-pressed="true">2</button><button class="count-button" aria-pressed="false">3</button></div></div>
+        </div>
+        <div class="generation-meta">
+          <div class="generation-summary" data-total>4 images<small>2 providers × 2 images<br />Runs in two lanes</small></div>
+          <button class="generate-button" data-generate>Generate 4 images</button>
+        </div>
+      </section>
+      <section class="ledger-date">
+        <div class="date-mark">Today<br />10:44</div>
+        <div class="sheet-grid ledger-sheet" data-gallery></div>
+      </section>
+    </main>
+  </section>
+
+  <nav class="prototype-switcher" aria-label="Prototype variants">
+    <button type="button" data-prev aria-label="Previous variant">←</button>
+    <div class="switcher-copy"><strong data-variant-label>Variant A · Studio rail</strong><span data-state-label>OpenAI + Antigravity · 2 each · 4 jobs</span></div>
+    <button type="button" data-next aria-label="Next variant">→</button>
+  </nav>
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const variants = [
+      { id: 'a', name: 'Studio rail', note: 'Library leads · complete setup stays at the right' },
+      { id: 'b', name: 'Workbench', note: 'Setup and active batch share one horizontal bench' },
+      { id: 'c', name: 'Inline batch', note: 'Generation is the first row of the chronological record' }
+    ];
+
+    const galleryItems = [
+      ['sample-02.png', 'Pineapple courier', 'OpenAI'],
+      ['sample-03.png', 'Workshop landing page', 'OpenAI'],
+      ['sample-05.png', 'Workshop poster', 'Antigravity'],
+      ['sample-08.png', 'Three-step layout', 'OpenAI'],
+      ['sample-04.png', 'Generation app icon', 'Antigravity'],
+      ['sample-07.png', 'Camera app icon', 'OpenAI'],
+      ['sample-01.png', 'Pinned workshop page', 'Antigravity'],
+      ['sample-06.png', 'Pixel image icon', 'OpenAI']
+    ];
+
+    function galleryMarkup() {
+      return galleryItems.map(([src, title, provider], index) => `
+        <figure class="image-cell${index === 0 ? ' selected' : ''}">
+          <div class="image-frame">
+            <img src="prototype-assets/${src}" alt="${title}" loading="lazy" />
+            <div class="image-actions"><button data-use-reference>Use as reference</button><button data-copy>Copy</button></div>
+          </div>
+          <figcaption><strong>${title}</strong><span><span class="provider-dot">●</span> ${provider}</span></figcaption>
+        </figure>`).join('');
+    }
+
+    document.querySelectorAll('[data-gallery]').forEach((gallery) => { gallery.innerHTML = galleryMarkup(); });
+
+    let current = new URLSearchParams(location.search).get('variant') || 'a';
+    if (!variants.some((variant) => variant.id === current)) current = 'a';
+
+    function showVariant(id) {
+      current = id;
+      document.querySelectorAll('.variant').forEach((section) => section.classList.toggle('is-active', section.dataset.variant === id));
+      const selected = variants.find((variant) => variant.id === id);
+      document.querySelector('[data-variant-label]').textContent = `Variant ${id.toUpperCase()} · ${selected.name}`;
+      updateStateLabel();
+      const url = new URL(location.href);
+      url.searchParams.set('variant', id);
+      history.replaceState({}, '', url);
+    }
+
+    function cycle(step) {
+      const index = variants.findIndex((variant) => variant.id === current);
+      showVariant(variants[(index + step + variants.length) % variants.length].id);
+    }
+
+    function activeSection() { return document.querySelector(`.variant[data-variant="${current}"]`); }
+
+    function readState(section = activeSection()) {
+      const providers = [...section.querySelectorAll('[data-provider][aria-pressed="true"]')].map((button) => button.textContent.trim());
+      const count = Number(section.querySelector('[data-count] [aria-pressed="true"]')?.textContent || 1);
+      const jobs = providers.length * count;
+      return { providers, count, jobs };
+    }
+
+    function updateSection(section) {
+      const { providers, count, jobs } = readState(section);
+      section.querySelectorAll('[data-job-count]').forEach((node) => { node.textContent = `${providers.length} provider${providers.length === 1 ? '' : 's'} × ${count} image${count === 1 ? '' : 's'} · ${jobs} job${jobs === 1 ? '' : 's'}`; });
+      section.querySelectorAll('[data-total]').forEach((node) => { node.innerHTML = `${jobs} image${jobs === 1 ? '' : 's'}<small>${providers.length} provider${providers.length === 1 ? '' : 's'} × ${count} image${count === 1 ? '' : 's'}${current === 'c' ? '<br />Runs in two lanes' : ''}</small>`; });
+      section.querySelectorAll('[data-generate]').forEach((button) => {
+        button.textContent = providers.length ? `Generate ${jobs} image${jobs === 1 ? '' : 's'}` : 'Choose a provider';
+        button.disabled = providers.length === 0;
+      });
+      updateStateLabel();
+    }
+
+    function updateStateLabel() {
+      const selected = variants.find((variant) => variant.id === current);
+      const state = readState();
+      document.querySelector('[data-state-label]').textContent = `${selected.note} · ${state.providers.join(' + ') || 'No provider'} · ${state.count} each · ${state.jobs} jobs`;
+    }
+
+    function notify(message) {
+      const toast = document.querySelector('.toast');
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => toast.classList.remove('is-visible'), 2200);
+    }
+
+    document.querySelector('[data-prev]').addEventListener('click', () => cycle(-1));
+    document.querySelector('[data-next]').addEventListener('click', () => cycle(1));
+
+    document.addEventListener('keydown', (event) => {
+      const editable = event.target.matches('input, textarea, [contenteditable="true"]');
+      if (!editable && event.key === 'ArrowLeft') cycle(-1);
+      if (!editable && event.key === 'ArrowRight') cycle(1);
+      if (event.metaKey && event.key === 'Enter') activeSection().querySelector('[data-generate]')?.click();
+    });
+
+    document.querySelectorAll('[data-provider]').forEach((button) => {
+      button.addEventListener('click', () => {
+        button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+        updateSection(button.closest('.variant'));
+      });
+    });
+
+    document.querySelectorAll('[data-count] .count-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        button.parentElement.querySelectorAll('button').forEach((peer) => peer.setAttribute('aria-pressed', peer === button ? 'true' : 'false'));
+        updateSection(button.closest('.variant'));
+      });
+    });
+
+    document.querySelectorAll('.reference button').forEach((button) => {
+      button.addEventListener('click', () => { button.closest('.reference').remove(); notify('Reference removed'); });
+    });
+
+    document.querySelectorAll('[data-add-reference]').forEach((button) => {
+      button.addEventListener('click', () => notify('Paste an image with ⌘V'));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (event.target.matches('[data-use-reference]')) notify('Added to the next generation');
+      if (event.target.matches('[data-copy]')) notify('Image copied');
+      if (event.target.closest('.view-switch button')) {
+        const button = event.target.closest('button');
+        button.parentElement.querySelectorAll('button').forEach((peer) => peer.setAttribute('aria-pressed', peer === button ? 'true' : 'false'));
+      }
+    });
+
+    const resultImages = ['sample-02.png', 'sample-07.png', 'sample-04.png', 'sample-06.png', 'sample-08.png', 'sample-03.png'];
+
+    function jobSlotMarkup(index, provider) {
+      return `<div class="developing job-slot status-queued" data-job data-index="${index}" data-provider-name="${provider}" style="position:relative"><div class="job-copy"><span>Queued · ${provider}</span><button data-cancel-job>Cancel</button></div></div>`;
+    }
+
+    function clearJobTimers(slot) {
+      (slot.jobTimers || []).forEach(clearTimeout);
+      slot.jobTimers = [];
+    }
+
+    function setJobState(slot, status) {
+      const provider = slot.dataset.providerName;
+      const index = Number(slot.dataset.index);
+      slot.className = `developing job-slot status-${status}`;
+
+      if (status === 'running') {
+        slot.innerHTML = `<div class="job-copy"><span>Running · ${provider}</span><button data-cancel-job>Cancel</button></div>`;
+      } else if (status === 'failed') {
+        slot.innerHTML = `<div class="job-copy"><span>Backend error · ${provider}</span><button data-retry-job>Retry</button></div>`;
+      } else if (status === 'cancelled') {
+        slot.innerHTML = `<div class="job-copy"><span>Cancelled · ${provider}</span><button data-retry-job>Retry</button></div>`;
+      } else if (status === 'succeeded') {
+        slot.className = 'image-cell job-slot status-succeeded';
+        slot.innerHTML = `<div class="image-frame"><img src="prototype-assets/${resultImages[index % resultImages.length]}" alt="Completed ${provider} result" /></div><figcaption><strong>${provider} · ${index + 1}</strong><span>Done</span></figcaption>`;
+      } else {
+        slot.innerHTML = `<div class="job-copy"><span>Queued · ${provider}</span><button data-cancel-job>Cancel</button></div>`;
+      }
+    }
+
+    function finishIfTerminal(section) {
+      const active = section.querySelectorAll('.status-queued, .status-running').length;
+      if (active) return;
+      const done = section.querySelectorAll('.status-succeeded').length;
+      const failed = section.querySelectorAll('.status-failed').length;
+      const cancelled = section.querySelectorAll('.status-cancelled').length;
+      const button = section.querySelector('[data-generate]');
+      button.disabled = false;
+      updateSection(section);
+      const runStatus = section.querySelector('[data-run-status]');
+      if (runStatus) {
+        runStatus.className = '';
+        runStatus.textContent = `${done} done${failed ? ` · ${failed} failed` : ''}${cancelled ? ` · ${cancelled} cancelled` : ''}`;
+      }
+    }
+
+    function scheduleJob(slot, shouldFail = false) {
+      const section = slot.closest('.variant');
+      const index = Number(slot.dataset.index);
+      clearJobTimers(slot);
+      slot.jobTimers = [
+        setTimeout(() => setJobState(slot, 'running'), 250 + index * 240),
+        setTimeout(() => {
+          setJobState(slot, shouldFail ? 'failed' : 'succeeded');
+          finishIfTerminal(section);
+        }, 1800 + index * 320)
+      ];
+    }
+
+    function startBatch(section, jobs) {
+      const { providers } = readState(section);
+      const cappedJobs = Math.min(jobs, 6);
+      const slots = Array.from({ length: cappedJobs }, (_, index) => jobSlotMarkup(index, providers[index % providers.length]));
+      const target = section.dataset.variant === 'b' ? section.querySelector('[data-active-strip]') : section.querySelector('[data-gallery]');
+      if (section.dataset.variant === 'b') target.innerHTML = slots.join('');
+      else target.insertAdjacentHTML('afterbegin', slots.join(''));
+
+      const runStatus = section.querySelector('[data-run-status]');
+      if (runStatus) {
+        runStatus.className = 'run-status';
+        runStatus.innerHTML = `<span>${cappedJobs} queued</span><button class="cancel-batch" data-cancel-batch>Cancel batch</button>`;
+      }
+
+      [...target.querySelectorAll('[data-job]')].slice(0, cappedJobs).forEach((slot, index) => scheduleJob(slot, cappedJobs > 2 && index === cappedJobs - 1));
+    }
+
+    document.addEventListener('click', (event) => {
+      const cancelJob = event.target.closest('[data-cancel-job]');
+      const retryJob = event.target.closest('[data-retry-job]');
+      const cancelBatch = event.target.closest('[data-cancel-batch]');
+
+      if (cancelJob) {
+        const slot = cancelJob.closest('[data-job]');
+        const section = slot.closest('.variant');
+        clearJobTimers(slot);
+        setJobState(slot, 'cancelled');
+        finishIfTerminal(section);
+        notify('Job cancelled');
+      }
+
+      if (retryJob) {
+        const slot = retryJob.closest('[data-job]');
+        clearJobTimers(slot);
+        setJobState(slot, 'queued');
+        scheduleJob(slot, false);
+        const section = slot.closest('.variant');
+        section.querySelector('[data-generate]').disabled = true;
+        notify('Retry queued');
+      }
+
+      if (cancelBatch) {
+        const section = cancelBatch.closest('.variant');
+        section.querySelectorAll('.status-queued, .status-running').forEach((slot) => {
+          clearJobTimers(slot);
+          setJobState(slot, 'cancelled');
+        });
+        finishIfTerminal(section);
+        notify('Batch cancelled');
+      }
+    });
+
+    document.querySelectorAll('[data-generate]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const section = button.closest('.variant');
+        const { jobs } = readState(section);
+        button.disabled = true;
+        button.textContent = `${jobs} jobs queued`;
+        startBatch(section, jobs);
+        notify(`${jobs} generation jobs started`);
+      });
+    });
+
+    document.querySelectorAll('.variant').forEach(updateSection);
+    showVariant(current);
+  </script>
+</body>
+</html>
