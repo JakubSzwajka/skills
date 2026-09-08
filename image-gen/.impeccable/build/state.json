@@ -6,80 +6,160 @@
   "direction": "b71650ff",
   "breakpoint": null,
   "artifact": null,
-  "phase": "comps",
+  "phase": "review",
   "phases": {
     "comps": {
-      "status": "open",
+      "status": "closed",
       "openedAt": "2026-09-08T15:18:37.551Z",
-      "closedAt": null,
-      "attempts": 0,
+      "closedAt": "2026-09-08T18:04:51.233Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
-      "forced": null
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "0 comps under .impeccable/mocks; the comp round puts three compositional options of the chosen direction in front of the user (reference/visualize.md). Generate the missing ones (harness image tool or generate-image.mjs), each with a .json sidecar holding its prompt.",
+          "no comp is approved: put the three comps in front of the user (decision page via serve-question.mjs, or the structured question tool), then set \"approved\": true in the chosen comp's sidecar. A delegated pick is recorded the same way and disclosed."
+        ],
+        "summary": "0 comps, 0 approved",
+        "approved": null,
+        "at": "2026-09-08T18:04:51.231Z"
+      },
+      "forced": {
+        "at": "2026-09-08T18:04:51.233Z",
+        "reason": "The user asked to close this prototype process and no longer requires the comp gates because Variant A is already implemented and recorded in DESIGN.md.",
+        "reasons": [
+          "0 comps under .impeccable/mocks; the comp round puts three compositional options of the chosen direction in front of the user (reference/visualize.md). Generate the missing ones (harness image tool or generate-image.mjs), each with a .json sidecar holding its prompt.",
+          "no comp is approved: put the three comps in front of the user (decision page via serve-question.mjs, or the structured question tool), then set \"approved\": true in the chosen comp's sidecar. A delegated pick is recorded the same way and disclosed."
+        ]
+      }
     },
     "spec": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.233Z",
+      "closedAt": "2026-09-08T18:04:51.300Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
-      "forced": null
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "no spec at .impeccable/build/spec.json: run comp-spec.mjs --comp null --grid, name the regions, then --regions regions.json"
+        ],
+        "at": "2026-09-08T18:04:51.297Z"
+      },
+      "forced": {
+        "at": "2026-09-08T18:04:51.300Z",
+        "reason": "The user asked to close this prototype process and no longer requires the comp gates because Variant A is already implemented and recorded in DESIGN.md.",
+        "reasons": [
+          "no spec at .impeccable/build/spec.json: run comp-spec.mjs --comp null --grid, name the regions, then --regions regions.json"
+        ]
+      }
     },
     "plates": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.300Z",
+      "closedAt": "2026-09-08T18:04:51.366Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
-      "forced": null
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "no spec"
+        ],
+        "at": "2026-09-08T18:04:51.363Z"
+      },
+      "forced": {
+        "at": "2026-09-08T18:04:51.366Z",
+        "reason": "The user asked to close this prototype process and no longer requires the comp gates because Variant A is already implemented and recorded in DESIGN.md.",
+        "reasons": [
+          "no spec"
+        ]
+      }
     },
     "hero": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.366Z",
+      "closedAt": "2026-09-08T18:04:51.433Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
-      "forced": null
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "no hero capture at .impeccable/review/hero-repro.png: screenshot the first viewport at the comp's own dimensions (comp size) into that path"
+        ],
+        "at": "2026-09-08T18:04:51.430Z"
+      },
+      "forced": {
+        "at": "2026-09-08T18:04:51.433Z",
+        "reason": "The user asked to close this prototype process and no longer requires the comp gates because Variant A is already implemented and recorded in DESIGN.md.",
+        "reasons": [
+          "no hero capture at .impeccable/review/hero-repro.png: screenshot the first viewport at the comp's own dimensions (comp size) into that path"
+        ]
+      }
     },
     "sections": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.433Z",
+      "closedAt": "2026-09-08T18:04:51.486Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-08T18:04:51.485Z"
+      },
       "forced": null
     },
     "motion": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.486Z",
+      "closedAt": "2026-09-08T18:04:51.537Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-09-08T18:04:51.536Z"
+      },
       "forced": null
     },
     "responsive": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
-      "attempts": 0,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.537Z",
+      "closedAt": "2026-09-08T18:04:51.588Z",
+      "attempts": 1,
       "notes": [],
-      "gate": null,
-      "forced": null
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "no .impeccable/review/desktop.png: capture the page at a common desktop width (1440 wide, full page) into that path",
+          "no .impeccable/review/mobile.png: capture the page at 390 wide, full page, into that path"
+        ],
+        "at": "2026-09-08T18:04:51.586Z"
+      },
+      "forced": {
+        "at": "2026-09-08T18:04:51.588Z",
+        "reason": "The user asked to close this prototype process and no longer requires the comp gates because Variant A is already implemented and recorded in DESIGN.md.",
+        "reasons": [
+          "no .impeccable/review/desktop.png: capture the page at a common desktop width (1440 wide, full page) into that path",
+          "no .impeccable/review/mobile.png: capture the page at 390 wide, full page, into that path"
+        ]
+      }
     },
     "review": {
-      "status": "pending",
-      "openedAt": null,
-      "closedAt": null,
+      "status": "closed",
+      "openedAt": "2026-09-08T18:04:51.588Z",
+      "closedAt": "2026-09-08T18:04:51.647Z",
       "attempts": 0,
       "notes": [],
       "gate": null,
       "forced": null
     }
   },
-  "finish": null
+  "finish": {
+    "disposition": "ship",
+    "at": "2026-09-08T18:04:51.645Z",
+    "phaseAtFinish": "review"
+  }
 }
