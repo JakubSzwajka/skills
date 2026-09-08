@@ -71,7 +71,10 @@ function JobTile({
 }) {
   const asset = job.outputAsset;
   return (
-    <div className={`job-tile status-${job.status}`}>
+    <div
+      className={`job-tile status-${job.status}`}
+      aria-label={`${PROVIDER_LABELS[job.provider]} image ${job.variantIndex + 1}: ${STATUS_LABELS[job.status]}`}
+    >
       {job.status === "succeeded" && asset ? (
         <>
           <button
@@ -81,12 +84,14 @@ function JobTile({
           >
             <img
               src={api.fileSrc(asset.thumbnailPath ?? asset.path)}
-              alt={`${PROVIDER_LABELS[job.provider]} result`}
+              alt={`${PROVIDER_LABELS[job.provider]} result ${job.variantIndex + 1}`}
               loading="lazy"
             />
           </button>
           <div className="job-meta">
-            <span>{PROVIDER_LABELS[job.provider]}</span>
+            <span>
+              {PROVIDER_LABELS[job.provider]} · {job.variantIndex + 1}
+            </span>
             <button
               type="button"
               className="link-button"
@@ -98,7 +103,7 @@ function JobTile({
         </>
       ) : (
         <>
-          <div className="job-placeholder">
+          <div className="job-placeholder" aria-live="polite">
             {job.status === "running" && <span className="spinner" aria-hidden />}
             <span className="job-status-label">
               {job.status === "failed" && job.errorCode
@@ -107,7 +112,9 @@ function JobTile({
             </span>
           </div>
           <div className="job-meta">
-            <span>{PROVIDER_LABELS[job.provider]}</span>
+            <span>
+              {PROVIDER_LABELS[job.provider]} · {job.variantIndex + 1}
+            </span>
             {(job.status === "queued" || job.status === "running") && (
               <button
                 type="button"

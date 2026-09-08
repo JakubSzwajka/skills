@@ -1,5 +1,3 @@
-// Pure composer rules. Mirrors the Rust-side limits.
-
 import type { Provider } from "../app/types";
 
 export const MAX_REFERENCES = 8;
@@ -11,6 +9,17 @@ export function jobCount(providers: Provider[], variantCount: number): number {
 
 export function generateLabel(count: number): string {
   return count === 1 ? "Generate 1 image" : `Generate ${count} images`;
+}
+
+export function jobSummary(
+  providers: Provider[],
+  variantCount: number,
+): string {
+  const providerLabel = providers.length === 1 ? "provider" : "providers";
+  const imageLabel = variantCount === 1 ? "image" : "images";
+  const count = jobCount(providers, variantCount);
+  const jobLabel = count === 1 ? "job" : "jobs";
+  return `${providers.length} ${providerLabel} × ${variantCount} ${imageLabel} · ${count} ${jobLabel}`;
 }
 
 export function canSubmit(input: {

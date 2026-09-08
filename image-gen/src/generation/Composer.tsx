@@ -1,127 +1,164 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import * as api from "../app/api";
 import type { AssetView, BatchView, Provider } from "../app/types";
 import { ALL_PROVIDERS, PROVIDER_LABELS } from "../app/types";
-import { canSubmit, generateLabel, jobCount, MAX_REFERENCES } from "./composerLogic";
+import {
+  canSubmit,
+  generateLabel,
+  jobCount,
+  jobSummary,
+  MAX_REFERENCES,
+} from "./composerLogic";
 
 interface ComposerProps {
   seedReferences: AssetView[];
-  onClose: () => void;
+  onSeedConsumed: () => void;
   onCreated: (batch: BatchView) => void;
 }
 
-export function Composer({ seedReferences, onClose, onCreated }: ComposerProps) {
-  const [prompt, setPrompt] = useState("");
-  const [providers, setProviders] = useState<Provider[]>([...ALL_PROVIDERS]);
-  const [variantCount, setVariantCount] = useState(1);
-  const [references, setReferences] = useState<AssetView[]>(seedReferences);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+export interface ComposerHandle {
+  focusPrompt: () => void;
+  scrollIntoView: () => void;
+}
 
-  const addReference = useCallback((asset: AssetView) => {
-    setReferences((current) => {
-      if (current.some((r) => r.id === asset.id)) return current;
-      if (current.length >= MAX_REFERENCES) {
-        setError(`At most ${MAX_REFERENCES} references per batch.`);
-        return current;
-      }
-      return [...current, asset];
-    });
-  }, []);
+export const Composer = forwardRef<ComposerHandle, ComposerProps>(
+  function Composer({ seedReferences, onSeedConsumed, onCreated }, forwardedRef) {
+    const [prompt, setPrompt] = useState("");
+    const [providers, setProviders] = useState<Provider[]>([...ALL_PROVIDERS]);
+    const [variantCount, setVariantCount] = useState(1);
+    const [references, setReferences] = useState<AssetView[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const promptRef = useRef<HTMLTextAreaElement>(null);
 
-  // Paste a reference while the composer is open.
-  useEffect(() => {
-    const onPaste = (event: ClipboardEvent) => {
-      const item = Array.from(event.clipboardData?.items ?? []).find((i) =>
-        i.type.startsWith("image/"),
-      );
-      if (!item) return;
-      event.preventDefault();
-      const file = item.getAsFile();
-      if (!file) return;
-      file
-        .arrayBuffer()
-        .then((buffer) => api.importReference(new Uint8Array(buffer)))
-        .then((asset) => {
-          setError(null);
-          addReference(asset);
-        })
-        .catch((reason) => setError(String(reason)));
-    };
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-  }, [addReference]);
+    const addReferences = useCallback((assets: AssetView[]) => {
+      setReferences((current) => {
+        const unique = assets.filter(
+          (asset) => !current.some((reference) => reference.id === asset.id),
+        );
+        const available = MAX_REFERENCES - current.length;
+        if (unique.length > available) {
+          setError(`At most ${MAX_REFERENCES} references per batch.`);
+        }
+        return [...current, ...unique.slice(0, available)];
+      });
+    }, []);
 
-  const count = jobCount(providers, variantCount);
-  const submittable =
-    canSubmit({
-      prompt,
-      providers,
-      variantCount,
-      referenceCount: references.length,
-    }) && !submitting;
+    useEffect(() => {
+      if (seedReferences.length === 0) return;
+      addReferences(seedReferences);
+      onSeedConsumed();
+    }, [addReferences, onSeedConsumed, seedReferences]);
 
-  const submit = useCallback(() => {
-    if (!submittable) return;
-    setSubmitting(true);
-    setError(null);
-    api
-      .createBatch({
-        prompt: prompt.trim(),
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        focusPrompt: () => promptRef.current?.focus(),
+        scrollIntoView: () =>
+          rootRef.current?.scrollIntoView({ block: "start" }),
+      }),
+      [],
+    );
+
+    useEffect(() => {
+      const onPaste = (event: ClipboardEvent) => {
+        const item = Array.from(event.clipboardData?.items ?? []).find((candidate) =>
+          candidate.type.startsWith("image/"),
+        );
+        if (!item) return;
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        file
+          .arrayBuffer()
+          .then((buffer) => api.importReference(new Uint8Array(buffer)))
+          .then((asset) => {
+            setError(null);
+            addReferences([asset]);
+          })
+          .catch((reason) => setError(String(reason)));
+      };
+      window.addEventListener("paste", onPaste);
+      return () => window.removeEventListener("paste", onPaste);
+    }, [addReferences]);
+
+    const count = jobCount(providers, variantCount);
+    const submittable =
+      canSubmit({
+        prompt,
         providers,
         variantCount,
-        referenceAssetIds: references.map((r) => r.id),
-      })
-      .then((batch) => onCreated(batch))
-      .catch((reason) => {
-        setError(String(reason));
-        setSubmitting(false);
-      });
-  }, [submittable, prompt, providers, variantCount, references, onCreated]);
+        referenceCount: references.length,
+      }) && !submitting;
 
-  // Command+Enter submits.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.metaKey && event.key === "Enter") {
-        event.preventDefault();
-        submit();
-      }
+    const submit = useCallback(() => {
+      if (!submittable) return;
+      setSubmitting(true);
+      setError(null);
+      api
+        .createBatch({
+          prompt: prompt.trim(),
+          providers,
+          variantCount,
+          referenceAssetIds: references.map((reference) => reference.id),
+        })
+        .then((batch) => {
+          setPrompt("");
+          setReferences([]);
+          setSubmitting(false);
+          onCreated(batch);
+        })
+        .catch((reason) => {
+          setError(String(reason));
+          setSubmitting(false);
+        });
+    }, [submittable, prompt, providers, variantCount, references, onCreated]);
+
+    useEffect(() => {
+      const onKey = (event: KeyboardEvent) => {
+        if (event.metaKey && event.key === "Enter") {
+          event.preventDefault();
+          submit();
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [submit]);
+
+    const toggleProvider = (provider: Provider) => {
+      setProviders((current) =>
+        current.includes(provider)
+          ? current.filter((item) => item !== provider)
+          : ALL_PROVIDERS.filter(
+              (item) => current.includes(item) || item === provider,
+            ),
+      );
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [submit]);
 
-  const toggleProvider = (provider: Provider) => {
-    setProviders((current) =>
-      current.includes(provider)
-        ? current.filter((p) => p !== provider)
-        : [...ALL_PROVIDERS.filter((p) => current.includes(p) || p === provider)],
-    );
-  };
+    return (
+      <div className="composer" ref={rootRef}>
+        <h2 id="composer-heading" className="section-title">
+          Make images
+        </h2>
 
-  return (
-    <div className="overlay" onClick={onClose}>
-      <div
-        className="sheet"
-        role="dialog"
-        aria-label="New generation"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="sheet-header">
-          <h2 className="sheet-title">New generation</h2>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </header>
-
-        <section className="sheet-section">
-          <h3 className="field-label">References</h3>
+        <section className="composer-field" aria-labelledby="references-label">
+          <h3 id="references-label" className="field-label">
+            References
+          </h3>
           <div className="reference-row">
             {references.map((reference) => (
               <div key={reference.id} className="reference-thumb">
                 <img
                   src={api.fileSrc(reference.thumbnailPath ?? reference.path)}
-                  alt="Reference"
+                  alt="Generation reference"
                 />
                 <button
                   type="button"
@@ -129,7 +166,7 @@ export function Composer({ seedReferences, onClose, onCreated }: ComposerProps) 
                   aria-label="Remove reference"
                   onClick={() =>
                     setReferences((current) =>
-                      current.filter((r) => r.id !== reference.id),
+                      current.filter((item) => item.id !== reference.id),
                     )
                   }
                 >
@@ -137,75 +174,97 @@ export function Composer({ seedReferences, onClose, onCreated }: ComposerProps) 
                 </button>
               </div>
             ))}
-            <div className="reference-hint">
-              {references.length === 0
-                ? "Paste an image (⌘V) or use one from history."
-                : "Paste to add more."}
-            </div>
+            {references.length < MAX_REFERENCES && (
+              <div className="reference-paste" aria-label="Paste an image with Command V">
+                <span>Paste image</span>
+                <kbd>⌘V</kbd>
+              </div>
+            )}
           </div>
         </section>
 
-        <section className="sheet-section">
-          <h3 className="field-label">Prompt</h3>
+        <label className="composer-field" htmlFor="generation-prompt">
+          <span className="field-label">Prompt</span>
           <textarea
+            id="generation-prompt"
+            ref={promptRef}
             className="prompt-input"
             value={prompt}
-            autoFocus
             rows={4}
             placeholder="Describe the image…"
             onChange={(event) => setPrompt(event.target.value)}
           />
-        </section>
+        </label>
 
-        <section className="sheet-section sheet-options">
-          <div>
-            <h3 className="field-label">Providers</h3>
-            <div className="segmented">
-              {ALL_PROVIDERS.map((provider) => (
+        <div className="composer-options">
+          <section className="choice-line" aria-labelledby="providers-label">
+            <h3 id="providers-label" className="field-label">
+              Providers
+            </h3>
+            <div className="toggle-group">
+              {ALL_PROVIDERS.map((provider) => {
+                const selected = providers.includes(provider);
+                return (
+                  <button
+                    key={provider}
+                    type="button"
+                    className={`toggle-button${selected ? " is-selected" : ""}`}
+                    aria-pressed={selected}
+                    onClick={() => toggleProvider(provider)}
+                  >
+                    {PROVIDER_LABELS[provider]}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="choice-line" aria-labelledby="images-each-label">
+            <h3 id="images-each-label" className="field-label">
+              Images each
+            </h3>
+            <div className="count-control" role="group" aria-labelledby="images-each-label">
+              {[1, 2, 3].map((number) => (
                 <button
-                  key={provider}
+                  key={number}
                   type="button"
-                  className={`segment${providers.includes(provider) ? " is-selected" : ""}`}
-                  onClick={() => toggleProvider(provider)}
+                  aria-pressed={variantCount === number}
+                  className={`count-button${variantCount === number ? " is-selected" : ""}`}
+                  onClick={() => setVariantCount(number)}
                 >
-                  {PROVIDER_LABELS[provider]}
+                  {number}
                 </button>
               ))}
             </div>
-          </div>
-          <div>
-            <h3 className="field-label">Variants</h3>
-            <div className="segmented">
-              {[1, 2, 3].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`segment${variantCount === n ? " is-selected" : ""}`}
-                  onClick={() => setVariantCount(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {error && <div className="form-error">{error}</div>}
+        {error && (
+          <div className="form-error" role="alert">
+            {error}
+          </div>
+        )}
 
-        <footer className="sheet-footer">
-          <button type="button" className="secondary-button" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="primary-button"
-            disabled={!submittable}
-            onClick={submit}
-          >
-            {generateLabel(count)}
-          </button>
-        </footer>
+        <p className="job-count">{jobSummary(providers, variantCount)}</p>
+        <button
+          type="button"
+          className="primary-button generate-button"
+          disabled={!submittable}
+          aria-busy={submitting}
+          onClick={submit}
+        >
+          {providers.length === 0
+            ? "Choose a provider"
+            : submitting
+              ? "Starting…"
+              : generateLabel(count)}
+        </button>
+        <p className="composer-help">
+          <kbd>⌘ Enter</kbd> to generate
+          <br />
+          Jobs run one at a time per provider.
+        </p>
       </div>
-    </div>
-  );
-}
+    );
+  },
+);

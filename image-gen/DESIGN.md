@@ -2,7 +2,7 @@
 
 ## Status
 
-Design approved in principle. Implementation has not started.
+Design approved. The Variant A Studio rail interface is implemented.
 
 ## Product intent
 
@@ -60,15 +60,14 @@ Selecting two providers and three variants creates six jobs. The submit button s
 
 ### Browse images
 
-The main window shows:
+The main window offers two library views:
 
-1. The latest generation batch at the top.
-2. A thumbnail grid of recent images.
-3. Full history with incremental loading.
-4. Batch, provider, status, and creation-time details.
-5. Failed jobs alongside successful jobs.
+1. **Images**: a newest-first contact sheet of successful outputs.
+2. **Batches**: chronological generation history with incremental loading.
+3. Batch, provider, status, and creation-time details.
+4. Failed, cancelled, and interrupted jobs alongside successful jobs.
 
-Selecting an image opens a large preview with these actions:
+Selecting an image opens a modal preview. Focus enters the preview, remains inside it while open, and returns to the invoking control after Close, Escape, or backdrop dismissal. The preview provides these actions:
 
 - Copy image
 - Reveal in Finder
@@ -82,13 +81,14 @@ Deletion is not part of the first implementation.
 
 ### Visual direction
 
-The interface should be modern, quiet, and minimal:
+Use a quiet contact-sheet language:
 
-- System font
+- System font in compact, workhorse sizes
 - System light and dark modes
-- Neutral surfaces with one restrained accent color
-- Thin borders instead of large shadows
-- 8–12 px corner radius
+- Cool proof-paper surfaces with near-black ink
+- Registration blue as the restrained accent
+- Square image fields, hairline dividers, and almost no containers
+- Small corner radii and neutral shadows only where elevation matters
 - No gradients, glass effects, marketing panels, or decorative animation
 - Motion only where it explains job progress or navigation
 
@@ -100,52 +100,35 @@ Recommended minimum size: 1,000 × 680 px.
 
 ```text
 ┌───────────────────────────────────────────────────────────────┐
-│ Image Gen                                      [New generation]│
-├──────────────┬────────────────────────────────────────────────┤
-│ Latest       │ Latest batch                                   │
-│ History      │ ┌──────────┐ ┌──────────┐ ┌──────────┐         │
-│              │ │ image    │ │ running… │ │ failed   │         │
-│ Settings     │ └──────────┘ └──────────┘ └──────────┘         │
-│              │                                                │
-│              │ History                                        │
-│              │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐    │
-│              │ │        │ │        │ │        │ │        │    │
-│              │ └────────┘ └────────┘ └────────┘ └────────┘    │
-└──────────────┴────────────────────────────────────────────────┘
+│ Image Gen                                  History   Settings  │
+├──────────────────────────────────────────┬────────────────────┤
+│ Library                 [Images|Batches] │ Make images        │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌─────┐│ References         │
+│ │ image  │ │ image  │ │ image  │ │ ... ││ Prompt             │
+│ └────────┘ └────────┘ └────────┘ └─────┘│ Providers           │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌─────┐│ Images each         │
+│ │ image  │ │ image  │ │ image  │ │ ... ││ 2 providers · 6 jobs│
+│ └────────┘ └────────┘ └────────┘ └─────┘│ [Generate 6 images] │
+└──────────────────────────────────────────┴────────────────────┘
 ```
+
+The library leads in the flexible left field. The complete generation setup remains visible in a 356 px right rail. Settings replace the library field without hiding the rail. At 780 px and below, stack the generation setup before the library so visual, keyboard, and assistive-technology order agree. Use two contact-sheet columns on narrow screens and avoid horizontal overflow.
 
 Do not load full-resolution files for the grid. Load generated thumbnails and open the original only in the preview.
 
 ### Generation composer
 
-Use a sheet or focused panel inside the main window, not a second operating-system window.
+The persistent **Make images** rail contains references, prompt, providers, images per provider, the calculated job summary, and the Generate action. It is not a modal, drawer, or second operating-system window. Selecting two providers and three images each must show six jobs before submission and label the action **Generate 6 images**.
 
-```text
-┌─────────────────────────────────────────────────────┐
-│ New generation                                  [×] │
-│                                                     │
-│ References                                          │
-│ [thumb ×] [thumb ×] [Paste an image]                │
-│                                                     │
-│ Prompt                                              │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │                                                 │ │
-│ └─────────────────────────────────────────────────┘ │
-│                                                     │
-│ Providers    [✓ OpenAI] [✓ Antigravity]             │
-│ Variants     [1] [2] [3]                            │
-│                                                     │
-│                         [Cancel] [Generate 6 images] │
-└─────────────────────────────────────────────────────┘
-```
+Generated work appears in **Batches**, where each provider and variant keeps its independent queued, running, succeeded, failed, cancelled, or interrupted state and recovery actions.
 
 Keyboard shortcuts:
 
-- `Command+N`: open composer
-- `Command+V`: paste a reference while composer is open
-- `Command+Enter`: submit
-- `Command+,`: settings
-- `Escape`: close composer or preview
+- `Command+N`: show the library and focus the prompt
+- `Command+V`: paste an image reference while the app is active
+- `Command+Enter`: submit the current generation setup
+- `Command+,`: show settings
+- `Escape`: close the image preview
 
 ### Settings
 
@@ -288,11 +271,11 @@ The current Antigravity HTTP 500 should appear as a failed `backend_error` job w
 
 ### Previous generations
 
-The preview and gallery cards expose **Use as reference**. This opens or focuses the composer and attaches the selected asset without copying the original file.
+The preview and gallery cards expose **Use as reference**. This focuses the persistent composer and attaches the selected asset without copying the original file.
 
 ### Clipboard
 
-When the composer is open, handle paste events containing image bytes:
+While the app is active, handle paste events containing image bytes:
 
 1. Read only the image item from the paste event.
 2. Send the bytes to Rust.
@@ -518,7 +501,7 @@ Use one writer at a time in this checkout. If several agents write concurrently,
 - The user can select one or both providers.
 - The user can request one to three variants per provider.
 - The user can paste or reuse reference images within the stated validation limits.
-- **Use as reference** opens or focuses the composer and attaches the image.
+- **Use as reference** focuses the persistent composer and attaches the image.
 - Each provider/variant pair has an independent job and visible status.
 - Every provider invocation passes through the quota-protecting scheduler.
 - Successful jobs produce validated raster files and thumbnails.

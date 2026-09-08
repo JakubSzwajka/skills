@@ -1,44 +1,31 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import * as api from "./api";
 import type { AssetView, EffectiveSettings } from "./types";
+import { PROVIDER_LABELS } from "./types";
 import {
   galleryAssets,
   initialLibraryState,
   libraryReducer,
 } from "./libraryReducer";
-import { Composer } from "../generation/Composer";
+import { Composer, type ComposerHandle } from "../generation/Composer";
 import { BatchCard, type PreviewTarget } from "../history/BatchCard";
 import { Preview } from "../preview/Preview";
 import { SettingsView } from "../settings/SettingsView";
 
-type Section = "latest" | "history" | "settings";
-
-const SECTIONS: { id: Section; label: string }[] = [
-  { id: "latest", label: "Latest" },
-  { id: "history", label: "History" },
-  { id: "settings", label: "Settings" },
-];
-
-interface ComposerState {
-  open: boolean;
-  seed: AssetView[];
-}
+type Section = "library" | "settings";
+type LibraryView = "images" | "batches";
 
 export function App() {
-  const [section, setSection] = useState<Section>("latest");
+  const [section, setSection] = useState<Section>("library");
+  const [libraryView, setLibraryView] = useState<LibraryView>("images");
   const [library, dispatch] = useReducer(libraryReducer, initialLibraryState);
   const [settings, setSettings] = useState<EffectiveSettings | null>(null);
-  const [composer, setComposer] = useState<ComposerState>({
-    open: false,
-    seed: [],
-  });
+  const [composerSeed, setComposerSeed] = useState<AssetView[]>([]);
   const [preview, setPreview] = useState<PreviewTarget | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [historyView, setHistoryView] = useState<"batches" | "gallery">(
-    "batches",
-  );
+  const composerRef = useRef<ComposerHandle>(null);
 
-  // The shell renders first; history and settings load after first paint.
+  // Loading after first paint keeps native window startup responsive.
   useEffect(() => {
     let disposed = false;
     const unlisteners: Array<() => void> = [];
@@ -62,41 +49,46 @@ export function App() {
     };
   }, []);
 
-  const openComposer = useCallback((seed: AssetView[] = []) => {
-    setComposer((current) => ({
-      open: true,
-      // Use-as-reference attaches to an already-open composer.
-      seed: current.open
-        ? [...current.seed, ...seed.filter((a) => !current.seed.some((s) => s.id === a.id))]
-        : seed,
-    }));
+  const focusComposer = useCallback(() => {
+    composerRef.current?.focusPrompt();
+    composerRef.current?.scrollIntoView();
+  }, []);
+
+  const showLibrary = useCallback((view: LibraryView = "images") => {
+    setSection("library");
+    setLibraryView(view);
   }, []);
 
   const useAsReference = useCallback(
     (asset: AssetView) => {
       setPreview(null);
-      openComposer([asset]);
+      setSection("library");
+      setComposerSeed((current) =>
+        current.some((reference) => reference.id === asset.id)
+          ? current
+          : [...current, asset],
+      );
+      requestAnimationFrame(focusComposer);
     },
-    [openComposer],
+    [focusComposer],
   );
 
-  // Keyboard shortcuts: ⌘N composer, ⌘, settings, Escape closes.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey && event.key === "n") {
         event.preventDefault();
-        openComposer();
+        setSection("library");
+        requestAnimationFrame(focusComposer);
       } else if (event.metaKey && event.key === ",") {
         event.preventDefault();
         setSection("settings");
-      } else if (event.key === "Escape") {
-        if (preview) setPreview(null);
-        else setComposer({ open: false, seed: [] });
+      } else if (event.key === "Escape" && preview) {
+        setPreview(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openComposer, preview]);
+  }, [focusComposer, preview]);
 
   const loadMore = useCallback(() => {
     if (!library.nextCursor || loadingMore) return;
@@ -108,143 +100,146 @@ export function App() {
       .finally(() => setLoadingMore(false));
   }, [library.nextCursor, loadingMore]);
 
-  const latest = library.batches[0] ?? null;
   const gallery = galleryAssets(library);
+  const promptByBatch = useMemo(
+    () => new Map(library.batches.map((batch) => [batch.id, batch.prompt])),
+    [library.batches],
+  );
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">Image Gen</h1>
         <button
           type="button"
-          className="primary-button"
-          onClick={() => openComposer()}
+          className="brand-button"
+          onClick={() => showLibrary("images")}
+          aria-label="Open image library"
         >
-          New generation
+          <span className="brand-mark" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span>Image Gen</span>
         </button>
-      </header>
-      <div className="app-body">
-        <nav className="sidebar" aria-label="Sections">
-          {SECTIONS.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              className={`sidebar-item${section === id ? " is-active" : ""}`}
-              onClick={() => setSection(id)}
-            >
-              {label}
-            </button>
-          ))}
+        <nav className="app-tools" aria-label="Primary">
+          <button
+            type="button"
+            className={section === "library" && libraryView === "batches" ? "is-active" : ""}
+            aria-current={section === "library" && libraryView === "batches" ? "page" : undefined}
+            onClick={() => showLibrary("batches")}
+          >
+            History
+          </button>
+          <button
+            type="button"
+            className={section === "settings" ? "is-active" : ""}
+            aria-current={section === "settings" ? "page" : undefined}
+            onClick={() => setSection("settings")}
+          >
+            Settings
+          </button>
         </nav>
-        <main className="content">
-          {section === "latest" && (
-            <>
-              <section aria-labelledby="latest-heading">
-                <h2 id="latest-heading" className="section-heading">
-                  Latest batch
-                </h2>
-                {latest ? (
-                  <BatchCard
-                    batch={latest}
-                    onPreview={setPreview}
-                    onUseReference={useAsReference}
-                  />
-                ) : (
-                  <div className="empty-state">
-                    {library.hasLoaded
-                      ? "No generations yet. Press ⌘N to create one."
-                      : "Loading…"}
-                  </div>
-                )}
-              </section>
-              <section aria-labelledby="recent-heading">
-                <h2 id="recent-heading" className="section-heading">
-                  Recent images
-                </h2>
-                {gallery.length > 0 ? (
-                  <div className="gallery-grid">
-                    {gallery.map(({ asset, job }) => (
-                      <button
-                        key={asset.id}
-                        type="button"
-                        className="gallery-tile"
-                        onClick={() => setPreview({ asset, job })}
-                      >
-                        <img
-                          src={api.fileSrc(asset.thumbnailPath ?? asset.path)}
-                          alt="Generated"
-                          loading="lazy"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    Generated images will appear here.
-                  </div>
-                )}
-              </section>
-            </>
-          )}
+      </header>
 
-          {section === "history" && (
-            <section aria-labelledby="history-heading">
-              <div className="history-header">
-                <h2 id="history-heading" className="section-heading">
-                  History
-                </h2>
-                <div className="segmented">
-                  {(
-                    [
-                      ["batches", "Batches"],
-                      ["gallery", "Gallery"],
-                    ] as const
-                  ).map(([id, label]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`segment${historyView === id ? " is-selected" : ""}`}
-                      onClick={() => setHistoryView(id)}
-                    >
-                      {label}
-                    </button>
+      <div className="studio-layout">
+        <aside className="studio-rail" aria-labelledby="composer-heading">
+          <Composer
+            ref={composerRef}
+            seedReferences={composerSeed}
+            onSeedConsumed={() => setComposerSeed([])}
+            onCreated={() => showLibrary("batches")}
+          />
+        </aside>
+
+        <main className="studio-library">
+          {section === "library" ? (
+            <>
+              <header className="library-heading">
+                <div>
+                  <h1 className="section-title">Library</h1>
+                  <p className="section-subtitle">
+                    {gallery.length} {gallery.length === 1 ? "image" : "images"} · newest first
+                  </p>
+                </div>
+                <div className="view-switch" aria-label="Library view">
+                  <button
+                    type="button"
+                    aria-pressed={libraryView === "images"}
+                    onClick={() => setLibraryView("images")}
+                  >
+                    Images
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={libraryView === "batches"}
+                    onClick={() => setLibraryView("batches")}
+                  >
+                    Batches
+                  </button>
+                </div>
+              </header>
+
+              {!library.hasLoaded ? (
+                <div className="contact-sheet loading-sheet" aria-label="Loading library" aria-busy="true">
+                  {Array.from({ length: 8 }, (_, index) => (
+                    <div className="loading-tile" key={index} aria-hidden="true" />
                   ))}
                 </div>
-              </div>
-              {library.batches.length === 0 && (
-                <div className="empty-state">
-                  {library.hasLoaded ? "No generations yet." : "Loading…"}
-                </div>
-              )}
-              {historyView === "batches" ? (
-                library.batches.map((batch) => (
-                  <BatchCard
-                    key={batch.id}
-                    batch={batch}
-                    onPreview={setPreview}
-                    onUseReference={useAsReference}
-                  />
-                ))
-              ) : (
-                gallery.length > 0 && (
-                  <div className="gallery-grid">
+              ) : libraryView === "images" ? (
+                gallery.length > 0 ? (
+                  <div className="contact-sheet">
                     {gallery.map(({ asset, job }) => (
-                      <button
-                        key={asset.id}
-                        type="button"
-                        className="gallery-tile"
-                        onClick={() => setPreview({ asset, job })}
-                      >
-                        <img
-                          src={api.fileSrc(asset.thumbnailPath ?? asset.path)}
-                          alt="Generated"
-                          loading="lazy"
-                        />
-                      </button>
+                      <article className="contact-item" key={asset.id}>
+                        <button
+                          type="button"
+                          className="contact-image"
+                          onClick={() => setPreview({ asset, job })}
+                        >
+                          <img
+                            src={api.fileSrc(asset.thumbnailPath ?? asset.path)}
+                            alt={`${PROVIDER_LABELS[job.provider]} result ${job.variantIndex + 1}`}
+                            loading="lazy"
+                          />
+                        </button>
+                        <div className="contact-caption">
+                          <span className="contact-title" title={promptByBatch.get(job.batchId)}>
+                            {promptByBatch.get(job.batchId) ?? "Generated image"}
+                          </span>
+                          <span className="contact-provider">
+                            <i aria-hidden="true" />
+                            {PROVIDER_LABELS[job.provider]}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="contact-reference-action"
+                          onClick={() => useAsReference(asset)}
+                        >
+                          Use as reference
+                        </button>
+                      </article>
                     ))}
                   </div>
+                ) : (
+                  <div className="empty-state">Generated images will appear here.</div>
                 )
+              ) : library.batches.length > 0 ? (
+                <div className="batch-list" aria-live="polite">
+                  {library.batches.map((batch) => (
+                    <BatchCard
+                      key={batch.id}
+                      batch={batch}
+                      onPreview={setPreview}
+                      onUseReference={useAsReference}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">No generations yet.</div>
               )}
+
               {library.nextCursor && (
                 <button
                   type="button"
@@ -255,28 +250,25 @@ export function App() {
                   {loadingMore ? "Loading…" : "Load more"}
                 </button>
               )}
-            </section>
+            </>
+          ) : (
+            <>
+              <header className="library-heading">
+                <div>
+                  <h1 className="section-title">Settings</h1>
+                  <p className="section-subtitle">Storage and provider executables</p>
+                </div>
+              </header>
+              {settings ? (
+                <SettingsView settings={settings} onSaved={setSettings} />
+              ) : (
+                <div className="empty-state">Loading…</div>
+              )}
+            </>
           )}
-
-          {section === "settings" &&
-            (settings ? (
-              <SettingsView settings={settings} onSaved={setSettings} />
-            ) : (
-              <div className="empty-state">Loading…</div>
-            ))}
         </main>
       </div>
 
-      {composer.open && (
-        <Composer
-          seedReferences={composer.seed}
-          onClose={() => setComposer({ open: false, seed: [] })}
-          onCreated={() => {
-            setComposer({ open: false, seed: [] });
-            setSection("latest");
-          }}
-        />
-      )}
       {preview && (
         <Preview
           key={preview.asset.id}

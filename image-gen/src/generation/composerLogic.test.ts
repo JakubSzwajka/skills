@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canSubmit, generateLabel, jobCount } from "./composerLogic";
+import {
+  canSubmit,
+  generateLabel,
+  jobCount,
+  jobSummary,
+} from "./composerLogic";
 
 describe("jobCount", () => {
   it("multiplies providers by variants", () => {
@@ -13,6 +18,18 @@ describe("generateLabel", () => {
   it("makes quota use clear before submission", () => {
     expect(generateLabel(6)).toBe("Generate 6 images");
     expect(generateLabel(1)).toBe("Generate 1 image");
+  });
+});
+
+describe("jobSummary", () => {
+  it("describes the provider, image, and job totals", () => {
+    expect(jobSummary(["openai", "antigravity"], 2)).toBe(
+      "2 providers × 2 images · 4 jobs",
+    );
+    expect(jobSummary(["openai"], 1)).toBe(
+      "1 provider × 1 image · 1 job",
+    );
+    expect(jobSummary([], 3)).toBe("0 providers × 3 images · 0 jobs");
   });
 });
 

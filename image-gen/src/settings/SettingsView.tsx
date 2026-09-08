@@ -28,11 +28,7 @@ export function SettingsView({ settings, onSaved }: SettingsViewProps) {
   };
 
   return (
-    <section aria-labelledby="settings-heading" className="settings">
-      <h2 id="settings-heading" className="section-heading">
-        Settings
-      </h2>
-
+    <div className="settings">
       <label className="settings-field">
         <span className="field-label">Output directory</span>
         <input
@@ -69,6 +65,6 @@ export function SettingsView({ settings, onSaved }: SettingsViewProps) {
         </button>
         {notice && <span className="settings-notice">{notice}</span>}
       </div>
-    </section>
+    </div>
   );
 }

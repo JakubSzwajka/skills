@@ -1,31 +1,49 @@
-/* Design tokens. System font, neutral surfaces, one restrained accent. */
-
 :root {
   --font-system:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
     sans-serif;
-
-  --radius-small: 8px;
-  --radius-medium: 10px;
+  --radius-small: 7px;
+  --radius-medium: 9px;
   --radius-large: 12px;
-
-  --color-background: #f5f5f4;
-  --color-surface: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.12);
-  --color-text: #1c1c1e;
-  --color-text-secondary: rgba(28, 28, 30, 0.6);
-  --color-accent: #3b6ef6;
+  --paper: #f4f3ef;
+  --paper-raised: #fbfaf7;
+  --rail: #eeede8;
+  --ink: #191918;
+  --muted: #666762;
+  --faint: #a5a69f;
+  --line: #cdcec8;
+  --line-strong: #959790;
+  --accent: #175ce6;
+  --accent-hover: #1047b4;
+  --accent-soft: #e2eaff;
+  --danger: #c33d31;
+  --success: #326943;
+  --focus: #0d52de;
+  --color-background: var(--paper);
+  --color-surface: var(--paper-raised);
+  --color-border: var(--line);
+  --color-text: var(--ink);
+  --color-text-secondary: var(--muted);
+  --color-accent: var(--accent);
   --color-accent-text: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #1e1e1f;
-    --color-surface: #2a2a2c;
-    --color-border: rgba(255, 255, 255, 0.14);
-    --color-text: #f2f2f3;
-    --color-text-secondary: rgba(242, 242, 243, 0.6);
-    --color-accent: #6d94ff;
-    --color-accent-text: #10131c;
+    --paper: #1d1e1c;
+    --paper-raised: #252624;
+    --rail: #222320;
+    --ink: #f2f1eb;
+    --muted: #b2b2aa;
+    --faint: #777970;
+    --line: #42443f;
+    --line-strong: #696b64;
+    --accent: #6f98ff;
+    --accent-hover: #8aabff;
+    --accent-soft: #273759;
+    --danger: #ef8278;
+    --success: #79b58a;
+    --focus: #8aabff;
+    --color-accent-text: #111722;
   }
 }
