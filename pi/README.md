@@ -9,3 +9,8 @@ This directory holds portable Pi configuration that is versioned with the shared
 Keep machine state out of this directory: `auth.json`, `trust.json`, sessions, caches, installed packages, and tool-managed extensions remain in `~/.pi/agent/`.
 
 Pi discovers `~/.agents/skills/` directly. Do not add a second Pi skill mirror here.
+
+`extensions/blocks-connector/` is global code with directory-local configuration. It reads
+`.env` and `agent-card.json` from Pi's trusted current working directory, so separate agent
+directories can run separate Blocks identities without copying the extension. Each working
+directory also links `handler.js` to the extension's CLI-required placeholder.

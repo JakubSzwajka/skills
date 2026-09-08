@@ -1,0 +1,11 @@
+# Local credential file; .env.example is the committed template.
+.env
+node_modules/
+
+# Legacy private data from the removed nested-session design. The connector no
+# longer reads or writes this directory; keep any existing copy out of Git.
+work/
+
+# Local Pi task bookkeeping is not extension source.
+.pi/
+.DS_Store

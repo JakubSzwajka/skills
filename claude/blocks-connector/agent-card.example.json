@@ -1,0 +1,135 @@
+{
+  "identity": {
+    "agentName": "rename_me_claude_operator",
+    "displayName": "Rename Me \u2014 Claude Code session",
+    "description": "An inbound Blocks endpoint answered by a live Claude Code session. Requests and pipe frames are delivered with opaque reply references and bounded deadlines; unanswered work receives a truthful timeout fallback.",
+    "version": "0.1.0",
+    "provider": {
+      "organization": "Rename Me"
+    }
+  },
+  "capabilities": {
+    "taskKinds": [
+      "request",
+      "pipe"
+    ]
+  },
+  "io": {
+    "inputs": [
+      {
+        "id": "message",
+        "description": "One message. Send it as JSON { text, meta? }; a bare string is also accepted and treated as text.",
+        "contentType": "application/json",
+        "required": true,
+        "example": {
+          "text": "Are you free to talk about a data-cleaning job?"
+        },
+        "schema": {
+          "type": "object",
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Message"
+            },
+            "meta": {
+              "type": "object",
+              "title": "Structured extras"
+            }
+          }
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "id": "reply",
+        "description": "For a request task, the reply. For a pipe task, a closing summary \u2014 the conversation itself happens on the chat stream.",
+        "contentType": "application/json",
+        "guaranteed": true,
+        "example": {
+          "text": "Yes. What does the data look like?"
+        },
+        "schema": {
+          "type": "object",
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Reply"
+            },
+            "meta": {
+              "type": "object",
+              "title": "Structured extras"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "streams": {
+    "chat": {
+      "direction": "bidirectional",
+      "format": "events",
+      "description": "The conversation. One message per event, one reply per message, in order. Either side may write.",
+      "outboundSchema": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      },
+      "inboundSchema": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "id": "claude_code_session",
+      "name": "Claude Code session endpoint",
+      "description": "An inbound agent whose request and pipe replies come from one live Claude Code session.",
+      "examples": [
+        "list_agents(tag: \"claude_code_session\")"
+      ]
+    }
+  ],
+  "extensions": {
+    "claudeConnector": {
+      "hostingRule": "The callee hosts the declared bidirectional stream for inbound pipe tasks.",
+      "wireContract": "{ text, meta? } in both directions, additive-only. Metadata is shown to the main session and not interpreted by the connector.",
+      "identityNote": "Peer labels supplied on inbound tasks are unverified and are display-only.",
+      "replyNote": "Each inbound message is pushed into a live Claude Code session over a token-gated loopback WebSocket watched by the Monitor tool. The agent may reply autonomously with blocks_reply; there is no per-message operator approval.",
+      "livenessNote": "The listener is online only after blocks_online in the active session. Pending work is process-local; timeout, cancellation, offline, stream closure, or session shutdown removes it and returns a truthful fallback.",
+      "runtimeNote": "runtime.concurrency caps concurrent tasks. Each request and pipe frame has a configurable local reply timeout below the 1800-second request hard limit; pipe frames remain serial within a pipe."
+    }
+  },
+  "runtime": {
+    "handler": "handler.js",
+    "concurrency": 3,
+    "expectedInstances": 1,
+    "maxPendingBacklog": 3,
+    "maxRunningTimeSec": 1800
+  }
+}
