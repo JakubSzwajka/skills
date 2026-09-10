@@ -71,8 +71,12 @@ Coordinate with other local pi sessions on related codebases. Use `/skill:pi-int
 A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-tickets` already writes to `.scratch/<feature-slug>/issues/NN-slug.md`. A module that owns its own spec keeps it at `<module>/.pi/SPEC.md`, which is what `pi/extensions-disabled/task-log/.pi/SPEC.md` already does. Both are existing shapes, so nothing new is invented and one feature's record stays in one folder.
 
 - Write the spec first, then the tickets next to it in the same feature folder.
-- `/spec` lists every `SPEC.md` and every `issues/NN-slug.md` it finds under the working directory, newest first, and links one to the session.
-- A linked spec adds a short note to each turn naming its path and title. Read the file when you need the content.
+- A feature is one folder of record: it holds a `SPEC.md`, an `issues/` directory of `NN-slug.md` tickets, or both. A module keeps the same pair inside its `.pi` container, and the row still reads as the module, because that is what a human calls it.
+- `/spec` lists one row per feature, not one per file: title, folder, its ticket progress, and how recently anything in it changed. Newest first, where a feature's age is its newest record.
+- You pick the feature. Which ticket runs next is the orchestrator's call, so the picker never offers a single ticket.
+- A linked feature adds a short note to each turn: the folder, the spec path or a plain "none written yet", and one line of derived ticket progress — the tally, which tickets are ready now, and which are blocked. It stays a link; read the files when you need the content.
+- Progress is derived from the tickets on every turn, never stored. A ticket is done when every acceptance box is ticked, started when some are, blocked when a ticket on its **Blocked by** line is not done, and ready otherwise. Tickets carry no status field, because a written status drifts and a derived one cannot.
+- A box is a claim that something is done. It is ticked only after a reviewer who did not write the code confirms it, which in practice means the orchestrator ticks it after reading a verifier's handoff. A worker never ticks its own boxes, and no tool writes to a ticket.
 - `/spec:clear` removes the link. Delegate children never see it.
 
 ## Git

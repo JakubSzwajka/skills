@@ -82,14 +82,16 @@ Honest state, so the gap stays visible.
 | Piece | State |
 | --- | --- |
 | Human-to-orchestrator boundary | holds in practice |
-| Delegation to parallel sessions | works: `delegate` over Herdr panes |
+| Delegation to parallel sessions | works: `delegate`, in a Herdr pane or as a detached headless process |
+| A lane that outlives the session that started it | works: the headless transport; a fresh parent adopts and stops it |
 | Ask the orchestrator mid-flight | works: intercom, contract-enforced |
-| Steer a running engine | not in the tool |
-| Spec and tickets | works: `/to-spec`, `/to-tickets` |
+| Cost and state on screen while work runs | works for panes: the widget, on a 1.5 s timer. A headless lane shows the same numbers but nothing watches it |
+| Steer a running engine | not in the tool. Stop the lane and start a better-briefed one |
+| Spec and tickets | works: `/to-spec`, `/to-tickets`, and `/spec` links one to the session |
 | Log of what happened during the work | missing; the task log was disabled on purpose |
 | Decision records | missing |
 | Automatic triggers | missing |
-| Evidence linking a lane back to its spec | manual |
+| Evidence linking a lane back to its spec | manual; a worker never inherits the session's link, so the brief has to carry the path |
 | Cross-project view of what is running | deliberately outside this repo; it is your terminal tool, not an agent surface |
 
 ## How to use this file

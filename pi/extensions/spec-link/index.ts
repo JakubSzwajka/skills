@@ -1,57 +1,56 @@
 import type { ContextEvent, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { describe, discover, pickerLabel, renderNote, sanitizeDisplay, type SpecLink } from "./discovery.ts";
+import { describeFeature, discover, type FeatureLink, pickerLabels, renderNote, sanitizeDisplay } from "./discovery.ts";
 
 const LINK_ENTRY = "spec-link:link";
 const NOTE_TYPE = "spec-link:note";
 const STATUS_KEY = "spec-link";
 
-type StoredLink = SpecLink | { path: null };
+type StoredLink = FeatureLink | { path: null };
 
 export default function specLinkExtension(pi: ExtensionAPI): void {
 	// Children get their brief, not the operator's context.
 	if (process.env.PI_DELEGATE_ROLE === "child") return;
 
-	let link: SpecLink | undefined;
+	let link: FeatureLink | undefined;
 
 	const showStatus = (ctx: ExtensionContext): void => {
 		if (!ctx.hasUI) return;
 		ctx.ui.setStatus(STATUS_KEY, link ? `spec: ${sanitizeDisplay(link.title, 40)}` : undefined);
 	};
 
-	const setLink = (next: SpecLink | undefined, ctx: ExtensionContext): void => {
+	const setLink = (next: FeatureLink | undefined, ctx: ExtensionContext): void => {
 		link = next;
 		pi.appendEntry<StoredLink>(LINK_ENTRY, next ?? { path: null });
 		showStatus(ctx);
 	};
 
 	const restore = (ctx: ExtensionContext): void => {
-		let stored: SpecLink | undefined;
+		let stored: FeatureLink | undefined;
 		for (const entry of ctx.sessionManager.getBranch()) {
 			if (entry.type !== "custom" || entry.customType !== LINK_ENTRY) continue;
 			const data = entry.data as StoredLink | undefined;
-			stored = data && typeof data === "object" && typeof data.path === "string" ? (data as SpecLink) : undefined;
+			stored = data && typeof data === "object" && typeof data.path === "string" ? (data as FeatureLink) : undefined;
 		}
-		// A spec that moved or was deleted is no longer a link worth carrying.
-		link = stored && describe(stored.path, ctx.cwd) ? stored : undefined;
+		// A feature that moved or lost its records is no longer a link worth carrying.
+		link = stored ? describeFeature(stored.path, ctx.cwd) : undefined;
 		showStatus(ctx);
 	};
 
 	pi.registerCommand("spec", {
-		description: "Link a spec or ticket to this session",
+		description: "Link a feature — its spec and tickets — to this session",
 		handler: async (_args, ctx) => {
 			if (!ctx.hasUI) {
 				ctx.ui.notify("/spec needs the interactive TUI.", "error");
 				return;
 			}
-			const candidates = discover(ctx.cwd);
-			if (candidates.length === 0) {
+			const features = discover(ctx.cwd);
+			if (features.length === 0) {
 				ctx.ui.notify(`No specs or tickets found under ${ctx.cwd}.`, "warning");
 				return;
 			}
-			const now = Date.now();
-			const labels = candidates.map((candidate) => pickerLabel(candidate, now));
-			const clearLabel = link ? `Clear the linked ${link.kind}` : undefined;
-			const choice = await ctx.ui.select("Link a spec or ticket", clearLabel ? [clearLabel, ...labels] : labels);
+			const labels = pickerLabels(features, Date.now());
+			const clearLabel = link ? "Clear the linked feature" : undefined;
+			const choice = await ctx.ui.select("Link a feature", clearLabel ? [clearLabel, ...labels] : labels);
 			if (!choice) return;
 			if (choice === clearLabel) {
 				const previous = link;
@@ -59,18 +58,21 @@ export default function specLinkExtension(pi: ExtensionAPI): void {
 				ctx.ui.notify(`Cleared: ${sanitizeDisplay(previous?.title ?? "")}`, "info");
 				return;
 			}
-			const chosen = candidates[labels.indexOf(choice)];
+			const chosen = features[labels.indexOf(choice)];
 			if (!chosen) return;
-			setLink({ path: chosen.path, title: chosen.title, kind: chosen.kind }, ctx);
-			ctx.ui.notify(`Linked ${chosen.kind}: ${sanitizeDisplay(chosen.title)}`, "info");
+			setLink(
+				{ path: chosen.path, title: chosen.title, specPath: chosen.specPath, ticketsPath: chosen.ticketsPath, ticketCount: chosen.ticketCount },
+				ctx,
+			);
+			ctx.ui.notify(`Linked feature: ${sanitizeDisplay(chosen.title)}`, "info");
 		},
 	});
 
 	pi.registerCommand("spec:clear", {
-		description: "Clear the linked spec or ticket",
+		description: "Clear the linked feature",
 		handler: async (_args, ctx) => {
 			if (!link) {
-				ctx.ui.notify("No spec is linked.", "warning");
+				ctx.ui.notify("No feature is linked.", "warning");
 				return;
 			}
 			const previous = link;

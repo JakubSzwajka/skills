@@ -74,12 +74,12 @@ Do NOT close or modify any parent issue.
 
 **Blocked by:** the numbers/titles of the tickets that gate this one, or "None — can start immediately".
 
-**Status:** ready-for-agent
-
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2
 
 </local-ticket-template>
+
+The acceptance boxes are the record of progress. A ticked box is the only place a ticket says work landed, so `/spec` reads the boxes and the **Blocked by** line to derive what is done, started, ready and blocked. Write no `**Status:**` line: one stamped value on every ticket cannot track anything, and a written status drifts the moment work moves while a derived one cannot.
 
 <issue-template>
 

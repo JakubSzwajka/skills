@@ -3,10 +3,12 @@
 How to run delegated work. `AGENTS.md` holds the rules that must hold even if
 this file is never read. This file holds the detail.
 
-Delegation runs on the `delegate` tool: a worker is a pi session in a herdr pane.
-There is no pi-subagents. Rollback plan and the reason for the switch:
+Delegation runs on the `delegate` tool. A worker is a separate pi session, running
+either in a herdr pane beside you or as a detached headless process. There is no
+pi-subagents. Rollback plan and the reason for the switch:
 `audit/experiments/herdr-orchestration/SETUP.md`. Tool design:
-`audit/experiments/herdr-orchestration/DELEGATE-DESIGN.md`.
+`audit/experiments/herdr-orchestration/DELEGATE-DESIGN.md`. The transport seam:
+`audit/experiments/subprocess-transport/SEAM-ANALYSIS-2026-09-10.md`.
 
 Written from a scan of 172 sessions and 367 child runs, 28 Aug to 9 Sep 2026,
 plus a full-day measurement of 9 Sep. Evidence: `audit/FINDINGS-2026-09-09.md`
@@ -38,16 +40,70 @@ you have one lane.
 ## The loop
 
 ```
-delegate start   →  pane splits beside you, worker reads its brief
+delegate start   →  a pane splits beside you, or a headless pi starts with no terminal
    (returns at once, you keep working or answer the operator)
 worker writes its handoff file
 worker rings you through intercom  →  your turn fires
 delegate read    →  the handoff body
 you verify       →  tests, git status, your own eyes
-delegate stop    →  process group killed, pane closed, lane deregistered
+delegate stop    →  process group killed, pane closed if there is one, lane deregistered
 ```
 
 Five calls, no polling, no guessing how long work takes.
+
+## Two transports
+
+`transport` is a field on a profile, and **only the operator sets it**. It defaults to
+`herdr` (`pi/extensions/delegate/types.ts:13`, `delegate.ts:166`). No profile in
+`profiles.json` sets it, so every lane is a pane unless the operator changes one.
+
+There is no `transport` argument on `start`. Naming one is refused with an error, because
+the choice decides whether the operator can watch a worker at all, and that is not yours
+to take from them. If a lane genuinely needs to outlive the session, say so and ask for a
+profile; do not look for a way around it.
+
+`model` is the deliberate opposite. It stays overridable per call, because matching a model
+to a lane's difficulty is your job and this file tells you to do it. One choice is about
+the work, the other is about whether the human can see the work.
+
+| | `herdr` | `subprocess` |
+| --- | --- | --- |
+| what it is | a split pane running interactive pi | a detached `pi --print`, no terminal |
+| can you look at it | yes, it is on your screen | no, its output is `lanes/<lane>/worker.log` |
+| statuses it can report | idle, working, blocked, done, unknown | working, blocked, done, unknown |
+| outlives this session | the pane does | the process does |
+| something watches it | you and the widget | nothing |
+
+Everything else is shared. Same registry, same assigned handoff, same intercom ring,
+same return contract, same depth-one guard. `PI_DELEGATE_ROLE=child` goes into the
+headless environment too (`runners/subprocess.ts:238`), so a headless worker cannot
+delegate either.
+
+What a headless lane costs you, on purpose:
+
+- **`idle` and `done` collapse.** A print-mode worker runs or has exited. There is no
+  state that means "finished its turn and waiting".
+- **Nothing watches it.** A wedged headless lane burns tokens until you run `list`.
+  A wedged pane at least sits in front of you.
+- **`blocked` narrows to one cause.** It is set only when an intercom ask carrying
+  `expectsReply` reaches you (`delegate.ts:112`), and it clears itself when the
+  worker's transcript grows more than 3 seconds after the ask
+  (`runners/subprocess.ts:13`). Any other stall is invisible.
+- **Project-local extensions, skills and settings are skipped.** Non-interactive pi
+  never prompts for trust, and `defaultProjectTrust` defaults to `ask`, which ignores
+  those resources (pi `docs/settings.md:16`). A lane that needs a repo's own skill
+  needs a pane.
+
+What it buys: the worker survives the session that started it, and a fresh session
+adopts it once the old parent's process is confirmed gone (`delegate.ts:73`). It also
+runs where there is no herdr at all. Without `HERDR_ENV=1` or the binary, only the
+pane transport refuses; headless lanes still start, list, read, wait and stop, and
+`list` names the transport it could not reach as `staleTransports`.
+
+Give a lane a pane when you may want to look at it, when it uses project-local skills
+or extensions, or when it is the one thing you are doing. Headless suits work that must
+outlive this session, or a screen panes would crowd. Neither is your call per lane: it
+follows from the profile you pick, so say which profile you chose and why.
 
 ## Ownership
 
@@ -84,9 +140,14 @@ says so in its result.
 `readOnly` becomes `--exclude-tools edit` and **keeps `write`**, because a worker
 that cannot write cannot produce a handoff. That was a real bug in this file.
 
-The `reviewer` and `oracle` profiles point at `amazon-bedrock/global.anthropic.claude-opus-5`
-rather than the `anthropic` endpoint. On 9 Sep that endpoint returned 14 consecutive 429s
-from 17:18 onward and every review silently fell back to one model family.
+Every profile also excludes `ask_user_question`, so a worker cannot stall in a dialog
+nobody is watching. A profile may carry `transport`; none does today, and only the operator
+can add it.
+
+`reviewer` and `oracle` run `anthropic/claude-opus-5`. On 9 Sep that endpoint returned
+14 consecutive 429s from 17:18 onward and every review silently fell back to one model
+family. There is no automatic retry on a provider failure, so a review that dies on a
+429 is yours to notice and restart.
 
 Model routing from the pi-subagents era is preserved at
 `audit/experiments/herdr-orchestration/snapshot/subagents-model-routing.json`. The
@@ -109,6 +170,11 @@ A brief a fresh worker can act on without asking you anything:
 4. **Non-goals** — what it must not touch.
 5. **Stop conditions** — when to stop and report instead of pushing on.
 6. **Acceptance** — the checks that decide done, and their exit codes.
+
+A brief also has to carry the spec. `/spec` links one spec or ticket to *your*
+session, and the spec-link extension returns early for children
+(`pi/extensions/spec-link/index.ts:12`). A worker never sees your linked spec. Put its
+path in the brief.
 
 The tool appends the seventh part itself: the return contract, the assigned handoff path,
 and the doorbell line. **Never write the contract or the doorbell.** You forgot the
@@ -199,21 +265,52 @@ whether it rang, whether its handoff is unread.
 - **Do not poll.** Polling cost more context than every worker answer combined.
   The ring is the wake.
 
-A lane survives its orchestrator. The registry is a file, so a fresh session
-adopts panes that are still alive rather than orphaning them.
+The widget repaints on a 1.5 second timer rather than at turn boundaries
+(`pi/extensions/delegate/index.ts:18`), so the numbers move while you work. Most ticks
+read files only; every fourth one asks the transports for statuses, and only while a lane
+that can still move is on screen.
+
+Each row also names the lane's model, and a lane you stopped stays on the list, dimmed,
+for the rest of the session, with its final spend and whether its handoff was collected.
+That is your own history: use it in the integration report instead of guessing what a
+closed lane cost. An unread handoff stays loud after the lane closes, because it is still
+work nobody has read.
+
+### When a lane reads `unknown`
+
+`unknown` means nothing proved the lane alive and nothing proved it dead. A headless
+lane reads `unknown` when `ps` could not be read or the record carries no process start
+time (`runners/subprocess.ts:194`). A pane lane reads `unknown` when the pane is there
+but herdr lists no agent in it (`runners/herdr.ts:77`).
+
+The tool then does nothing on your behalf, which is deliberate. The record stays open,
+`wait` times out instead of reporting `done`, and `stop` on a headless lane refuses to
+signal and hands you the pid, the log path and the `kill -TERM -<pid>` to run yourself.
+Signalling a pid that may have been recycled would kill a stranger's process group.
+
+Nothing nags about this state, so it is on you to check the widget. Open the log or the
+pane and decide whether that process is your worker. If it is, kill it by hand. If it
+already exited, the record closes itself the next time `ps` answers. Until you know,
+do not start a replacement lane on the same paths: an `unknown` lane may still be
+writing them.
+
+A lane survives its orchestrator on both transports. The registry is a file, so a fresh
+session adopts live panes and live headless processes rather than orphaning them, and
+it only claims them after the previous parent's process is confirmed gone.
 
 ## Mechanics
 
 ```ts
 delegate({ action: "start", profile: "scout", brief: "…", cwd?, name?, model?, handoff? })
-  → { lane, pane, session, handoff }        returns immediately
+  → { lane, transport, handoff, session, pane?, pid?, logFile? }   returns immediately
 
 delegate({ action: "list" })
-  → { lanes: [{ lane, profile, status, contextPct, spendUsd, rang, handoffPresent, unread }] }
+  → { lanes: [{ lane, profile, status, transport, contextPct, spendUsd, rang,
+                handoffPresent, unread, pane, pid, logFile }], staleTransports? }
 
 delegate({ action: "read", lane })          → { status, handoffPresent, handoff, body }
 delegate({ action: "wait", lanes?, timeoutMs? })
-delegate({ action: "stop", lane })          → kills, closes the pane, deregisters
+delegate({ action: "stop", lane })          → kills the process group, closes the pane, deregisters
 ```
 
 There is no `steer`. The tool cannot correct a worker mid-flight. If a lane is
@@ -246,7 +343,6 @@ Compare against the 28 Aug to 9 Sep baseline and the 9 Sep day:
 - parallelism factor: **1.0 to 1.43**. Target above 2.0 on any session with
   three or more lanes.
 
-`audit/tools/analyze.py` reads pi-subagents artifacts, which panes do not
-produce, so levels 1, 2, 3 and 5 are blind during this trial. Pane sessions
-still write ordinary pi session logs, so the data exists and the tool can be
-pointed at it.
+`audit/tools/analyze.py` reads pi-subagents artifacts, which delegate lanes do not
+produce, so levels 1, 2, 3 and 5 are blind during this trial. Both transports still
+write ordinary pi session logs, so the data exists and the tool can be pointed at it.

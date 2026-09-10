@@ -4,16 +4,25 @@ import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import { readRegistry } from "./registry.ts";
 import type { LaneStatus } from "./types.ts";
+import { statusRank } from "./types.ts";
 
 /** What the widget needs to know about one lane. */
 export interface LaneView {
 	lane: string;
 	profile: string;
 	status: LaneStatus | string;
+	/** The lane's model id, joined as `provider/id[:thinking]`, or null when the record has none. */
+	model: string | null;
 	contextPct: number | null;
 	spendUsd: number | null;
 	rang: boolean;
 	unread: boolean;
+	/** Whether the handoff has been read. Only a finished lane shows it, as `read` or `no handoff`. */
+	read?: boolean;
+	/** A lane this session has finished with: stopped, or closed by the refresh. Dimmed, kept on screen. */
+	finished?: boolean;
+	/** When the lane closed, ISO, used only to order the finished group. */
+	finishedAt?: string;
 }
 
 export type Tone = "label" | "text" | "muted" | "dim" | "attention" | "notice" | "ok";
@@ -26,15 +35,40 @@ export type Paint = (text: string, tone: Tone, bold: boolean) => string;
 const CHUNK_BYTES = 4 * 1024 * 1024;
 const NAME_LIMIT = 24;
 const PROFILE_LIMIT = 10;
+// Model ids run long and none of them is validated, so the column is clipped exactly as the lane
+// name column is: no id can push the status and note columns sideways.
+const MODEL_LIMIT = 24;
 const GAP = 2;
 const RULE_CHAR = "\u2500";
 
 export function laneRows(lanes: readonly LaneView[]): Row[] {
 	const sorted = sortLaneViews(lanes);
-	const needing = sorted.filter(needsOperator).length;
-	const summary = `${sorted.length} lane${sorted.length === 1 ? "" : "s"}${needing ? ` · ${needing} need${needing === 1 ? "s" : ""} you` : ""}`;
-	const header: Row = { indent: 0, cells: [{ text: "delegate", tone: "label", bold: true }, { text: summary, tone: "dim" }] };
+	const live = sorted.filter((lane) => !lane.finished);
+	const finished = sorted.filter((lane) => lane.finished);
+	const header: Row = { indent: 0, cells: [{ text: "delegate", tone: "label", bold: true }, { text: headerSummary(live, finished, sorted), tone: "dim" }] };
 	return [header, ...sorted.map((lane) => ({ indent: 2, cells: laneCells(lane) }))];
+}
+
+/**
+ * `1 live · 3 done · $12.40`, with the count of lanes that still need the operator kept in the
+ * middle when there is one. Spend is the session total across live and finished lanes, so closing a
+ * lane never makes the bill look smaller than it is.
+ */
+function headerSummary(live: readonly LaneView[], finished: readonly LaneView[], all: readonly LaneView[]): string {
+	const needing = all.filter(needsOperator).length;
+	const spend = sessionSpend(all);
+	return [
+		`${live.length} live`,
+		...(finished.length ? [`${finished.length} done`] : []),
+		...(needing ? [`${needing} need${needing === 1 ? "s" : ""} you`] : []),
+		...(spend === null ? [] : [`$${spend.toFixed(2)}`]),
+	].join(" · ");
+}
+
+export function sessionSpend(lanes: readonly LaneView[]): number | null {
+	const reported = lanes.filter((lane) => lane.spendUsd !== null);
+	if (!reported.length) return null;
+	return Math.round(reported.reduce((total, lane) => total + Number(lane.spendUsd), 0) * 100) / 100;
 }
 
 export function renderRows(rows: readonly Row[], width: number, paint: Paint): string[] {
@@ -143,25 +177,78 @@ export class LaneWidgetComponent {
 
 /** Cheap identity of what the widget shows. Equal signature means no repaint is needed. */
 export function laneSignature(lanes: readonly LaneView[]): string {
-	return sortLaneViews(lanes).map((lane) => [lane.lane, lane.profile, lane.status, lane.contextPct ?? "", lane.spendUsd ?? "", lane.rang ? 1 : 0, lane.unread ? 1 : 0].join("\u0001")).join("\u0002");
+	return sortLaneViews(lanes).map((lane) => [lane.lane, lane.profile, lane.model ?? "", lane.status, lane.contextPct ?? "", lane.spendUsd ?? "", lane.rang ? 1 : 0, lane.unread ? 1 : 0, lane.read ? 1 : 0, lane.finished ? 1 : 0].join("\u0001")).join("\u0002");
 }
 
+/**
+ * Live lanes first, in the order that puts what needs the operator on top. Finished lanes below
+ * them, oldest first, so a lane that closes appends to the bottom of the list instead of pushing
+ * the finished rows already on screen down by one every time.
+ */
 export function sortLaneViews(lanes: readonly LaneView[]): LaneView[] {
-	return [...lanes].sort((left, right) => statusRank(left.status) - statusRank(right.status) || left.lane.localeCompare(right.lane));
+	return [...lanes].sort((left, right) => Number(Boolean(left.finished)) - Number(Boolean(right.finished))
+		|| (left.finished
+			? (left.finishedAt ?? "").localeCompare(right.finishedAt ?? "")
+			: statusRank(left.status) - statusRank(right.status))
+		|| left.lane.localeCompare(right.lane));
 }
 
 function laneCells(lane: LaneView): Cell[] {
+	if (lane.finished) return finishedCells(lane);
 	const blocked = lane.status === "blocked";
 	return [
 		{ text: blocked ? "!" : lane.unread ? "•" : " ", tone: blocked ? "attention" : lane.unread ? "notice" : "dim", bold: blocked },
 		{ text: clip(lane.lane, NAME_LIMIT), tone: "text", bold: blocked },
 		{ text: clip(lane.profile, PROFILE_LIMIT), tone: "muted" },
+		{ text: shortModel(lane.model), tone: "muted" },
 		statusCell(lane.status),
 		{ text: lane.contextPct === null ? "— ctx" : `${trimNumber(lane.contextPct)}% ctx`, tone: "muted", align: "right" },
-		{ text: lane.spendUsd === null ? "—" : `$${Number(lane.spendUsd).toFixed(2)}`, tone: "muted", align: "right" },
+		{ text: spendText(lane.spendUsd), tone: "muted", align: "right" },
 		noteCell(lane),
 	];
 }
+
+/**
+ * A lane this session finished with. Everything is dim except an uncollected handoff, which stays
+ * loud: the lane is over, but the work still has not reached the operator.
+ */
+function finishedCells(lane: LaneView): Cell[] {
+	return [
+		{ text: lane.unread ? "•" : " ", tone: lane.unread ? "notice" : "dim" },
+		{ text: clip(lane.lane, NAME_LIMIT), tone: "dim" },
+		{ text: clip(lane.profile, PROFILE_LIMIT), tone: "dim" },
+		{ text: shortModel(lane.model), tone: "dim" },
+		{ text: "done", tone: "dim" },
+		// A closed lane's context use is history nobody can act on, so the column carries the group's
+		// dash instead of a frozen percentage. Left in its column, because a dash pushed to the right
+		// edge of a `28% ctx` column reads as a gap. Its final spend stays, because the bill does not.
+		{ text: "—", tone: "dim" },
+		{ text: spendText(lane.spendUsd), tone: "dim", align: "right" },
+		finishedNote(lane),
+	];
+}
+
+/**
+ * A finished lane's one useful fact: whether the operator collected it. `no handoff` is its own word
+ * because a lane that was stopped before it wrote anything did not produce work to read.
+ */
+function finishedNote(lane: LaneView): Cell {
+	if (lane.unread) return { text: "unread handoff", tone: "notice" };
+	return { text: lane.read ? "read" : "no handoff", tone: "dim" };
+}
+
+/**
+ * The provider prefix is the same on every lane an orchestrator runs, so it costs a column and says
+ * nothing. `openai-codex/gpt-5.6-sol:high` reads as `gpt-5.6-sol:high`, and a bare dotted id such as
+ * `global.anthropic.claude-opus-5` survives whole until it hits the limit.
+ */
+export function shortModel(model: string | null | undefined): string {
+	if (!model) return "—";
+	const bare = model.slice(model.lastIndexOf("/") + 1).trim();
+	return clip(bare || model.trim(), MODEL_LIMIT);
+}
+
+function spendText(spend: number | null): string { return spend === null ? "—" : `$${Number(spend).toFixed(2)}`; }
 
 function statusCell(status: string): Cell {
 	if (status === "blocked") return { text: "BLOCKED", tone: "attention", bold: true };
@@ -178,7 +265,6 @@ function noteCell(lane: LaneView): Cell {
 }
 
 function needsOperator(lane: LaneView): boolean { return lane.status === "blocked" || lane.unread; }
-function statusRank(status: string): number { return status === "blocked" ? 0 : status === "working" ? 1 : status === "done" || status === "idle" ? 2 : status === "unknown" || status === "pending" ? 3 : 4; }
 function trimNumber(value: number): string { return String(Math.round(value * 10) / 10); }
 
 export function clip(text: string, limit: number): string {
@@ -276,12 +362,48 @@ export interface SampleOptions {
 	cwd: string;
 	parentId: string;
 	watcher: SessionStatsWatcher;
+	/** Session-scoped memory of finished lanes, so retention pruning cannot erase this session's history. */
+	finished?: ClosedLaneMemory;
 	contextWindow?: (model: string) => number | null;
+}
+
+/**
+ * Remembers the lanes this session finished with, for as long as the session lives.
+ *
+ * The registry drops a closed record 24 hours after it closed, and a long session would watch its
+ * own history disappear mid-run. Keying on lane name plus start time keeps a later lane that reuses
+ * a name from inheriting the old one's row.
+ */
+export class ClosedLaneMemory {
+	private readonly lanes = new Map<string, { view: LaneView; handoff: string }>();
+
+	static key(lane: string, started: string): string { return `${lane}\u0000${started}`; }
+
+	/** Records a finished lane, keeping the last spend figure it ever reported. */
+	remember(key: string, view: LaneView, handoff: string): LaneView {
+		const previous = this.lanes.get(key);
+		const merged: LaneView = { ...view, spendUsd: view.spendUsd ?? previous?.view.spendUsd ?? null };
+		this.lanes.set(key, { view: merged, handoff });
+		return merged;
+	}
+
+	/** The remembered lanes whose keys the registry no longer carries. */
+	forgottenBy(present: ReadonlySet<string>): Array<{ key: string; view: LaneView; handoff: string }> {
+		return [...this.lanes].filter(([key]) => !present.has(key)).map(([key, entry]) => ({ key, ...entry }));
+	}
+
+	update(key: string, view: LaneView, handoff: string): void { this.lanes.set(key, { view, handoff }); }
+	get size(): number { return this.lanes.size; }
 }
 
 /**
  * Build the widget's lane views straight from the registry files plus the filesystem.
  * No subprocess runs here: statuses are whatever the last full delegate refresh wrote.
+ *
+ * A closed lane stays visible, but only when this session owns it. Ownership, not the working
+ * directory, is the test: another parent working in the same checkout would otherwise leave dimmed
+ * rows for lanes this session never ran. An adopted lane has had its ownership rewritten to this
+ * session, so it counts as ours once we are the one who closed it.
  */
 export async function sampleLaneViews(options: SampleOptions): Promise<LaneView[]> {
 	let entries;
@@ -289,24 +411,39 @@ export async function sampleLaneViews(options: SampleOptions): Promise<LaneView[
 	catch { return []; }
 	const views: LaneView[] = [];
 	const sessionFiles: string[] = [];
+	const present = new Set<string>();
 	for (const entry of entries) {
 		if (!entry.isDirectory()) continue;
 		for (const record of (await readRegistry(join(options.root, entry.name, "lanes.json"))).lanes) {
-			if (record.closed || (record.cwd !== options.cwd && record.ownerSession !== options.parentId)) continue;
+			const ours = record.ownerSession === options.parentId;
+			if (record.closed ? !ours : !(ours || record.cwd === options.cwd)) continue;
 			const stats = record.sessionFile
 				? await options.watcher.sample(record.sessionFile, options.contextWindow?.(record.model ?? "") ?? null)
 				: { contextPct: null, spendUsd: null };
 			if (record.sessionFile) sessionFiles.push(record.sessionFile);
-			views.push({
+			const view: LaneView = {
 				lane: record.lane,
 				profile: record.profile,
 				status: record.status ?? "pending",
+				model: record.model ?? null,
 				contextPct: stats.contextPct,
 				spendUsd: stats.spendUsd,
 				rang: Boolean(record.rang),
 				unread: !record.read && await fileExists(record.handoff),
-			});
+				read: record.read,
+				...(record.closed ? { finished: true, finishedAt: record.closedAt ?? record.started } : {}),
+			};
+			const key = ClosedLaneMemory.key(record.lane, record.started);
+			present.add(key);
+			views.push(record.closed && options.finished ? options.finished.remember(key, view, record.handoff) : view);
 		}
+	}
+	// A record the retention window pruned is still work this session did, so its remembered row stays.
+	// Only the handoff is re-checked, because that is the one part of it that can still change.
+	for (const { key, view, handoff } of options.finished?.forgottenBy(present) ?? []) {
+		const refreshed: LaneView = { ...view, unread: view.unread && await fileExists(handoff) };
+		options.finished?.update(key, refreshed, handoff);
+		views.push(refreshed);
 	}
 	options.watcher.prune(sessionFiles);
 	return sortLaneViews(views);

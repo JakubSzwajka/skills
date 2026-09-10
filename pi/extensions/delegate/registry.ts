@@ -1,6 +1,8 @@
 import { mkdir, open, readFile, readdir, rename, rmdir, stat, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { LaneRecord, LaneRegistry } from "./types.ts";
+import type { LaneRecord, LaneRegistry, Transport } from "./types.ts";
+import { TRANSPORTS } from "./types.ts";
+import { isPid } from "./runners/support.ts";
 
 const LOCK_WAIT_MS = 20;
 const LOCK_TIMEOUT_MS = 5_000;
@@ -130,8 +132,19 @@ function toLane(value: unknown): LaneRecord | undefined {
 		...(isStatus(value.status) ? { status: value.status } : {}),
 		...(text(value.error) ? { error: text(value.error) } : {}),
 		...(text(value.ownerSession) ? { ownerSession: text(value.ownerSession) } : {}),
-		...(positiveInteger(value.ownerPid) ? { ownerPid: positiveInteger(value.ownerPid) } : {}),
+		...(isPid(value.ownerPid) ? { ownerPid: value.ownerPid } : {}),
+		...(isTransport(value.transport) ? { transport: value.transport } : {}),
+		// A pid no kernel could have handed out is dropped rather than carried: it can never be probed
+		// or signalled, and as part of a batched `ps` it used to blind every other lane in the file.
+		...(isPid(value.pid) ? { pid: value.pid } : {}),
+		...(text(value.pidStart) ? { pidStart: text(value.pidStart) } : {}),
+		...(text(value.logFile) ? { logFile: text(value.logFile) } : {}),
+		...(text(value.blockedAt) ? { blockedAt: text(value.blockedAt) } : {}),
 	};
+}
+
+function isTransport(value: unknown): value is Transport {
+	return typeof value === "string" && (TRANSPORTS as readonly string[]).includes(value);
 }
 
 function isStatus(value: unknown): value is LaneRecord["status"] {
@@ -144,10 +157,6 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function text(value: unknown): string | undefined {
 	return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function positiveInteger(value: unknown): number | undefined {
-	return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : undefined;
 }
 
 function isPresent<T>(value: T | undefined): value is T { return value !== undefined; }

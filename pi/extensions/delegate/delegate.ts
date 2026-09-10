@@ -1,25 +1,23 @@
 import { access, readFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
-import type { DelegateInput, DelegateProfile, LaneRecord, LaneRegistry, LaneStatus, CommandRunner } from "./types.ts";
+import type {
+	CommandRunner, DelegateInput, DelegateProfile, LaneObservation, LaneRecord, LaneRunner, LaneStatus, Transport,
+} from "./types.ts";
+import { DEFAULT_TRANSPORT, TRANSPORTS, statusRank } from "./types.ts";
 import { mutateRegistry, readRegistry, registryFiles } from "./registry.ts";
+import { HerdrLaneRunner } from "./runners/herdr.ts";
+import { SubprocessLaneRunner } from "./runners/subprocess.ts";
+import { errorMessage, isObject, numberValue, processAlive, text } from "./runners/support.ts";
 
 const CLOSED_RETENTION_MS = 24 * 60 * 60 * 1_000;
 const DEFAULT_WAIT_MS = 300_000;
 const DEFAULT_PROFILES: Record<string, DelegateProfile> = {
 	worker: { model: "openai-codex/gpt-5.6-sol:high", excludeTools: ["ask_user_question"] },
 	scout: { model: "openai-codex/gpt-5.6-luna", readOnly: true, excludeTools: ["ask_user_question"] },
-	reviewer: { model: "amazon-bedrock/global.anthropic.claude-opus-5", readOnly: true, excludeTools: ["ask_user_question"] },
-	oracle: { model: "amazon-bedrock/global.anthropic.claude-opus-5", readOnly: true, excludeTools: ["ask_user_question"] },
+	reviewer: { model: "anthropic/claude-opus-5", readOnly: true, excludeTools: ["ask_user_question"] },
+	oracle: { model: "anthropic/claude-opus-5", readOnly: true, excludeTools: ["ask_user_question"] },
 };
-
-interface AgentInfo {
-	name?: string;
-	pane: string;
-	status: LaneStatus;
-	session: string;
-	sessionFile?: string;
-}
 
 interface ActionContext {
 	parentId: string;
@@ -31,12 +29,15 @@ interface ActionContext {
 export class DelegateService {
 	readonly root: string;
 	readonly profilesPath: string;
-	private readonly runner: CommandRunner;
+	private readonly runners: Map<Transport, LaneRunner>;
 	private readonly registries = new Set<string>();
 	private readonly foreignRegistries = new Map<string, string>();
+	/** Transports that could not be asked during the last refresh, so their lanes show stale status. */
+	private probeFailures = new Map<Transport, string>();
 
-	constructor(runner: CommandRunner, home: string) {
-		this.runner = runner;
+	constructor(runner: CommandRunner, home: string, runners?: readonly LaneRunner[]) {
+		const configured = runners ?? [new HerdrLaneRunner(runner), new SubprocessLaneRunner()];
+		this.runners = new Map(configured.map((candidate) => [candidate.transport, candidate]));
 		this.root = join(home, ".pi", "agent", "delegate");
 		this.profilesPath = join(home, ".agents", "pi", "delegate", "profiles.json");
 	}
@@ -46,7 +47,12 @@ export class DelegateService {
 		let result: Record<string, unknown>;
 		switch (input.action) {
 			case "start": result = await this.start(input, context, profileState.profiles); break;
-			case "list": result = { lanes: await this.list(context) }; break;
+			case "list": {
+				const lanes = await this.list(context);
+				const stale = [...this.probeFailures].map(([transport, message]) => `${transport}: ${message}`);
+				result = stale.length ? { lanes, staleTransports: stale } : { lanes };
+				break;
+			}
 			case "read": result = await this.read(input.lane, context); break;
 			case "wait": result = await this.wait(input.lanes, input.timeoutMs, context); break;
 			case "stop": result = await this.stop(input.lane, context); break;
@@ -58,7 +64,6 @@ export class DelegateService {
 		const own = this.registryPath(context.parentId);
 		this.registries.add(own);
 		this.foreignRegistries.clear();
-		const agents = await this.listAgents(context.signal);
 		for (const path of await registryFiles(this.root)) {
 			if (path === own) continue;
 			const foreignParent = basename(dirname(path));
@@ -82,10 +87,19 @@ export class DelegateService {
 			if (claimed) this.registries.add(path);
 			else this.foreignRegistries.set(path, foreignParent);
 		}
-		await this.refresh(context, agents);
+		await this.refresh(context);
 	}
 
-	async markRang(senderSessionId: string, context: ActionContext): Promise<string | undefined> {
+	/**
+	 * Write current lane statuses back to the registry and return nothing. The widget's timer
+	 * wants exactly this: `list` additionally re-reads every handoff and every transcript, which
+	 * is wasted work several times a minute.
+	 */
+	async refreshStatus(context: ActionContext): Promise<void> {
+		await this.refresh(context);
+	}
+
+	async markRang(senderSessionId: string, context: ActionContext, options?: { expectsReply?: boolean }): Promise<string | undefined> {
 		await this.ensureRegistries(context);
 		for (const path of this.registries) {
 			let matched: string | undefined;
@@ -93,6 +107,12 @@ export class DelegateService {
 				const lane = registry.lanes.find((candidate) => !candidate.closed && candidate.session === senderSessionId);
 				if (!lane) return;
 				lane.rang = new Date().toISOString();
+				// A pane reports its own blocked state. A headless lane cannot, so the one blocking
+				// event the parent can actually see — an intercom ask — is the only one it gets.
+				if (options?.expectsReply && transportOf(lane) === "subprocess") {
+					lane.status = "blocked";
+					lane.blockedAt = new Date().toISOString();
+				}
 				matched = lane.lane;
 			});
 			if (matched) return matched;
@@ -111,13 +131,18 @@ export class DelegateService {
 				lane: lane.lane,
 				profile: lane.profile,
 				status: lane.closed ? "closed" : lane.status ?? "pending",
+				transport: transportOf(lane),
 				contextPct: stats.contextPct,
 				spendUsd: stats.spendUsd,
 				rang: Boolean(lane.rang),
 				handoffPresent: present,
 				unread: present && !lane.read,
 				pane: lane.pane || null,
+				pid: lane.pid ?? null,
+				logFile: lane.logFile ?? null,
 				session: lane.session || null,
+				sessionFile: lane.sessionFile ?? null,
+				model: lane.model ?? null,
 				handoff: lane.handoff,
 				ownership: owned ? "owned" : "other-parent",
 				owner,
@@ -127,20 +152,27 @@ export class DelegateService {
 	}
 
 	private async start(input: Extract<DelegateInput, { action: "start" }>, context: ActionContext, profiles: Record<string, DelegateProfile>): Promise<Record<string, unknown>> {
+		// The transport decides whether the operator can watch a lane, so it is theirs alone: it comes
+		// from the profile they maintain. A caller that names one is refused rather than quietly obeyed,
+		// so a model that learned the old parameter finds out instead of guessing it worked.
+		if ((input as { transport?: unknown }).transport !== undefined) {
+			throw new Error("transport is not a per-call choice: a lane's transport comes from its profile, which the operator maintains in profiles.json. Pick a profile, or ask the operator to change one. model is still yours to choose.");
+		}
 		const brief = input.brief?.trim();
 		if (!brief) throw new Error("start requires a non-empty brief");
 		const profileName = input.profile?.trim() || "worker";
 		const profile = profiles[profileName];
 		if (!profile) throw new Error(`Unknown delegate profile ${JSON.stringify(profileName)}`);
+		const transport = resolveTransport(profile.transport);
+		const runner = this.runnerFor(transport);
 		const cwd = resolve(input.cwd || context.cwd);
-		const agents = await this.listAgents(context.signal);
-		const lane = input.name ? validateLaneName(input.name) : generatedLaneName(cwd, new Set(agents.map((agent) => agent.name).filter(isPresent)));
-		if (agents.some((agent) => agent.name === lane)) throw new Error(`A live Herdr agent is already named ${JSON.stringify(lane)}`);
+		const taken = await runner.liveNames(context.signal);
+		const lane = input.name ? validateLaneName(input.name) : generatedLaneName(cwd, taken);
+		if (taken.has(lane)) throw new Error(`A live ${transport} lane is already named ${JSON.stringify(lane)}`);
 		const registryPath = this.registryPath(context.parentId);
 		this.registries.add(registryPath);
 		const handoff = input.handoff ? (isAbsolute(input.handoff) ? input.handoff : resolve(cwd, input.handoff)) : join(dirname(registryPath), `${lane}.md`);
 		const chosenModel = input.model?.trim() || profile.model;
-		const policy = toolPolicy(profile);
 		const initial: LaneRecord = {
 			lane,
 			profile: profileName,
@@ -153,6 +185,7 @@ export class DelegateService {
 			closed: false,
 			model: chosenModel,
 			status: "pending",
+			transport,
 			ownerSession: context.parentId,
 			ownerPid: process.pid,
 		};
@@ -161,84 +194,54 @@ export class DelegateService {
 			registry.lanes.push(initial);
 		});
 
-		let pane = "";
-		let session = "";
+		const spec = {
+			lane, cwd, parentId: context.parentId, model: chosenModel, policy: toolPolicy(profile),
+			prompt: returnContract(brief, handoff, context.parentId), handoff,
+			stateDir: join(dirname(registryPath), "lanes", lane),
+		};
 		try {
-			const split = await this.herdr([
-				"pane", "split", "--current", "--direction", "right", "--ratio", "0.4", "--cwd", cwd,
-				"--env", "PI_DELEGATE_ROLE=child", "--env", `PI_DELEGATE_PARENT=${context.parentId}`, "--no-focus",
-			], context.signal, 10_000, "split pane");
-			pane = findString(split, ["pane_id", "paneId"]);
-			if (!pane) throw new Error("Herdr split a pane but returned no pane ID");
-			await this.updateLane(registryPath, lane, (record) => { record.pane = pane; });
-			await this.awaitAvailableShell(pane, context.signal);
-			const started = await this.startAgent(pane, lane, chosenModel, policy, context.signal);
-			const agent = toAgent(findObject(started, (value) => isObject(value) && (value.pane_id === pane || value.paneId === pane) ? value : undefined));
-			if (!agent) throw new Error("Herdr did not confirm the started Pi agent");
-			session = agent.session;
-			await this.updateLane(registryPath, lane, (record) => {
-				record.session = agent.session;
-				record.sessionFile = agent.sessionFile;
-				record.status = agent.status;
-			});
-			const contract = returnContract(brief, handoff, context.parentId);
-			let transitionConfirmed = true;
-			try {
-				await this.herdr(["agent", "prompt", lane, contract, "--wait", "--until", "working", "--timeout", "10000"], context.signal, 11_000, "deliver brief");
-			} catch (error) {
-				if (!isTransitionTimeout(error)) throw error;
-				transitionConfirmed = false;
-			}
+			const handle = await runner.spawn(spec, (patch) => this.updateLane(registryPath, lane, (record) => Object.assign(record, patch)), context.signal);
 			await this.updateLane(registryPath, lane, (record) => {
 				record.started = new Date().toISOString();
-				if (transitionConfirmed) record.status = "working";
+				if (handle.pane) record.pane = handle.pane;
+				if (handle.session) record.session = handle.session;
+				if (handle.sessionFile) record.sessionFile = handle.sessionFile;
+				if (handle.pid) record.pid = handle.pid;
+				if (handle.pidStart) record.pidStart = handle.pidStart;
+				if (handle.logFile) record.logFile = handle.logFile;
+				record.status = handle.status ?? record.status ?? "pending";
 			});
-			return { lane, pane, session: session || null, handoff, ...(transitionConfirmed ? {} : { transitionConfirmed: false }) };
+			return {
+				lane, transport, handoff,
+				...(handle.pane ? { pane: handle.pane } : {}),
+				...(handle.pid ? { pid: handle.pid } : {}),
+				...(handle.logFile ? { logFile: handle.logFile } : {}),
+				session: handle.session || null,
+				...(handle.transitionConfirmed === false ? { transitionConfirmed: false } : {}),
+			};
 		} catch (error) {
 			const message = errorMessage(error);
 			let registryError: string | undefined;
+			let attached: LaneRecord | undefined;
 			try {
 				await this.updateLane(registryPath, lane, (record) => {
 					record.error = message;
-					record.status = pane ? "unknown" : "closed";
-					if (!pane) { record.closed = true; record.closedAt = new Date().toISOString(); }
+					attached = record;
+					const live = Boolean(record.pane || record.pid);
+					record.status = live ? "unknown" : "closed";
+					if (!live) { record.closed = true; record.closedAt = new Date().toISOString(); }
 				});
 			} catch (updateError) { registryError = errorMessage(updateError); }
 			const detail = registryError ? `${message}; registry update also failed: ${registryError}` : message;
-			if (pane) return { lane, pane, session: session || null, handoff, transitionConfirmed: false, error: detail };
-			throw new Error(`${detail}. Registry retained lane ${lane} before pane creation.`);
-		}
-	}
-
-	private async awaitAvailableShell(pane: string, signal?: AbortSignal): Promise<void> {
-		// A freshly split pane needs a moment before its shell reaches an interactive prompt.
-		// Starting an agent early fails with agent_pane_busy, which cost a real lane on 2026-09-10.
-		const deadline = Date.now() + 10_000;
-		for (;;) {
-			try {
-				const raw = await this.herdr(["pane", "process-info", "--pane", pane], signal, 5_000, "inspect pane process");
-				const info = findObject(raw, (value) => isObject(value) && ("shell_pid" in value || "shellPid" in value) ? value : undefined);
-				const shell = numberValue(info?.shell_pid ?? info?.shellPid);
-				const foreground = numberValue(info?.foreground_process_group_id ?? info?.foregroundProcessGroupId);
-				if (shell && foreground === shell) return;
-			} catch (error) { if (Date.now() >= deadline) throw error; }
-			if (Date.now() >= deadline) return;
-			await sleep(200);
-		}
-	}
-
-	private async startAgent(pane: string, lane: string, modelSpec: string, policy: { tools?: string[]; excludeTools: string[] }, signal?: AbortSignal): Promise<unknown> {
-		const { model, thinking } = splitModelSpec(modelSpec);
-		const args = ["agent", "start", lane, "--kind", "pi", "--pane", pane, "--timeout", "30000", "--", "--name", lane, "--model", model];
-		if (policy.tools?.length) args.push("--tools", policy.tools.join(","));
-		if (policy.excludeTools.length) args.push("--exclude-tools", policy.excludeTools.join(","));
-		if (thinking) args.push("--thinking", thinking);
-		for (let attempt = 1; ; attempt += 1) {
-			try { return await this.herdr(args, signal, 31_000, "start Pi agent"); }
-			catch (error) {
-				if (attempt >= 5 || !/agent_pane_busy|agent_not_ready/.test(errorMessage(error))) throw error;
-				await sleep(500 * attempt);
+			if (attached?.pane || attached?.pid) {
+				return {
+					lane, transport, handoff, transitionConfirmed: false, error: detail,
+					...(attached.pane ? { pane: attached.pane } : {}),
+					...(attached.pid ? { pid: attached.pid } : {}),
+					session: attached.session || null,
+				};
 			}
+			throw new Error(`${detail}. Registry retained lane ${lane} before the worker existed.`);
 		}
 	}
 
@@ -261,28 +264,31 @@ export class DelegateService {
 		await this.ensureRegistries(context);
 		const timeout = timeoutMs ?? DEFAULT_WAIT_MS;
 		if (!Number.isSafeInteger(timeout) || timeout <= 0) throw new Error("timeoutMs must be a positive integer");
-		const all = (await this.allRecords()).filter(({ lane }) => !lane.closed && lane.pane);
+		const all = (await this.allRecords()).filter(({ lane }) => !lane.closed && spawned(lane));
 		const names = laneNames?.length ? [...new Set(laneNames)] : all.map(({ lane }) => lane.lane);
 		if (!names.length) throw new Error("No live delegate lanes to wait for");
 		const selected = names.map((name) => {
 			const matches = all.filter(({ lane }) => lane.lane === name);
 			if (matches.length !== 1) throw new Error(matches.length ? `Delegate lane ${JSON.stringify(name)} is ambiguous` : `Unknown live delegate lane ${JSON.stringify(name)}`);
-			return matches[0];
+			return matches[0]!;
 		});
 		const controllers = selected.map(() => new AbortController());
 		const abortFromParent = () => controllers.forEach((controller) => controller.abort());
 		context.signal?.addEventListener("abort", abortFromParent, { once: true });
 		try {
-			const settled = await Promise.race(selected.map(({ lane }, index) => this.waitOne(lane, timeout, controllers[index]!.signal)));
+			const settled = await Promise.race(selected.map(async (entry, index) => ({
+				entry,
+				outcome: await this.runnerFor(transportOf(entry.lane)).settle(entry.lane, timeout, controllers[index]!.signal),
+			})));
 			controllers.forEach((controller) => controller.abort());
-			if (settled.timedOut) return { timedOut: true, lanes: names };
-			const matched = selected.find(({ lane }) => lane.pane === settled.agent.pane || lane.lane === settled.agent.name);
-			if (matched) await this.updateLane(matched.path, matched.lane.lane, (record) => { record.status = settled.agent.status; });
+			if (settled.outcome.timedOut) return { timedOut: true, lanes: names };
+			const matched = settled.entry;
+			await this.updateLane(matched.path, matched.lane.lane, (record) => { record.status = (settled.outcome as { status: LaneStatus }).status; });
 			return {
 				timedOut: false,
-				lane: matched?.lane.lane ?? settled.agent.name ?? null,
-				status: settled.agent.status,
-				handoffPresent: matched ? await fileExists(matched.lane.handoff) : false,
+				lane: matched.lane.lane,
+				status: settled.outcome.status,
+				handoffPresent: await fileExists(matched.lane.handoff),
 			};
 		} finally {
 			context.signal?.removeEventListener("abort", abortFromParent);
@@ -290,79 +296,40 @@ export class DelegateService {
 		}
 	}
 
-	private async waitOne(lane: LaneRecord, timeoutMs: number, signal: AbortSignal): Promise<{ timedOut: true } | { timedOut: false; agent: AgentInfo }> {
-		let result;
-		try {
-			result = await this.runner.exec("herdr", waitArguments(lane.lane, timeoutMs), { signal, timeout: timeoutMs + 1_000 });
-		} catch (error) {
-			const raw = parsePossibleJson((error as { stdout?: unknown } | null)?.stdout);
-			if (errorCode(raw) === "timeout") return { timedOut: true };
-			throw error;
-		}
-		const raw = parsePossibleJson(result.stdout);
-		if (errorCode(raw) === "timeout") return { timedOut: true };
-		if (result.code !== 0) throw new Error(herdrFailure("wait for agent", raw, result.stderr));
-		const agent = toAgent(findObject(raw, (value) => isObject(value) && typeof (value.agent_status ?? value.status) === "string" ? value : undefined));
-		if (!agent) throw new Error("Herdr wait returned no agent state");
-		return { timedOut: false, agent };
-	}
-
 	private async stop(laneName: string | undefined, context: ActionContext): Promise<Record<string, unknown>> {
 		const found = await this.requireLane(laneName, context);
 		const lane = found.lane;
-		if (!lane.pane) {
+		const identity = { lane: lane.lane, ...(lane.pane ? { pane: lane.pane } : {}), ...(lane.pid ? { pid: lane.pid } : {}) };
+		if (!spawned(lane)) {
 			await this.closeRecord(found.path, lane.lane);
-			return { lane: lane.lane, gone: true, alreadyGone: true };
+			return { ...identity, gone: true, alreadyGone: true };
 		}
-		const [agents, panes] = await Promise.all([this.listAgents(context.signal), this.listPanes(context.signal)]);
-		const present = agents.some((agent) => agent.pane === lane.pane) || panes.has(lane.pane);
-		if (!present) {
-			await this.closeRecord(found.path, lane.lane);
-			return { lane: lane.lane, pane: lane.pane, gone: true, alreadyGone: true };
-		}
-		const failures: string[] = [];
-		try { await this.terminatePaneProcess(lane.pane, context.signal); }
-		catch (error) { failures.push(errorMessage(error)); }
-		try { await this.herdr(["pane", "close", lane.pane], context.signal, 5_000, "close pane"); }
-		catch (error) { failures.push(errorMessage(error)); }
-		const [afterAgents, afterPanes] = await Promise.all([this.listAgents(context.signal), this.listPanes(context.signal)]);
-		const gone = !afterAgents.some((agent) => agent.pane === lane.pane) && !afterPanes.has(lane.pane);
-		if (!gone) throw new Error(`stop left pane ${lane.pane} behind${failures.length ? `: ${failures.join("; ")}` : ""}`);
+		const outcome = await this.runnerFor(transportOf(lane)).kill(lane, context.signal);
+		if (!outcome.gone) throw new Error(outcome.detail ?? `stop left lane ${lane.lane} behind`);
 		await this.closeRecord(found.path, lane.lane);
-		return { lane: lane.lane, pane: lane.pane, gone: true, alreadyGone: false, ...(failures.length ? { warnings: failures } : {}) };
+		return { ...identity, gone: true, alreadyGone: outcome.alreadyGone, ...(outcome.warnings.length ? { warnings: outcome.warnings } : {}) };
 	}
 
-	private async terminatePaneProcess(pane: string, signal?: AbortSignal): Promise<void> {
-		const raw = await this.herdr(["pane", "process-info", "--pane", pane], signal, 5_000, "inspect pane process");
-		const info = findObject(raw, (value) => isObject(value) && ("foreground_process_group_id" in value || "foregroundProcessGroupId" in value) ? value : undefined);
-		const group = numberValue(info?.foreground_process_group_id ?? info?.foregroundProcessGroupId);
-		const shell = numberValue(info?.shell_pid ?? info?.shellPid);
-		if (!group || group === shell) return;
-		try { process.kill(-group, "SIGTERM"); }
-		catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
-		await sleep(100);
-		if (!processGroupAlive(group)) return;
-		try { process.kill(-group, "SIGKILL"); }
-		catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
-	}
-
-	private async refresh(context: ActionContext, knownAgents?: AgentInfo[]): Promise<void> {
+	private async refresh(context: ActionContext): Promise<void> {
 		await this.ensureRegistries(context);
-		const [agents, panes] = await Promise.all([knownAgents ? Promise.resolve(knownAgents) : this.listAgents(context.signal), this.listPanes(context.signal)]);
-		const byPane = new Map(agents.map((agent) => [agent.pane, agent]));
+		const live = (await this.allRecords()).map(({ lane }) => lane).filter((lane) => !lane.closed);
+		this.probeFailures = new Map();
+		const observations = await this.probe(live, context.signal);
 		const now = Date.now();
 		for (const path of this.registries) {
 			await mutateRegistry(path, (registry) => {
 				registry.lanes = registry.lanes.filter((lane) => !lane.closedAt || now - Date.parse(lane.closedAt) <= CLOSED_RETENTION_MS);
 				for (const lane of registry.lanes) {
 					if (lane.closed) continue;
-					const agent = lane.pane ? byPane.get(lane.pane) : undefined;
-					if (agent) {
-						lane.status = agent.status;
-						lane.session ||= agent.session;
-						lane.sessionFile ||= agent.sessionFile;
-					} else if (lane.pane && panes.has(lane.pane)) lane.status = "unknown";
-					else if (lane.pane || now - Date.parse(lane.started) > CLOSED_RETENTION_MS) {
+					const observation = observations.get(lane.lane);
+					if (observation?.kind === "status") {
+						lane.status = observation.status;
+						if (!lane.session && observation.session) lane.session = observation.session;
+						lane.sessionFile ||= observation.sessionFile;
+						if (lane.status !== "blocked") delete lane.blockedAt;
+					// A transport nobody could reach says nothing about its lanes, so neither its silence nor
+					// the lane's age is allowed to close one.
+					} else if (!this.probeFailures.has(transportOf(lane)) && (observation?.kind === "gone" || now - Date.parse(lane.started) > CLOSED_RETENTION_MS)) {
 						lane.closed = true;
 						lane.status = "closed";
 						lane.closedAt = new Date(now).toISOString();
@@ -370,6 +337,36 @@ export class DelegateService {
 				}
 			});
 		}
+	}
+
+	/** One probe per transport, each seeing every one of its own lanes at once. */
+	private async probe(lanes: readonly LaneRecord[], signal?: AbortSignal): Promise<Map<string, LaneObservation>> {
+		const grouped = new Map<Transport, LaneRecord[]>();
+		for (const lane of lanes) {
+			const transport = transportOf(lane);
+			if (!this.runners.has(transport)) continue;
+			const group = grouped.get(transport) ?? [];
+			group.push(lane);
+			grouped.set(transport, group);
+		}
+		const merged = new Map<string, LaneObservation>();
+		for (const [transport, group] of grouped) {
+			// One transport that cannot be reached costs its own lanes their fresh status and nothing
+			// else. A session outside Herdr has to be able to list, read and stop its headless lanes
+			// even while a pane lane it cannot see sits in the same registry.
+			try {
+				for (const [lane, observation] of await this.runners.get(transport)!.probe(group, signal)) merged.set(lane, observation);
+			} catch (error) {
+				this.probeFailures.set(transport, errorMessage(error));
+			}
+		}
+		return merged;
+	}
+
+	private runnerFor(transport: Transport): LaneRunner {
+		const runner = this.runners.get(transport);
+		if (!runner) throw new Error(`No delegate runner is configured for transport ${JSON.stringify(transport)}`);
+		return runner;
 	}
 
 	private async ensureRegistries(context: ActionContext): Promise<void> {
@@ -412,30 +409,6 @@ export class DelegateService {
 
 	private registryPath(parentId: string): string { return join(this.root, parentId, "lanes.json"); }
 
-	private async listAgents(signal?: AbortSignal): Promise<AgentInfo[]> {
-		const raw = await this.herdr(["agent", "list"], signal, 5_000, "list agents");
-		const values = nestedArray(raw, "agents");
-		return values.map(toAgent).filter(isPresent);
-	}
-
-	private async listPanes(signal?: AbortSignal): Promise<Set<string>> {
-		const raw = await this.herdr(["pane", "list"], signal, 5_000, "list panes");
-		return new Set(nestedArray(raw, "panes").map((pane) => isObject(pane) ? text(pane.pane_id ?? pane.paneId) : undefined).filter(isPresent));
-	}
-
-	private async herdr(args: string[], signal: AbortSignal | undefined, timeout: number, action: string): Promise<unknown> {
-		let result;
-		try { result = await this.runner.exec("herdr", args, { signal, timeout }); }
-		catch (error) {
-			const raw = parsePossibleJson((error as { stdout?: unknown } | null)?.stdout);
-			throw new Error(herdrFailure(action, raw, text((error as { stderr?: unknown } | null)?.stderr) ?? errorMessage(error)));
-		}
-		const raw = parsePossibleJson(result.stdout);
-		if (result.code !== 0 || errorCode(raw)) throw new Error(herdrFailure(action, raw, result.stderr));
-		if (!raw) throw new Error(`Herdr could not ${action}: response was not JSON`);
-		return raw;
-	}
-
 	private async loadProfiles(): Promise<{ profiles: Record<string, DelegateProfile>; warning?: string }> {
 		let raw: string;
 		try { raw = await readFile(this.profilesPath, "utf8"); }
@@ -458,6 +431,9 @@ export class DelegateService {
 	}
 }
 
+export { statusRank } from "./types.ts";
+export { waitArguments } from "./runners/herdr.ts";
+
 export function returnContract(brief: string, handoff: string, parent: string): string {
 	return `${brief.trim()}\n\nYou are a worker. Implement the work yourself. Do not delegate.\nIf you need a decision before you can continue, use the intercom tool to ask\nsession ${parent} and wait for the reply. Never try to open a question dialog;\nnobody may be watching your pane, and a pane waiting on a dialog looks identical\nto a pane doing work. Say what you need in one line, offer the options you see,\nand name your own recommendation. If you are still stuck after the reply, write\nthe handoff describing the block rather than waiting again.\nWrite your handoff to ${handoff}. That file is your result; a terminal\nnobody reads is not.\nWhen the handoff is written, use the intercom tool to message session ${parent}\nwith the handoff path and a one-line outcome. Do this even if you failed or only\npartly finished.`;
 }
@@ -468,8 +444,8 @@ export function toolPolicy(profile: DelegateProfile): { tools?: string[]; exclud
 	return { ...(profile.tools ? { tools: [...profile.tools] } : {}), excludeTools: [...excluded] };
 }
 
-export function intercomRings(entries: readonly unknown[]): Array<{ sender: string; messageId: string }> {
-	const rings: Array<{ sender: string; messageId: string }> = [];
+export function intercomRings(entries: readonly unknown[]): Array<{ sender: string; messageId: string; expectsReply: boolean }> {
+	const rings: Array<{ sender: string; messageId: string; expectsReply: boolean }> = [];
 	for (const entry of entries) {
 		if (!isObject(entry)) continue;
 		const holder = entry.type === "custom_message" ? entry
@@ -479,14 +455,26 @@ export function intercomRings(entries: readonly unknown[]): Array<{ sender: stri
 		const details = isObject(holder.details) ? holder.details : undefined;
 		const sender = isObject(details?.from) ? text(details.from.id) : undefined;
 		if (!sender) continue;
-		const messageId = (isObject(details?.message) ? text(details.message.id) : undefined) ?? `${text(entry.timestamp) ?? ""}:${sender}`;
-		rings.push({ sender, messageId });
+		const message = isObject(details?.message) ? details.message : undefined;
+		const messageId = text(message?.id) ?? `${text(entry.timestamp) ?? ""}:${sender}`;
+		rings.push({ sender, messageId, expectsReply: message?.expectsReply === true });
 	}
 	return rings;
 }
 
-export function waitArguments(lane: string, timeoutMs: number): string[] {
-	return ["agent", "wait", lane, "--until", "idle", "--until", "done", "--until", "blocked", "--timeout", String(timeoutMs)];
+export function resolveTransport(value: unknown): Transport {
+	if (value === undefined || value === null || value === "") return DEFAULT_TRANSPORT;
+	if (typeof value === "string" && (TRANSPORTS as readonly string[]).includes(value)) return value as Transport;
+	throw new Error(`Unknown delegate transport ${JSON.stringify(value)}; expected ${TRANSPORTS.join(" or ")}`);
+}
+
+function transportOf(lane: LaneRecord): Transport {
+	return lane.transport ?? DEFAULT_TRANSPORT;
+}
+
+/** A lane has a home once its runner created something: a pane, or a process. */
+function spawned(lane: LaneRecord): boolean {
+	return Boolean(lane.pane || lane.pid);
 }
 
 function validateLaneName(name: string): string {
@@ -504,35 +492,6 @@ function generatedLaneName(cwd: string, live: Set<string>): string {
 	}
 }
 
-function splitModelSpec(spec: string): { model: string; thinking?: string } {
-	const match = spec.match(/^(.*):(off|minimal|low|medium|high|xhigh|max)$/);
-	return match ? { model: match[1]!, thinking: match[2] } : { model: spec };
-}
-
-function toAgent(value: unknown): AgentInfo | undefined {
-	if (!isObject(value)) return undefined;
-	const pane = text(value.pane_id ?? value.paneId);
-	if (!pane) return undefined;
-	const sessionValue = isObject(value.agent_session) ? value.agent_session.value : isObject(value.session) ? value.session.value : value.session_path ?? value.sessionPath;
-	const sessionFile = text(sessionValue);
-	return {
-		name: text(value.name),
-		pane,
-		status: laneStatus(value.agent_status ?? value.status ?? value.state),
-		session: sessionFile ? sessionIdFromPath(sessionFile) : text(value.session_id ?? value.sessionId) ?? "",
-		...(sessionFile ? { sessionFile } : {}),
-	};
-}
-
-function laneStatus(value: unknown): LaneStatus {
-	return typeof value === "string" && ["idle", "working", "blocked", "done"].includes(value) ? value as LaneStatus : "unknown";
-}
-
-function sessionIdFromPath(path: string): string {
-	const filename = basename(path).replace(/\.jsonl$/, "");
-	return filename.slice(filename.lastIndexOf("_") + 1);
-}
-
 async function sessionStats(path: string | undefined, configuredWindow: number | null): Promise<{ contextPct: number | null; spendUsd: number | null }> {
 	if (!path) return { contextPct: null, spendUsd: null };
 	let source: string;
@@ -544,7 +503,8 @@ async function sessionStats(path: string | undefined, configuredWindow: number |
 	let sawCost = false;
 	for (const line of source.split("\n")) {
 		if (!line) continue;
-		const parsed = parsePossibleJson(line);
+		let parsed: unknown;
+		try { parsed = JSON.parse(line); } catch { continue; }
 		if (!isObject(parsed) || !isObject(parsed.message) || parsed.message.role !== "assistant") continue;
 		const usage = isObject(parsed.message.usage) ? parsed.message.usage : undefined;
 		const total = numberValue(usage?.totalTokens);
@@ -556,32 +516,14 @@ async function sessionStats(path: string | undefined, configuredWindow: number |
 	return { contextPct: tokens !== null && window ? Math.round(tokens / window * 1_000) / 10 : null, spendUsd: sawCost ? Math.round(spend * 1000) / 1000 : null };
 }
 
-function returnErrorMessage(value: unknown): string | undefined {
-	return isObject(value) ? text(value.message) : undefined;
+function isProfile(value: unknown): value is DelegateProfile {
+	return isObject(value)
+		&& Boolean(text(value.model))
+		&& (value.readOnly === undefined || typeof value.readOnly === "boolean")
+		&& (value.transport === undefined || (typeof value.transport === "string" && (TRANSPORTS as readonly string[]).includes(value.transport)))
+		&& stringArrayOrUndefined(value.tools)
+		&& stringArrayOrUndefined(value.excludeTools);
 }
 
-function herdrFailure(action: string, raw: unknown, stderr: string): string {
-	const code = errorCode(raw);
-	const message = returnErrorMessage(isObject(raw) ? raw.error : undefined);
-	const detail = code ? `${code}${message ? `: ${message}` : ""}` : stderr.trim().split("\n")[0];
-	return `Herdr could not ${action}${detail ? `: ${detail}` : ""}`;
-}
-
-function errorCode(raw: unknown): string | undefined { return isObject(raw) && isObject(raw.error) ? text(raw.error.code) : undefined; }
-function parsePossibleJson(value: unknown): unknown { if (typeof value !== "string") return undefined; try { return JSON.parse(value); } catch { return undefined; } }
-function nestedArray(value: unknown, key: string): unknown[] { const found = findObject(value, (candidate) => isObject(candidate) && Array.isArray(candidate[key]) ? candidate : undefined); return found && Array.isArray(found[key]) ? found[key] : []; }
-function findString(value: unknown, keys: string[]): string { for (const key of keys) { const found = findObject(value, (candidate) => isObject(candidate) && text(candidate[key]) ? candidate : undefined); if (found) return text(found[key]) ?? ""; } return ""; }
-function findObject<T>(value: unknown, convert: (value: unknown) => T | undefined): T | undefined { const direct = convert(value); if (direct) return direct; if (!isObject(value) && !Array.isArray(value)) return undefined; for (const child of Object.values(value)) { const found = findObject(child, convert); if (found) return found; } return undefined; }
-function isProfile(value: unknown): value is DelegateProfile { return isObject(value) && Boolean(text(value.model)) && (value.readOnly === undefined || typeof value.readOnly === "boolean") && stringArrayOrUndefined(value.tools) && stringArrayOrUndefined(value.excludeTools); }
 function stringArrayOrUndefined(value: unknown): boolean { return value === undefined || Array.isArray(value) && value.every((item) => Boolean(text(item))); }
-function isObject(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }
-function text(value: unknown): string | undefined { return typeof value === "string" && value.length ? value : undefined; }
-function numberValue(value: unknown): number | undefined { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
-function isPresent<T>(value: T | undefined): value is T { return value !== undefined; }
-function errorMessage(error: unknown): string { return error instanceof Error ? error.message : String(error); }
-function isTransitionTimeout(error: unknown): boolean { return /\btime(?:d\s*)?out\b/i.test(errorMessage(error)); }
 function fileExists(path: string): Promise<boolean> { return access(path, constants.F_OK).then(() => true, () => false); }
-function processAlive(pid: number): boolean { try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; } }
-function processGroupAlive(group: number): boolean { try { process.kill(-group, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; } }
-function sleep(ms: number): Promise<void> { return new Promise((resolve) => setTimeout(resolve, ms)); }
-function statusRank(status: string): number { return status === "blocked" ? 0 : status === "working" ? 1 : status === "done" || status === "idle" ? 2 : status === "unknown" || status === "pending" ? 3 : 4; }

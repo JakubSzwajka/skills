@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Delegate executes. Continuity is manual.</title>
+<title>The orchestrator system: one conversation, engines behind it</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
@@ -718,216 +718,192 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 
 <main class="wrap">
   <header class="masthead">
-    <h1>Delegate executes. Continuity is manual.</h1>
-    <p class="thesis">Delegate still runs depth-one lanes and returns each result to its parent through a handoff file and intercom ring. <strong>No loaded task tool carries work from one session to the next.</strong></p>
+    <h1>You talk to one agent. It runs the rest.</h1>
+    <p class="thesis">The human talks to one orchestrator, and the orchestrator talks to engines. A lane now runs two ways: a pane you can watch, or a headless process that outlives the session that started it. <strong>What survives either one is the handoff file and the spec it was briefed from.</strong></p>
   </header>
 
   <div class="tabs" data-tabs>
     <div class="tabstrip" role="tablist" aria-label="System views">
-      <button id="tab-fit" role="tab" aria-controls="panel-fit" data-tab="fit" class="on" aria-selected="true" tabindex="0">How it fits</button>
-      <button id="tab-task" role="tab" aria-controls="panel-task" data-tab="task" aria-selected="false" tabindex="-1">Task log · retired</button>
-      <button id="tab-spec" role="tab" aria-controls="panel-spec" data-tab="spec" aria-selected="false" tabindex="-1">Spec and tickets</button>
-      <button id="tab-orchestration" role="tab" aria-controls="panel-orchestration" data-tab="orchestration" aria-selected="false" tabindex="-1">Orchestration</button>
-      <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false" tabindex="-1">Missing · 3 gaps</button>
+      <button id="tab-rule" role="tab" aria-controls="panel-rule" data-tab="rule" class="on" aria-selected="true" tabindex="0">The one rule</button>
+      <button id="tab-record" role="tab" aria-controls="panel-record" data-tab="record" aria-selected="false" tabindex="-1">The record</button>
+      <button id="tab-run" role="tab" aria-controls="panel-run" data-tab="run" aria-selected="false" tabindex="-1">Running a lane</button>
+      <button id="tab-transports" role="tab" aria-controls="panel-transports" data-tab="transports" aria-selected="false" tabindex="-1">Two transports</button>
+      <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false" tabindex="-1">Missing · 5 gaps</button>
     </div>
 
-    <section id="panel-fit" role="tabpanel" aria-labelledby="tab-fit" data-panel="fit">
-      <div class="sec-head"><h2>Planned work and lane execution meet at the parent session</h2></div>
+    <section id="panel-rule" role="tabpanel" aria-labelledby="tab-rule" data-panel="rule">
+      <div class="sec-head">
+        <span class="sec-tag">the boundary</span>
+        <h2>One conversation in front, engines behind it</h2>
+      </div>
+      <p>You never join a worker's session and never read its terminal to find out what happened. When a worker needs judgement, it reaches you through the orchestrator, in your own conversation. That boundary is the point of the whole thing, and every mechanism below exists to hold it.</p>
       <figure class="system-figure">
-        <div class="key" aria-label="System color key">
-          <span><i class="s2"></i>Spec and tickets</span><span><i class="s4"></i>Delegate execution</span><span><i class="flat"></i>Files and session state</span>
+        <div class="key" aria-label="Layer color key">
+          <span><i class="s2"></i>Record</span><span><i class="s4"></i>Orchestrator and engines</span><span><i class="flat"></i>People and files</span><span><i class="warn"></i>Gap</span>
         </div>
-        <svg viewBox="0 0 1040 580" role="img" aria-label="Specs, tickets, repository files, and pull requests carry durable work. Delegate starts a depth-one child Pi session in a Herdr pane. The worker writes an assigned handoff and rings through intercom. The parent reads, verifies, and stops the lane.">
+        <svg viewBox="0 0 1040 600" role="img" aria-label="You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the record holds specs, tickets and handoff files, and execution runs in separate sessions. Nothing logs what happened during the work, and no lane can be steered once it is running.">
           <defs>
-            <marker id="fit-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
-            <marker id="fit-spec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
-            <marker id="fit-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
+            <marker id="rule-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+            <marker id="rule-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
           </defs>
 
-          <rect class="node-neutral" x="45" y="28" width="215" height="66" rx="9"/>
-          <text class="lbl" x="152" y="56" text-anchor="middle">Operator</text>
-          <text class="sub" x="152" y="77" text-anchor="middle">chooses the work</text>
+          <rect class="node-neutral" x="60" y="44" width="260" height="84" rx="10"/>
+          <text class="lbl" x="190" y="80" text-anchor="middle">You</text>
+          <text class="sub" x="190" y="104" text-anchor="middle">one conversation</text>
 
-          <rect class="zone-spec" x="330" y="24" width="390" height="112" rx="12"/>
-          <text class="lbl" x="350" y="53">Spec or tickets</text>
-          <rect class="node-spec" x="355" y="70" width="150" height="44" rx="7"/>
-          <text class="lbl-sm" x="430" y="97" text-anchor="middle">Spec</text>
-          <rect class="node-spec" x="525" y="70" width="170" height="44" rx="7"/>
-          <text class="lbl-sm" x="610" y="97" text-anchor="middle">Ticket frontier</text>
+          <path class="edge-neutral" marker-end="url(#rule-neutral)" d="M140,128 V196"/>
+          <text class="elabel" x="132" y="166" text-anchor="end">asks for work</text>
+          <path class="edge-neutral" marker-end="url(#rule-neutral)" d="M240,196 V128"/>
+          <text class="elabel" x="248" y="166">reports back</text>
 
-          <rect class="node-neutral" x="45" y="182" width="265" height="100" rx="10"/>
-          <text class="lbl" x="177" y="215" text-anchor="middle">Repository and PRs</text>
-          <text class="sub" x="177" y="239" text-anchor="middle">code · docs · review evidence</text>
-          <text class="sub" x="177" y="261" text-anchor="middle">durable project records</text>
+          <rect class="node-agent" x="60" y="196" width="260" height="100" rx="10"/>
+          <text class="lbl" x="190" y="232" text-anchor="middle">Orchestrator</text>
+          <text class="sub-agent" x="190" y="256" text-anchor="middle">plans · delegates</text>
+          <text class="sub" x="190" y="278" text-anchor="middle">verifies · integrates</text>
 
-          <rect class="node-agent" x="380" y="184" width="340" height="104" rx="10"/>
-          <text class="lbl" x="550" y="217" text-anchor="middle">Parent Pi session</text>
-          <text class="sub-agent" x="550" y="241" text-anchor="middle">reads work sources · owns delegate</text>
-          <text class="sub" x="550" y="263" text-anchor="middle">reads · verifies · stops</text>
+          <path class="edge-agent" marker-end="url(#rule-agent)" d="M140,296 V372"/>
+          <text class="sub-agent" x="132" y="338" text-anchor="end">delegate start</text>
+          <path class="edge-agent" marker-end="url(#rule-agent)" d="M240,372 V296"/>
+          <text class="sub-agent" x="248" y="338">handoff · ring</text>
 
-          <rect class="node-neutral" x="780" y="176" width="220" height="102" rx="9"/>
-          <text class="lbl-sm" x="890" y="201" text-anchor="middle">Delegate lane registry</text>
-          <text class="sub" x="890" y="222" text-anchor="middle">~/.pi/agent/delegate/&lt;parent&gt;/</text>
-          <text class="sub" x="890" y="242" text-anchor="middle">lanes.json · pane · session</text>
-          <text class="sub" x="890" y="262" text-anchor="middle">status · handoff · ring · read</text>
+          <rect class="zone-agent" x="40" y="372" width="300" height="200" rx="12"/>
+          <text class="sub-agent" x="60" y="396">Engines · own sessions</text>
+          <rect class="node-agent" x="64" y="410" width="252" height="44" rx="8"/>
+          <text class="lbl-sm" x="190" y="437" text-anchor="middle">worker · owns paths</text>
+          <rect class="node-agent" x="64" y="462" width="252" height="44" rx="8"/>
+          <text class="lbl-sm" x="190" y="489" text-anchor="middle">reviewer · read-only</text>
+          <rect class="node-agent" x="64" y="514" width="252" height="44" rx="8"/>
+          <text class="lbl-sm" x="190" y="541" text-anchor="middle">scout · lookup</text>
 
-          <rect class="zone-agent" x="45" y="356" width="470" height="164" rx="12"/>
-          <text class="sub-agent" x="65" y="382">Herdr pane · separate session</text>
-          <rect class="node-agent" x="72" y="402" width="416" height="92" rx="10"/>
-          <text class="lbl" x="280" y="433" text-anchor="middle">Child Pi session</text>
-          <text class="sub-agent" x="280" y="457" text-anchor="middle">depth one · delegate absent</text>
-          <text class="sub" x="280" y="478" text-anchor="middle">implements the brief</text>
+          <line class="edge-dash" x1="320" y1="86" x2="390" y2="86"/>
+          <line class="edge-dash" x1="320" y1="246" x2="390" y2="246"/>
+          <line class="edge-dash" x1="340" y1="470" x2="390" y2="470"/>
 
-          <rect class="node-neutral" x="780" y="342" width="220" height="94" rx="9"/>
-          <text class="lbl-sm" x="890" y="373" text-anchor="middle">Assigned handoff file</text>
-          <text class="sub" x="890" y="397" text-anchor="middle">changes · checks · blockers</text>
-          <text class="sub" x="890" y="418" text-anchor="middle">the worker writes it</text>
+          <rect class="node-neutral" x="390" y="44" width="610" height="84" rx="10"/>
+          <text class="lbl-sm" x="414" y="74">Intent</text>
+          <text class="sub" x="414" y="100">You and the orchestrator argue about the problem. You approve.</text>
 
-          <rect class="node-neutral" x="780" y="472" width="220" height="82" rx="9"/>
-          <text class="lbl-sm" x="890" y="503" text-anchor="middle">Ordinary Pi session log</text>
-          <text class="sub" x="890" y="528" text-anchor="middle">child session transcript</text>
+          <rect class="node-spec" x="390" y="176" width="610" height="140" rx="10"/>
+          <text class="lbl-sm" x="414" y="206">Record</text>
+          <text class="sub-spec" x="414" y="232">Spec and tickets say what to build. /spec links one to a session.</text>
+          <text class="sub" x="414" y="254">Handoff files say what a lane did. The repository and PRs hold the rest.</text>
+          <text class="sub-warn" x="414" y="286">Missing: a log of what happened during the work.</text>
 
-          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M152,94 V182"/>
-          <text class="elabel" x="165" y="143">directs</text>
-          <path class="edge-spec" marker-end="url(#fit-spec)" d="M525,136 V184"/>
-          <text class="sub-spec" x="537" y="161">work source</text>
-          <path class="edge-neutral" marker-start="url(#fit-neutral)" marker-end="url(#fit-neutral)" d="M310,232 H380"/>
-          <text class="elabel" x="345" y="219" text-anchor="middle">reads · writes</text>
-          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M720,226 H780"/>
-          <text class="elabel" x="750" y="213" text-anchor="middle">records</text>
-
-          <path class="edge-agent" marker-end="url(#fit-agent)" d="M420,288 V356"/>
-          <text class="sub-agent" x="408" y="322" text-anchor="end">delegate start</text>
-          <path class="edge-agent" marker-end="url(#fit-agent)" d="M480,356 V288"/>
-          <text class="sub-agent" x="490" y="322">intercom ring</text>
-          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M488,440 H700 V389 H780"/>
-          <text class="elabel" x="594" y="432" text-anchor="middle">writes</text>
-          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M780,417 H752 V272 H720"/>
-          <text class="elabel" x="757" y="296">read</text>
-          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M488,480 H726 V513 H780"/>
-          <text class="elabel" x="607" y="472" text-anchor="middle">logs</text>
+          <rect class="node-agent" x="390" y="372" width="610" height="200" rx="10"/>
+          <text class="lbl-sm" x="414" y="402">Execution</text>
+          <text class="sub-agent" x="414" y="428">Each lane gets a brief, the paths it owns, and one model.</text>
+          <text class="sub" x="414" y="450">A pane you can watch, or a headless process that outlives you.</text>
+          <text class="sub" x="414" y="472">Depth is one. A worker has no delegate tool of its own.</text>
+          <text class="sub-warn" x="414" y="504">You cannot steer a lane. Stop it and brief a better one.</text>
         </svg>
-        <figcaption>Specs, tickets, repository files, and pull requests carry durable work. Delegate starts a depth-one child Pi session in a Herdr pane. The worker writes an assigned handoff and rings through intercom. The parent reads, verifies, and stops the lane.</figcaption>
+        <figcaption>You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the record holds specs, tickets and handoff files, and execution runs in separate sessions. Nothing logs what happened during the work, and no lane can be steered once it is running.</figcaption>
       </figure>
+      <blockquote class="quote">
+        <p>The human talks to one agent. That agent talks to the workers.</p>
+        <cite>VISION.md, "The one rule"</cite>
+      </blockquote>
+      <div class="callout">
+        <span class="h">two ways to break it</span>
+        <ul>
+          <li>Adding a mechanism you have to operate. If a change means watching a pane, opening a log, or chasing a worker, the rule is already broken.</li>
+          <li>Losing the record. Work whose reasoning survives only in a chat window gets redone.</li>
+        </ul>
+      </div>
     </section>
 
-    <section id="panel-task" role="tabpanel" aria-labelledby="tab-task" data-panel="task" hidden>
-      <div class="sec-head"><h2>The task log is retired; its files remain</h2></div>
-      <figure class="system-figure compact">
-        <svg viewBox="0 0 980 610" role="img" aria-label="The retired task log attached repository memory to a session and provided task_log, task_read, and task_manage. It is disabled at ~/.agents/pi/extensions-disabled/task-log. Existing task files remain readable at &lt;git-common-dir&gt;/pi/task-log/tasks. A spec-carried log is intended but has not been built.">
+    <section id="panel-record" role="tabpanel" aria-labelledby="tab-record" data-panel="record">
+      <div class="sec-head">
+        <span class="sec-tag">what survives</span>
+        <h2>Specs and tickets carry intent into a session</h2>
+      </div>
+      <p><code>/to-spec</code> writes the agreed shape. <code>/to-tickets</code> splits a large one into numbered slices with blocking edges. Both land in one feature folder, so a feature's record stays in one place. <code>/spec</code> then links a spec or a ticket to your session and adds a short note to every turn that names its path and title. The note carries the link, never the body, so a linked spec costs three lines a turn.</p>
+      <figure class="system-figure">
+        <svg viewBox="0 0 1040 640" role="img" aria-label="Specs and tickets live in one feature folder. /to-spec writes the spec and /to-tickets splits it into numbered issues. /spec finds them anywhere under the working directory, newest first, and links one to the session. Each turn then carries a short note naming the path and the title. A delegate child never sees that link. Nothing records what happened during the work.">
           <defs>
-            <marker id="retired-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+            <marker id="record-spec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
+            <marker id="record-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
           </defs>
 
-          <rect class="node-flat" x="35" y="42" width="275" height="176" rx="9"/>
-          <text class="lbl" x="172" y="76" text-anchor="middle">Task log</text>
-          <text class="sub" x="172" y="103" text-anchor="middle">RETIRED</text>
-          <text class="sub" x="172" y="132" text-anchor="middle">attached repository memory</text>
-          <text class="sub" x="172" y="154" text-anchor="middle">injected state into a session</text>
-          <text class="sub" x="172" y="184" text-anchor="middle">task_log · task_read · task_manage</text>
+          <rect class="node-spec" x="60" y="70" width="220" height="70" rx="9"/>
+          <text class="lbl-sm" x="170" y="100" text-anchor="middle">/to-spec</text>
+          <text class="sub-spec" x="170" y="122" text-anchor="middle">small: one spec</text>
+          <rect class="node-spec" x="60" y="160" width="220" height="70" rx="9"/>
+          <text class="lbl-sm" x="170" y="190" text-anchor="middle">/to-tickets</text>
+          <text class="sub-spec" x="170" y="212" text-anchor="middle">large: split it</text>
 
-          <rect class="node-flat" x="360" y="42" width="585" height="176" rx="9"/>
-          <text class="lbl-sm" x="390" y="76">Disabled extension</text>
-          <text class="sub" x="390" y="105">~/.agents/pi/extensions-disabled/task-log</text>
-          <line class="edge-neutral" x1="390" y1="128" x2="915" y2="128"/>
-          <text class="lbl-sm" x="390" y="158">Loaded extension directory</text>
-          <text class="sub" x="390" y="187">~/.agents/pi/extensions</text>
-          <text class="sub" x="390" y="207">contains no task-log extension</text>
+          <path class="edge-spec" marker-end="url(#record-spec)" d="M280,105 H340"/>
+          <text class="sub-spec" x="310" y="93" text-anchor="middle">writes</text>
+          <path class="edge-spec" marker-end="url(#record-spec)" d="M280,195 H340"/>
+          <text class="sub-spec" x="310" y="183" text-anchor="middle">splits</text>
 
-          <rect class="node-flat" x="35" y="280" width="430" height="218" rx="9"/>
-          <text class="lbl-sm" x="65" y="316">What it did</text>
-          <text class="sub" x="65" y="350">picked and attached repository tasks</text>
-          <text class="sub" x="65" y="376">stored status, references, and log entries</text>
-          <text class="sub" x="65" y="402">made attached task context available to Pi</text>
-          <text class="sub" x="65" y="445">None of this runs now.</text>
+          <rect class="zone-spec" x="340" y="40" width="380" height="250" rx="12"/>
+          <text class="lbl" x="364" y="70">One feature folder</text>
+          <text class="sub-spec" x="364" y="92">.scratch/feature-slug/</text>
+          <rect class="node-spec" x="364" y="110" width="330" height="56" rx="8"/>
+          <text class="lbl-sm" x="529" y="134" text-anchor="middle">SPEC.md</text>
+          <text class="sub-spec" x="529" y="154" text-anchor="middle">what was agreed</text>
+          <rect class="node-spec" x="364" y="186" width="330" height="56" rx="8"/>
+          <text class="lbl-sm" x="529" y="210" text-anchor="middle">issues/01-slug.md</text>
+          <text class="sub-spec" x="529" y="230" text-anchor="middle">one ticket per slice</text>
+          <text class="sub" x="364" y="272">a module keeps its own at module/.pi/SPEC.md</text>
 
-          <rect class="node-flat" x="515" y="280" width="430" height="218" rx="9"/>
-          <text class="lbl-sm" x="545" y="316">Files still on disk</text>
-          <text class="sub" x="545" y="350">&lt;git-common-dir&gt;/pi/task-log/tasks</text>
-          <text class="sub" x="545" y="376">readable as ordinary files</text>
-          <line class="edge-neutral" x1="545" y1="402" x2="915" y2="402"/>
-          <text class="lbl-sm" x="545" y="436">Intended replacement</text>
-          <text class="sub" x="545" y="466">a spec-carried log</text>
-          <text class="sub" x="545" y="486">not built</text>
+          <path class="edge-spec" marker-end="url(#record-spec)" d="M720,135 H780"/>
+          <text class="sub-spec" x="750" y="123" text-anchor="middle">reads</text>
 
-          <path class="edge-neutral" marker-end="url(#retired-neutral)" d="M310,130 H360"/>
-          <path class="edge-neutral" marker-end="url(#retired-neutral)" d="M172,218 V280"/>
-          <path class="edge-neutral" marker-end="url(#retired-neutral)" d="M730,218 V280"/>
+          <rect class="node-agent" x="780" y="70" width="220" height="130" rx="9"/>
+          <text class="lbl-sm" x="890" y="102" text-anchor="middle">/spec</text>
+          <text class="sub-agent" x="890" y="126" text-anchor="middle">picks one, newest first</text>
+          <text class="sub" x="890" y="148" text-anchor="middle">up to 5 levels deep</text>
+          <text class="sub" x="890" y="170" text-anchor="middle">status bar shows it</text>
+
+          <path class="edge-agent" marker-end="url(#record-agent)" d="M890,200 V340"/>
+          <text class="sub-agent" x="902" y="276">links it to a session</text>
+
+          <rect class="node-agent" x="60" y="340" width="940" height="120" rx="10"/>
+          <text class="lbl-sm" x="90" y="372">Every turn, one short note</text>
+          <text class="sub-agent" x="90" y="398">names the path and the title, never the body</text>
+          <text class="sub" x="90" y="420">/spec:clear removes the link</text>
+          <text class="sub-warn" x="90" y="444">a delegate child never sees it, so the brief has to carry the path</text>
+
+          <rect class="node-gap" x="60" y="490" width="940" height="110" rx="10"/>
+          <text class="lbl-gap" x="90" y="526">Missing: a log of what happened during the work</text>
+          <text class="sub-warn" x="90" y="552">the task log extension is disabled on purpose, so there is no per-session memory</text>
+          <text class="sub-warn" x="90" y="574">a fresh session recovers the facts from the spec, the repository, and you</text>
         </svg>
-        <figcaption>The retired task log attached repository memory to a session and provided task_log, task_read, and task_manage. It is disabled at ~/.agents/pi/extensions-disabled/task-log. Existing task files remain readable at &lt;git-common-dir&gt;/pi/task-log/tasks. A spec-carried log is intended but has not been built.</figcaption>
+        <figcaption>Specs and tickets live in one feature folder. /to-spec writes the spec and /to-tickets splits it into numbered issues. /spec finds them anywhere under the working directory, newest first, and links one to the session. Each turn then carries a short note naming the path and the title. A delegate child never sees that link. Nothing records what happened during the work.</figcaption>
       </figure>
+      <div class="note">
+        <span class="h">where a spec lives</span>
+        <p>A local spec goes in <code>.scratch/feature-slug/SPEC.md</code>, next to the tickets <code>/to-tickets</code> writes at <code>issues/NN-slug.md</code>. A module that owns its spec keeps it at <code>module/.pi/SPEC.md</code>. Discovery walks five directories down, skips build output, and sorts by modification time, so the thing you touched last is the first choice offered.</p>
+      </div>
     </section>
 
-    <section id="panel-spec" role="tabpanel" aria-labelledby="tab-spec" data-panel="spec" hidden>
-      <div class="sec-head"><h2>Small specs stay whole; large specs become linked tickets</h2></div>
+    <section id="panel-run" role="tabpanel" aria-labelledby="tab-run" data-panel="run" hidden>
+      <div class="sec-head">
+        <span class="sec-tag">execution</span>
+        <h2>Delegate runs depth-one sessions and returns a file</h2>
+      </div>
+      <p>Five actions, no polling. <code>start</code> writes the lane record before anything is running, so a spawn that half fails still leaves a lane you can address. The worker writes its assigned handoff and rings through intercom, which fires your next turn. You read, verify, and stop. The tool owns the return contract, the handoff path, and the doorbell line; a brief that writes them by hand gets them wrong.</p>
       <figure class="system-figure compact">
-        <svg viewBox="0 0 980 650" role="img" aria-label="A small spec can remain one tracker artifact. A large spec becomes tracer-bullet tickets published as local files or tracker issues with blocking edges. Both remain durable planning artifacts; neither records current execution state.">
+        <svg viewBox="0 0 980 720" role="img" aria-label="Delegate has five actions: start, list, read, wait and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.">
           <defs>
-            <marker id="spec-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
-          </defs>
-
-          <text class="sub-spec" x="225" y="38" text-anchor="middle">SMALL</text>
-          <rect class="node-spec" x="55" y="60" width="175" height="66" rx="9"/>
-          <text class="lbl-sm" x="142" y="88" text-anchor="middle">/to-spec</text>
-          <text class="sub-spec" x="142" y="108" text-anchor="middle">publish to tracker</text>
-          <rect class="node-spec" x="300" y="60" width="270" height="66" rx="9"/>
-          <text class="lbl" x="435" y="89" text-anchor="middle">Spec 1</text>
-          <text class="sub-spec" x="435" y="109" text-anchor="middle">tracker issue · not a runtime object</text>
-          <path class="edge-spec" marker-end="url(#spec-blue)" d="M230,93 H300"/>
-          <text class="sub-spec" x="265" y="81" text-anchor="middle">writes</text>
-          <text class="sub" x="435" y="151" text-anchor="middle">no tickets needed</text>
-
-          <text class="sub-spec" x="730" y="38" text-anchor="middle">BIG</text>
-          <rect class="node-spec" x="628" y="60" width="170" height="66" rx="9"/>
-          <text class="lbl-sm" x="713" y="88" text-anchor="middle">/to-tickets</text>
-          <text class="sub-spec" x="713" y="108" text-anchor="middle">split + publish</text>
-          <rect class="zone-spec" x="610" y="172" width="320" height="238" rx="12"/>
-          <text class="lbl" x="634" y="204">Spec 2</text>
-          <text class="sub-spec" x="906" y="204" text-anchor="end">local files or tracker issues</text>
-          <rect class="node-spec" x="640" y="232" width="260" height="60" rx="9"/>
-          <text class="lbl-sm" x="770" y="259" text-anchor="middle">Ticket 1</text>
-          <text class="sub-spec" x="770" y="279" text-anchor="middle">tracer bullet · starts now</text>
-          <rect class="node-spec" x="640" y="326" width="260" height="60" rx="9"/>
-          <text class="lbl-sm" x="770" y="353" text-anchor="middle">Ticket 2</text>
-          <text class="sub-spec" x="770" y="373" text-anchor="middle">tracer bullet · blocked by Ticket 1</text>
-          <path class="edge-spec" marker-end="url(#spec-blue)" d="M713,126 V172"/>
-          <path class="edge-spec" marker-end="url(#spec-blue)" d="M770,292 V326"/>
-          <text class="sub-spec" x="782" y="314">blocking edge</text>
-
-          <rect class="node-spec" x="250" y="500" width="480" height="92" rx="11"/>
-          <text class="lbl" x="490" y="534" text-anchor="middle">Published planning artifacts</text>
-          <text class="sub-spec" x="490" y="558" text-anchor="middle">durable in the repository or tracker</text>
-          <text class="sub" x="490" y="579" text-anchor="middle">no current execution state</text>
-          <path class="edge-spec" marker-end="url(#spec-blue)" d="M315,126 V466 H390 V500"/>
-          <path class="edge-spec" marker-end="url(#spec-blue)" d="M770,410 V466 H590 V500"/>
-          <text class="sub-spec" x="490" y="454" text-anchor="middle">either result remains at its published location</text>
-        </svg>
-        <figcaption>A small spec can remain one tracker artifact. A large spec becomes tracer-bullet tickets published as local files or tracker issues with blocking edges. Both remain durable planning artifacts; neither records current execution state.</figcaption>
-      </figure>
-    </section>
-
-    <section id="panel-orchestration" role="tabpanel" aria-labelledby="tab-orchestration" data-panel="orchestration" hidden>
-      <div class="sec-head"><h2>Delegate runs depth-one Pi sessions in Herdr panes</h2></div>
-      <figure class="system-figure compact">
-        <svg viewBox="0 0 980 720" role="img" aria-label="Delegate has five actions: start, list, read, wait, and stop. Start returns immediately and creates a lane registry entry plus a separate Pi session in a Herdr pane. The registry is at ~/.pi/agent/delegate/&lt;parent&gt;/lanes.json. List shows every live lane with its status, context use, spend, and whether the handoff is unread. The intercom ring is the normal wake. Wait is optional; when the parent has nothing else to do, it blocks until a lane is idle, done, or blocked. Read marks the handoff read. Stop kills the worker process group and closes the pane. The worker writes its assigned handoff file and rings through intercom. Child sessions have no delegate extension. A read-only lane cannot edit any file because its tool policy excludes edit, but write remains available for its handoff. Owned paths are a brief-level rule the tool does not enforce. Parallel lanes are read-only by default, and concurrent writers require approval plus isolated checkouts.">
-          <defs>
-            <marker id="orch-agent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
-            <marker id="orch-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+            <marker id="run-agent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
+            <marker id="run-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
           </defs>
 
           <rect class="node-agent" x="40" y="42" width="610" height="92" rx="10"/>
-          <text class="lbl" x="345" y="75" text-anchor="middle">Parent Pi session</text>
+          <text class="lbl" x="345" y="75" text-anchor="middle">Parent pi session</text>
           <text class="sub-agent" x="345" y="99" text-anchor="middle">writes the brief · calls delegate · integrates the result</text>
           <text class="sub" x="345" y="119" text-anchor="middle">start is async and returns the lane at once</text>
 
           <rect class="node-neutral" x="700" y="32" width="235" height="110" rx="9"/>
-          <text class="lbl-sm" x="817" y="61" text-anchor="middle">Delegate lane registry</text>
-          <text class="sub" x="817" y="83" text-anchor="middle">~/.pi/agent/delegate/&lt;parent&gt;/</text>
-          <text class="sub" x="817" y="102" text-anchor="middle">lanes.json</text>
+          <text class="lbl-sm" x="817" y="61" text-anchor="middle">Lane registry</text>
+          <text class="sub" x="817" y="83" text-anchor="middle">~/.pi/agent/delegate/</text>
+          <text class="sub" x="817" y="102" text-anchor="middle">parent-id/lanes.json</text>
           <text class="sub" x="817" y="122" text-anchor="middle">status · context · spend · unread</text>
 
           <rect class="zone-agent" x="40" y="184" width="610" height="280" rx="12"/>
-          <text class="sub-agent" x="60" y="211">Herdr panes · separate Pi sessions</text>
+          <text class="sub-agent" x="60" y="211">Separate pi sessions · a pane, or a headless process</text>
           <rect class="node-agent" x="68" y="242" width="170" height="112" rx="9"/>
           <text class="lbl-sm" x="153" y="273" text-anchor="middle">Scout lane</text>
           <text class="sub-agent" x="153" y="297" text-anchor="middle">read-only profile</text>
@@ -936,16 +912,16 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <rect class="node-agent" x="260" y="242" width="170" height="112" rx="9"/>
           <text class="lbl-sm" x="345" y="273" text-anchor="middle">Reviewer lane</text>
           <text class="sub-agent" x="345" y="297" text-anchor="middle">read-only profile</text>
-          <text class="sub" x="345" y="320" text-anchor="middle">writes handoff</text>
-          <text class="sub" x="345" y="340" text-anchor="middle">fresh verifier</text>
+          <text class="sub" x="345" y="320" text-anchor="middle">writes findings</text>
+          <text class="sub" x="345" y="340" text-anchor="middle">never applies them</text>
           <rect class="node-agent" x="452" y="242" width="170" height="112" rx="9"/>
           <text class="lbl-sm" x="537" y="273" text-anchor="middle">Worker lane</text>
           <text class="sub-agent" x="537" y="297" text-anchor="middle">writer profile</text>
           <text class="sub" x="537" y="320" text-anchor="middle">one checkout</text>
-          <text class="sub" x="537" y="340" text-anchor="middle">writes handoff</text>
+          <text class="sub" x="537" y="340" text-anchor="middle">owns named paths</text>
           <rect class="node-neutral" x="124" y="388" width="442" height="50" rx="8"/>
-          <text class="lbl-sm" x="345" y="409" text-anchor="middle">Depth one</text>
-          <text class="sub" x="345" y="428" text-anchor="middle">PI_DELEGATE_ROLE=child keeps delegate out of child sessions</text>
+          <text class="lbl-sm" x="345" y="409" text-anchor="middle">Depth one, both transports</text>
+          <text class="sub" x="345" y="428" text-anchor="middle">PI_DELEGATE_ROLE=child keeps delegate out of every worker</text>
 
           <rect class="node-neutral" x="700" y="166" width="235" height="80" rx="9"/>
           <text class="lbl-sm" x="817" y="197" text-anchor="middle">Assigned handoff file</text>
@@ -954,112 +930,218 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <text class="lbl-sm" x="817" y="304" text-anchor="middle">Intercom ring</text>
           <text class="sub" x="817" y="329" text-anchor="middle">wakes the parent session</text>
           <rect class="node-neutral" x="700" y="378" width="235" height="76" rx="9"/>
-          <text class="lbl-sm" x="817" y="408" text-anchor="middle">Ordinary Pi session log</text>
+          <text class="lbl-sm" x="817" y="408" text-anchor="middle">Ordinary pi session log</text>
           <text class="sub" x="817" y="433" text-anchor="middle">records the child session</text>
 
-          <path class="edge-agent" marker-end="url(#orch-agent-arrow)" d="M345,134 V184"/>
+          <path class="edge-agent" marker-end="url(#run-agent-arrow)" d="M345,134 V184"/>
           <text class="sub-agent" x="357" y="164">start</text>
-          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M650,82 H700"/>
+          <path class="edge-neutral" marker-end="url(#run-neutral-arrow)" d="M650,82 H700"/>
           <text class="elabel" x="675" y="69" text-anchor="middle">records</text>
-          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M622,286 H666 V206 H700"/>
+          <path class="edge-neutral" marker-end="url(#run-neutral-arrow)" d="M622,286 H666 V206 H700"/>
           <text class="elabel" x="676" y="193" text-anchor="middle">writes</text>
-          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M622,312 H700"/>
+          <path class="edge-neutral" marker-end="url(#run-neutral-arrow)" d="M622,312 H700"/>
           <text class="elabel" x="676" y="299" text-anchor="middle">rings</text>
-          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M622,338 H666 V416 H700"/>
+          <path class="edge-neutral" marker-end="url(#run-neutral-arrow)" d="M622,338 H666 V416 H700"/>
           <text class="elabel" x="678" y="365">logs</text>
 
           <rect class="node-neutral" x="40" y="510" width="280" height="116" rx="9"/>
           <text class="lbl-sm" x="60" y="541">Ownership boundary</text>
           <text class="sub" x="60" y="567">briefs name owned paths</text>
-          <text class="sub" x="60" y="589">brief rule; not enforced by the tool</text>
-          <text class="sub" x="60" y="611">the parent does not reopen owned paths</text>
+          <text class="sub" x="60" y="589">a rule in the brief, not in the tool</text>
+          <text class="sub" x="60" y="611">the parent does not reopen them</text>
 
           <rect class="node-neutral" x="350" y="510" width="270" height="116" rx="9"/>
           <text class="lbl-sm" x="370" y="541">Parallel default</text>
           <text class="sub" x="370" y="567">parallel lanes are read-only</text>
-          <text class="sub" x="370" y="589">write remains available for handoffs</text>
+          <text class="sub" x="370" y="589">write stays, for the handoff</text>
           <text class="sub" x="370" y="611">one writer per checkout</text>
 
           <rect class="node-warn" x="650" y="510" width="285" height="116" rx="9"/>
           <text class="lbl-gap" x="670" y="541">Concurrent writers</text>
           <text class="sub-warn" x="670" y="567">need explicit operator approval</text>
           <text class="sub-warn" x="670" y="589">and one isolated checkout each</text>
-          <text class="sub-warn" x="670" y="611">no automatic worktree is created</text>
+          <text class="sub-warn" x="670" y="611">no worktree is created for you</text>
 
           <rect class="node-agent" x="40" y="664" width="895" height="44" rx="8"/>
-          <text class="lbl-sm" x="487" y="692" text-anchor="middle">actions  ·  start  ·  list  ·  read  ·  wait  ·  stop</text>
+          <text class="lbl-sm" x="487" y="692" text-anchor="middle">actions · start · list · read · wait · stop · no steer</text>
         </svg>
-        <figcaption>Delegate has five actions: start, list, read, wait, and stop. Start returns immediately and creates a lane registry entry plus a separate Pi session in a Herdr pane. The registry is at ~/.pi/agent/delegate/&lt;parent&gt;/lanes.json. List shows every live lane with its status, context use, spend, and whether the handoff is unread. The intercom ring is the normal wake. Wait is optional; when the parent has nothing else to do, it blocks until a lane is idle, done, or blocked. Read marks the handoff read. Stop kills the worker process group and closes the pane. The worker writes its assigned handoff file and rings through intercom. Child sessions have no delegate extension. A read-only lane cannot edit any file because its tool policy excludes edit, but write remains available for its handoff. Owned paths are a brief-level rule the tool does not enforce. Parallel lanes are read-only by default, and concurrent writers require approval plus isolated checkouts.</figcaption>
+        <figcaption>Delegate has five actions: start, list, read, wait and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.</figcaption>
       </figure>
+      <div class="ledger">
+        <div class="row">
+          <div class="who">the widget</div>
+          <div class="what">One row per live lane above the editor, under a muted rule. It repaints on a 1.5 second timer rather than at turn boundaries, so context use and spend move while you work. Most ticks read files only; every fourth one asks each transport for statuses. A lane that needs you paints in the error colour and the header counts it.</div>
+        </div>
+        <div class="row">
+          <div class="who">the ring</div>
+          <div class="what">The worker messages the parent through intercom when its handoff is written. That fires your turn. Polling costs more context than every worker answer combined, so the ring is the wake.</div>
+        </div>
+        <div class="row">
+          <div class="who">blocked</div>
+          <div class="what">The most expensive state on the board. A pane reports it for any approval or question. A headless lane only gets it from an intercom ask that expects a reply, and it clears itself once the worker's transcript grows again.</div>
+        </div>
+        <div class="row flat">
+          <div class="who">adoption</div>
+          <div class="what">The registry is a file, so a lane outlives its orchestrator. A fresh session claims lanes in the same directory only after the previous parent's process is confirmed gone. Until then they list as another parent's and cannot be read or stopped.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-transports" role="tabpanel" aria-labelledby="tab-transports" data-panel="transports" hidden>
+      <div class="sec-head">
+        <span class="sec-tag">one seam, two runners</span>
+        <h2>A pane you can watch, or a process that outlives you</h2>
+      </div>
+      <p>Both paths share the registry, the assigned handoff, the intercom ring, the return contract, and the depth-one guard. <code>transport</code> is a field on a profile and an argument to <code>start</code>, and it defaults to <code>herdr</code>. No profile sets it today, so every lane is a pane until someone asks for the other one.</p>
+      <figure class="system-figure">
+        <div class="key" aria-label="Transport color key">
+          <span><i class="s4"></i>Lane</span><span><i class="flat"></i>What you get</span><span><i class="warn"></i>What it costs</span>
+        </div>
+        <svg viewBox="0 0 1040 680" role="img" aria-label="One start call runs a lane two ways. A Herdr pane is interactive and visible, and it stays the default. A headless lane is a detached pi print process with no terminal: idle and done collapse, nothing watches it, blocked comes only from an intercom ask, and project-local skills are skipped. Liveness has three answers, and a lane that cannot be proven either way is never closed and never signalled.">
+          <defs>
+            <marker id="transport-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
+          </defs>
+
+          <rect class="node-agent" x="380" y="36" width="280" height="64" rx="9"/>
+          <text class="lbl-sm" x="520" y="64" text-anchor="middle">delegate start</text>
+          <text class="sub-agent" x="520" y="86" text-anchor="middle">transport defaults to herdr</text>
+
+          <path class="edge-agent" marker-end="url(#transport-agent)" d="M470,100 V130 H240 V176"/>
+          <text class="sub-agent" x="300" y="122" text-anchor="middle">herdr</text>
+          <path class="edge-agent" marker-end="url(#transport-agent)" d="M570,100 V130 H800 V176"/>
+          <text class="sub-agent" x="720" y="122" text-anchor="middle">subprocess</text>
+
+          <rect class="node-agent" x="60" y="176" width="420" height="110" rx="10"/>
+          <text class="lbl" x="270" y="208" text-anchor="middle">Herdr pane</text>
+          <text class="sub-agent" x="270" y="232" text-anchor="middle">interactive pi, split beside you</text>
+          <text class="sub" x="270" y="254" text-anchor="middle">you can read it and focus it</text>
+
+          <rect class="node-flat" x="60" y="306" width="420" height="150" rx="10"/>
+          <text class="lbl-sm" x="84" y="336">What you get</text>
+          <text class="sub" x="84" y="362">idle, working, blocked, done, unknown</text>
+          <text class="sub" x="84" y="384">the pane survives this session</text>
+          <text class="sub" x="84" y="406">a fresh parent adopts it</text>
+          <text class="sub" x="84" y="428">no profile opts out of this transport</text>
+
+          <rect class="node-agent" x="560" y="176" width="440" height="110" rx="10"/>
+          <text class="lbl" x="780" y="208" text-anchor="middle">Detached headless pi</text>
+          <text class="sub-agent" x="780" y="232" text-anchor="middle">print mode, no terminal, own process group</text>
+          <text class="sub" x="780" y="254" text-anchor="middle">output appended to lanes/name/worker.log</text>
+
+          <rect class="node-warn" x="560" y="306" width="440" height="150" rx="10"/>
+          <text class="lbl-gap" x="584" y="336">What it costs</text>
+          <text class="sub-warn" x="584" y="362">idle and done collapse into done</text>
+          <text class="sub-warn" x="584" y="384">nobody watches it; a wedged lane burns tokens</text>
+          <text class="sub-warn" x="584" y="406">blocked only from an intercom ask</text>
+          <text class="sub-warn" x="584" y="428">project-local skills and extensions are skipped</text>
+
+          <rect class="node-neutral" x="60" y="500" width="940" height="150" rx="10"/>
+          <text class="lbl-sm" x="90" y="530">Liveness has three answers, not two</text>
+          <rect class="node-on" x="90" y="548" width="270" height="80" rx="8"/>
+          <text class="lbl-sm" x="225" y="572" text-anchor="middle">ours</text>
+          <text class="sub" x="225" y="592" text-anchor="middle">pid and start time match</text>
+          <text class="sub" x="225" y="612" text-anchor="middle">working, or blocked</text>
+          <rect class="node-flat" x="390" y="548" width="270" height="80" rx="8"/>
+          <text class="lbl-sm" x="525" y="572" text-anchor="middle">gone</text>
+          <text class="sub" x="525" y="592" text-anchor="middle">the pid is free</text>
+          <text class="sub" x="525" y="612" text-anchor="middle">done, record stays open</text>
+          <rect class="node-gap" x="690" y="548" width="280" height="80" rx="8"/>
+          <text class="lbl-gap" x="830" y="572" text-anchor="middle">unknown</text>
+          <text class="sub-warn" x="830" y="592" text-anchor="middle">nothing proved either way</text>
+          <text class="sub-warn" x="830" y="612" text-anchor="middle">stop refuses, wait times out</text>
+        </svg>
+        <figcaption>One start call runs a lane two ways. A Herdr pane is interactive and visible, and it stays the default. A headless lane is a detached pi print process with no terminal: idle and done collapse, nothing watches it, blocked comes only from an intercom ask, and project-local skills are skipped. Liveness has three answers, and a lane that cannot be proven either way is never closed and never signalled.</figcaption>
+      </figure>
+      <div class="callout">
+        <span class="h">when a lane reads unknown</span>
+        <p>Nothing nags about this state, so it is on you to look. A headless lane reads <code>unknown</code> when <code>ps</code> could not be read or the record carries no process start time. A pane lane reads it when the pane is there but Herdr lists no agent in it. The record stays open, <code>wait</code> times out instead of reporting done, and <code>stop</code> on a headless lane refuses to signal and hands you the pid, the log and the kill command to run yourself. Signalling a pid that may have been recycled would kill a stranger's process group. Until you know which it is, do not start a replacement lane on the same paths.</p>
+      </div>
+      <div class="compare">
+        <div class="side on">
+          <div class="side-head">give it a pane</div>
+          <ul>
+            <li>You may want to watch it, or read the pane when it goes quiet.</li>
+            <li>It needs a project-local skill, extension or setting. Print mode never prompts for trust, so those are skipped.</li>
+            <li>It is the one thing you are doing right now.</li>
+          </ul>
+        </div>
+        <div class="side">
+          <div class="side-head">run it headless</div>
+          <ul>
+            <li>The work has to outlive this session, and a fresh parent will adopt it.</li>
+            <li>Panes would crowd the screen.</li>
+            <li>There is no Herdr to run in. Only the pane transport refuses; headless lanes still start, list, read, wait and stop.</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <section id="panel-missing" role="tabpanel" aria-labelledby="tab-missing" data-panel="missing" hidden>
-      <div class="sec-head"><h2>Nothing carries current work into a fresh session</h2></div>
+      <div class="sec-head">
+        <span class="sec-tag">the gap, stated by the operator</span>
+        <h2>Five things this system still does not do</h2>
+      </div>
+      <p>These come from the state table in <code>VISION.md</code>, checked against the code. Autonomy grows on the last two: the system should start work on its own signal and still end in your conversation.</p>
       <figure class="system-figure">
-        <div class="key" aria-label="Current system and gap color key">
-          <span><i class="s2"></i>Spec and tickets</span><span><i class="s4"></i>Delegate lane</span><span><i class="flat"></i>Files and sessions</span><span><i class="warn"></i>Current gap</span>
+        <div class="key" aria-label="Gap color key">
+          <span><i class="flat"></i>Works today</span><span><i class="warn"></i>Missing</span>
         </div>
-        <svg viewBox="0 0 1040 720" role="img" aria-label="Current gaps after task-log retirement: no loaded component carries current work between sessions; delegate handoffs return lane results only to their parent; and no spec-carried execution log exists. Old task files remain readable on disk without a loaded task interface.">
-          <defs>
-            <marker id="missing-warn-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--warn)"/></marker>
-            <marker id="missing-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
-          </defs>
+        <svg viewBox="0 0 1040 600" role="img" aria-label="Five gaps the operator named. There is no way to steer a running lane, no log of what happened during the work, no decision record, no trigger other than a typed turn, and no link from a lane back to the spec it came from.">
+          <rect class="node-neutral" x="40" y="32" width="960" height="76" rx="10"/>
+          <text class="lbl-sm" x="520" y="62" text-anchor="middle">The loop that works today</text>
+          <text class="sub" x="520" y="88" text-anchor="middle">you decide · spec or ticket · delegate a lane · read the handoff · verify · integrate</text>
 
-          <rect class="node-gap" x="40" y="28" width="960" height="98" rx="9"/>
-          <text class="lbl-gap" x="520" y="61" text-anchor="middle">Largest gap: no cross-session work state</text>
-          <text class="sub-warn" x="520" y="88" text-anchor="middle">No loaded component records structured current state, next action, blockers, branch, or validation state.</text>
-          <text class="sub-warn" x="520" y="109" text-anchor="middle">A fresh session must recover those facts from durable project records and the operator.</text>
+          <rect class="node-gap" x="40" y="152" width="306" height="180" rx="10"/>
+          <text class="lbl-gap" x="193" y="188" text-anchor="middle">Steer a running engine</text>
+          <text class="sub-warn" x="193" y="216" text-anchor="middle">five actions, and none of</text>
+          <text class="sub-warn" x="193" y="238" text-anchor="middle">them corrects a worker</text>
+          <text class="sub-warn" x="193" y="266" text-anchor="middle">a wrong lane is stopped,</text>
+          <text class="sub-warn" x="193" y="288" text-anchor="middle">then briefed again from</text>
+          <text class="sub-warn" x="193" y="310" text-anchor="middle">the start, and paid for twice</text>
 
-          <rect class="node-neutral" x="40" y="176" width="250" height="92" rx="9"/>
-          <text class="lbl-sm" x="165" y="209" text-anchor="middle">Current Pi session</text>
-          <text class="sub" x="165" y="235" text-anchor="middle">work state exists in context</text>
-          <rect class="node-gap" x="395" y="176" width="250" height="92" rx="9"/>
-          <text class="lbl-gap" x="520" y="209" text-anchor="middle">No continuity carrier</text>
-          <text class="sub-warn" x="520" y="235" text-anchor="middle">nothing loaded bridges the boundary</text>
-          <rect class="node-neutral" x="750" y="176" width="250" height="92" rx="9"/>
-          <text class="lbl-sm" x="875" y="209" text-anchor="middle">Fresh Pi session</text>
-          <text class="sub" x="875" y="235" text-anchor="middle">no current-work attachment</text>
-          <path class="edge-gap" marker-end="url(#missing-warn-arrow)" d="M290,222 H395"/>
-          <path class="edge-gap" marker-end="url(#missing-warn-arrow)" d="M645,222 H750"/>
+          <rect class="node-gap" x="367" y="152" width="306" height="180" rx="10"/>
+          <text class="lbl-gap" x="520" y="188" text-anchor="middle">A log of the work</text>
+          <text class="sub-warn" x="520" y="216" text-anchor="middle">the task log extension is</text>
+          <text class="sub-warn" x="520" y="238" text-anchor="middle">disabled on purpose</text>
+          <text class="sub-warn" x="520" y="266" text-anchor="middle">no per-session memory, and</text>
+          <text class="sub-warn" x="520" y="288" text-anchor="middle">the handoff file is the only</text>
+          <text class="sub-warn" x="520" y="310" text-anchor="middle">trace a lane leaves behind</text>
 
-          <rect class="node-agent" x="40" y="346" width="200" height="94" rx="9"/>
-          <text class="lbl-sm" x="140" y="379" text-anchor="middle">Delegate child</text>
-          <text class="sub-agent" x="140" y="405" text-anchor="middle">does the brief</text>
-          <rect class="node-neutral" x="280" y="346" width="220" height="94" rx="9"/>
-          <text class="lbl-sm" x="390" y="379" text-anchor="middle">Assigned handoff</text>
-          <text class="sub" x="390" y="405" text-anchor="middle">lane result</text>
-          <rect class="node-agent" x="540" y="346" width="220" height="94" rx="9"/>
-          <text class="lbl-sm" x="650" y="379" text-anchor="middle">Parent session</text>
-          <text class="sub-agent" x="650" y="405" text-anchor="middle">reads and verifies</text>
-          <rect class="node-gap" x="800" y="346" width="200" height="94" rx="9"/>
-          <text class="lbl-gap" x="900" y="379" text-anchor="middle">Stops here</text>
-          <text class="sub-warn" x="900" y="405" text-anchor="middle">no automatic promotion</text>
-          <path class="edge-neutral" marker-end="url(#missing-neutral-arrow)" d="M240,393 H280"/>
-          <path class="edge-neutral" marker-end="url(#missing-neutral-arrow)" d="M500,393 H540"/>
-          <path class="edge-gap" marker-end="url(#missing-warn-arrow)" d="M760,393 H800"/>
+          <rect class="node-gap" x="694" y="152" width="306" height="180" rx="10"/>
+          <text class="lbl-gap" x="847" y="188" text-anchor="middle">Decision records</text>
+          <text class="sub-warn" x="847" y="216" text-anchor="middle">nothing in the loop writes</text>
+          <text class="sub-warn" x="847" y="238" text-anchor="middle">down why a choice was made</text>
+          <text class="sub-warn" x="847" y="266" text-anchor="middle">you can ask for one by hand,</text>
+          <text class="sub-warn" x="847" y="288" text-anchor="middle">and nothing asks you to,</text>
+          <text class="sub-warn" x="847" y="310" text-anchor="middle">so rejected options vanish</text>
 
-          <rect class="node-flat" x="40" y="520" width="320" height="122" rx="9"/>
-          <text class="lbl-sm" x="200" y="554" text-anchor="middle">Retired task files</text>
-          <text class="sub" x="200" y="580" text-anchor="middle">remain readable on disk</text>
-          <text class="sub" x="200" y="604" text-anchor="middle">no loaded picker or task interface</text>
-          <rect class="node-spec" x="410" y="520" width="220" height="122" rx="9"/>
-          <text class="lbl-sm" x="520" y="554" text-anchor="middle">Spec and tickets</text>
-          <text class="sub-spec" x="520" y="580" text-anchor="middle">durable plans</text>
-          <text class="sub" x="520" y="604" text-anchor="middle">no execution log</text>
-          <rect class="node-gap" x="680" y="500" width="320" height="162" rx="9"/>
-          <text class="lbl-gap" x="840" y="540" text-anchor="middle">Spec-carried log</text>
-          <text class="sub-warn" x="840" y="568" text-anchor="middle">intended replacement</text>
-          <text class="sub-warn" x="840" y="592" text-anchor="middle">not implemented</text>
-          <text class="sub-warn" x="840" y="626" text-anchor="middle">no resume or append path exists</text>
-          <path class="edge-gap" marker-end="url(#missing-warn-arrow)" d="M630,581 H680"/>
+          <rect class="node-gap" x="40" y="372" width="470" height="180" rx="10"/>
+          <text class="lbl-gap" x="275" y="408" text-anchor="middle">Automatic triggers</text>
+          <text class="sub-warn" x="275" y="436" text-anchor="middle">one thing starts work today: you type</text>
+          <text class="sub-warn" x="275" y="458" text-anchor="middle">no alert, failed deploy, webhook or schedule</text>
+          <text class="sub-warn" x="275" y="486" text-anchor="middle">the goal is not an agent that decides alone,</text>
+          <text class="sub-warn" x="275" y="508" text-anchor="middle">but one that starts without being asked</text>
+          <text class="sub-warn" x="275" y="530" text-anchor="middle">and still ends in your conversation</text>
+
+          <rect class="node-gap" x="530" y="372" width="470" height="180" rx="10"/>
+          <text class="lbl-gap" x="765" y="408" text-anchor="middle">A lane tied to its spec</text>
+          <text class="sub-warn" x="765" y="436" text-anchor="middle">the lane record carries no spec field</text>
+          <text class="sub-warn" x="765" y="458" text-anchor="middle">a worker never inherits the session's link</text>
+          <text class="sub-warn" x="765" y="486" text-anchor="middle">so the brief has to name the path by hand,</text>
+          <text class="sub-warn" x="765" y="508" text-anchor="middle">and a handoff read six weeks later</text>
+          <text class="sub-warn" x="765" y="530" text-anchor="middle">cannot say which spec it served</text>
         </svg>
-        <figcaption>Current gaps after task-log retirement: no loaded component carries current work between sessions; delegate handoffs return lane results only to their parent; and no spec-carried execution log exists. Old task files remain readable on disk without a loaded task interface.</figcaption>
+        <figcaption>Five gaps the operator named. There is no way to steer a running lane, no log of what happened during the work, no decision record, no trigger other than a typed turn, and no link from a lane back to the spec it came from.</figcaption>
       </figure>
+      <div class="note">
+        <span class="h">what is not a gap</span>
+        <p>A cross-project view of everything running sits outside this repository on purpose. That is the terminal tool's job, not an agent's.</p>
+      </div>
     </section>
   </div>
 
   <footer class="colophon">
-    <div><strong>Built from:</strong> <code>pi/settings.json</code>, <code>pi/extensions/delegate/README.md</code>, <code>pi/extensions-disabled/task-log</code>, <code>/to-spec</code>, and <code>/to-tickets</code>.</div>
+    <div><strong>Built from:</strong> <code>VISION.md</code>, <code>ORCHESTRATION.md</code>, <code>pi/extensions/delegate/</code>, <code>pi/extensions/spec-link/</code>, <code>pi/delegate/profiles.json</code>, and <code>pi/extensions-disabled/task-log</code>.</div>
     <div><strong>Next discussion:</strong> <a href="https://mega.dev/autonomous-product-development#drop-gate-inline">Autonomous product development</a> · <a href="https://mega.dev/ai-changed-programming">AI changed programming</a> · <a href="https://mega.dev/wrong-about-mcps">Wrong about MCPs</a>.</div>
   </footer>
 </main>
