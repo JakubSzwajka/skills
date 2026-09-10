@@ -15,10 +15,6 @@ Put the chosen output path and required source citations in the brief. When the 
 rings, call `delegate({ action: "read", lane: "<lane>" })`, verify the research file,
 then call `delegate({ action: "stop", lane: "<lane>" })`.
 
-## Task continuity
-
-After the scout writes the research file, if `task_log` is active, add its path with the `task_manage` reference action. Then append a concise structured `handoff` with the conclusion, next action, blockers, branch or worktree, latest commit, validation state, and references. Do not copy the artifact body into the task log. If `task_log` is inactive, skip these calls and continue the skill normally.
-
 Its job:
 
 1. Investigate the question against **primary sources** — official docs, source code, specs, first-party APIs — not a secondary write-up of them. Follow every claim back to the source that owns it.

@@ -5,10 +5,15 @@ import { Type } from "typebox";
 import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { DelegateService, intercomRings } from "./delegate.ts";
+import { SessionStatsWatcher, laneSignature, laneWidgetFactory, sampleLaneViews } from "./widget.ts";
 import type { CommandResult } from "./types.ts";
 
 const WIDGET_KEY = "delegate";
 const ACTIONS = ["start", "list", "read", "wait", "stop"] as const;
+// A cheap tick reads only the bytes appended to each worker transcript. Every fourth tick also asks
+// herdr for lane statuses, which is the only part that spawns a subprocess.
+const TICK_MS = 1_500;
+const SYNC_EVERY_TICKS = 4;
 
 export default function delegateExtension(pi: ExtensionAPI): void {
 	install(pi);
@@ -20,6 +25,14 @@ function install(pi: ExtensionAPI): void {
 	let service: DelegateService | undefined;
 	const announced = new Set<string>();
 	const seenRings = new Set<string>();
+	const watcher = new SessionStatsWatcher();
+	let shownSignature: string | undefined;
+	let timer: ReturnType<typeof setInterval> | undefined;
+	let ticking = false;
+	let ticksToSync = SYNC_EVERY_TICKS;
+	// Bumped when the widget is torn down. A tick that was already awaiting compares the era it
+	// started in and drops its repaint instead of putting a cleared widget back on screen.
+	let generation = 0;
 
 	const runner = {
 		async exec(command: string, args: string[], options?: { signal?: AbortSignal; timeout?: number }): Promise<CommandResult> {
@@ -30,9 +43,15 @@ function install(pi: ExtensionAPI): void {
 
 	const domain = (): DelegateService => (service ??= new DelegateService(runner, homedir()));
 
+	// Only the positive answer is cached: a PATH scan per widget tick would cost one access() per PATH
+	// entry, while a missing binary stays worth re-checking in case it gets installed mid-session.
+	let herdrFound = false;
 	const unavailable = async (): Promise<string | undefined> => {
 		if (process.env.HERDR_ENV !== "1") return "delegate needs a Herdr pane: HERDR_ENV is not 1, so no lane can be started, listed, read, waited on, or stopped.";
-		if (!(await onPath("herdr"))) return "delegate needs the herdr binary on PATH, and it is missing. No lane can be started, listed, read, waited on, or stopped.";
+		if (!herdrFound) {
+			if (!(await onPath("herdr"))) return "delegate needs the herdr binary on PATH, and it is missing. No lane can be started, listed, read, waited on, or stopped.";
+			herdrFound = true;
+		}
 		return undefined;
 	};
 
@@ -50,19 +69,61 @@ function install(pi: ExtensionAPI): void {
 		},
 	});
 
+	const clearWidget = (ctx: ExtensionContext): void => {
+		if (shownSignature === undefined) return;
+		shownSignature = undefined;
+		ctx.ui.setWidget(WIDGET_KEY, undefined);
+	};
+
+	/** Repaint from the registry and the transcript tails. No subprocess runs here. */
+	const paintWidget = async (ctx: ExtensionContext): Promise<void> => {
+		if (!ctx.hasUI) return;
+		const era = generation;
+		if (await unavailable()) { if (era === generation) clearWidget(ctx); return; }
+		const lanes = await sampleLaneViews({ root: domain().root, cwd: ctx.cwd, parentId: ctx.sessionManager.getSessionId(), watcher, contextWindow: actionContext(ctx).contextWindow });
+		if (era !== generation) return;
+		if (!lanes.length) { clearWidget(ctx); return; }
+		const signature = laneSignature(lanes);
+		if (signature === shownSignature) return;
+		shownSignature = signature;
+		ctx.ui.setWidget(WIDGET_KEY, laneWidgetFactory(lanes));
+	};
+
+	/** Ask herdr for lane statuses and write them back to the registry, then repaint. */
 	const refreshWidget = async (ctx: ExtensionContext): Promise<void> => {
 		if (!ctx.hasUI) return;
-		if (await unavailable()) { ctx.ui.setWidget(WIDGET_KEY, undefined); return; }
-		const lanes = (await domain().list(actionContext(ctx))).filter((lane) => lane.status !== "closed");
-		if (!lanes.length) { ctx.ui.setWidget(WIDGET_KEY, undefined); return; }
-		ctx.ui.setWidget(WIDGET_KEY, lanes.map((lane, index) => {
-			const label = index === 0 ? "delegate" : "        ";
-			const status = lane.status === "blocked" ? "BLOCKED" : String(lane.status);
-			const context = lane.contextPct === null ? "  — ctx" : `${String(lane.contextPct).padStart(4)}% ctx`;
-			const spend = lane.spendUsd === null ? "     —" : `$${Number(lane.spendUsd).toFixed(2)}`.padStart(6);
-			const ring = lane.status === "blocked" ? "needs you" : `ring:${lane.rang ? "yes" : "—"}${lane.unread ? "  unread" : ""}`;
-			return `${label}  ${String(lane.lane).padEnd(14)}${String(lane.profile).padEnd(10)}${status.padEnd(9)}${context}  ${spend}  ${ring}`;
-		}));
+		const era = generation;
+		if (await unavailable()) { if (era === generation) clearWidget(ctx); return; }
+		// Counted before the call, not after: a herdr that is present but failing must still buy the
+		// next three cheap ticks, or a dead daemon turns every 1.5 s tick into a pair of spawns.
+		ticksToSync = SYNC_EVERY_TICKS;
+		await domain().list(actionContext(ctx));
+		if (era !== generation) return;
+		await paintWidget(ctx);
+	};
+
+	const tick = async (ctx: ExtensionContext): Promise<void> => {
+		if (ticking) return;
+		ticking = true;
+		try {
+			// Statuses only move when a lane is live, so the subprocess pair stays idle otherwise.
+			if (shownSignature !== undefined && --ticksToSync <= 0) await refreshWidget(ctx);
+			else await paintWidget(ctx);
+		} catch (error) { void error; }
+		finally { ticking = false; }
+	};
+
+	const stopTimer = (): void => {
+		if (!timer) return;
+		clearInterval(timer);
+		timer = undefined;
+	};
+
+	const startTimer = (ctx: ExtensionContext): void => {
+		stopTimer();
+		if (!ctx.hasUI) return;
+		timer = setInterval(() => { void tick(ctx); }, TICK_MS);
+		timer.unref?.();
 	};
 
 	const correlateRings = async (ctx: ExtensionContext): Promise<void> => {
@@ -97,8 +158,14 @@ function install(pi: ExtensionAPI): void {
 
 	pi.on("session_start", safely(async (ctx) => {
 		if (await unavailable()) return;
-		await domain().adopt(actionContext(ctx));
-		await refreshWidget(ctx);
+		// The timer is the only retry path this widget has, so failed startup work must not cost the
+		// session its live widget for the rest of its life.
+		try {
+			await domain().adopt(actionContext(ctx));
+			await refreshWidget(ctx);
+		} finally {
+			startTimer(ctx);
+		}
 	}));
 
 	pi.on("turn_start", safely(async (ctx) => {
@@ -113,7 +180,9 @@ function install(pi: ExtensionAPI): void {
 	}));
 
 	pi.on("session_shutdown", safely(async (ctx) => {
-		if (ctx.hasUI) ctx.ui.setWidget(WIDGET_KEY, undefined);
+		stopTimer();
+		generation += 1;
+		if (ctx.hasUI) { shownSignature = undefined; ctx.ui.setWidget(WIDGET_KEY, undefined); }
 	}));
 
 	pi.registerTool({

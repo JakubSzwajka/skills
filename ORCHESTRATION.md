@@ -148,8 +148,8 @@ The worker's handoff is a claim. Before you accept a lane:
 - `git status --short`, and confirm only owned paths moved
 - for a review lane, spot-check one finding against the file it names
 
-On 10 Sep two audit lanes found 14 real defects in this file and `LUCY_CLI.md`,
-all of them mine. Workers are good at catching the orchestrator. Give them the
+On 10 Sep two audit lanes found 14 real defects in the orchestration docs, all
+of them mine. Workers are good at catching the orchestrator. Give them the
 chance, and use a fresh session that did not write the code.
 
 ## After a review
@@ -216,25 +216,11 @@ delegate({ action: "wait", lanes?, timeoutMs? })
 delegate({ action: "stop", lane })          → kills, closes the pane, deregisters
 ```
 
-There is no `steer`. Correcting a worker mid-flight is rare enough that if you
-need it, `lucy steer <lane>` still works from a terminal.
+There is no `steer`. The tool cannot correct a worker mid-flight. If a lane is
+going wrong, stop it and start a new one with a better brief.
 
 Full reference including profiles and failure modes:
 `pi/extensions/delegate/README.md`.
-
-## Where lucy fits
-
-`lucy` is the human's cross-project layer, not yours. You do not need it to
-delegate. It is useful when you want what a single session cannot see:
-
-```bash
-lucy sessions          # every live pi session, all repos
-lucy attention         # every agent that is blocked, all workspaces
-lucy subagents         # delegate lanes, grouped by parent session
-lucy show <target>     # read another session's screen
-```
-
-Reference: `~/.agents/LUCY_CLI.md`.
 
 ## Integration
 

@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DelegateService, intercomRings, returnContract, toolPolicy, waitArguments } from "./delegate.ts";
 import { mutateRegistry, readRegistry } from "./registry.ts";
+import { SessionStatsWatcher, clip, laneRows, laneSignature, laneWidgetFactory, renderWidget, sampleLaneViews, separatorLine, sortLaneViews } from "./widget.ts";
+import type { LaneView } from "./widget.ts";
 import delegateExtension from "./index.ts";
 import type { CommandResult, LaneRegistry } from "./types.ts";
 
@@ -426,6 +428,254 @@ function registryPath(root: string, parentId = "parent-1"): string { return join
 	assert.equal(retained.transitionConfirmed, false, "start never throws after a pane exists");
 	assert.match(String(retained.error), /agent_pane_busy/);
 	assert.equal((await readRegistry(registryPath(brittleRoot))).lanes[0]?.closed, false, "a post-pane failure stays addressable");
+}
+
+// 16. The widget sizes every column to its data, so no lane name can run into the next column.
+{
+	const plain = (text: string) => text;
+	const view = (over: Partial<LaneView> & { lane: string }): LaneView => ({ profile: "worker", status: "working", contextPct: 12.5, spendUsd: 0.4, rang: false, unread: false, ...over });
+	const longest = "a".repeat(32);
+	const lines = renderWidget([view({ lane: longest }), view({ lane: "b", profile: "scout", status: "done" })], 200, plain);
+	const [rule, header, first, second] = lines as [string, string, string, string];
+	assert.match(rule, /^\u2500{200}$/, "a rule tops the widget");
+	assert.match(header, /^delegate {2}2 lanes$/, "one label heads the group instead of blanks padding every later row");
+	assert.equal(first.indexOf("worker"), second.indexOf("scout"), "the profile column starts at the same place for a 32 character name and a 1 character name");
+	assert.ok(first.includes(`${clip(longest, 24)}  worker`), "the two space gap survives the longest allowed lane name");
+	assert.ok(first.indexOf("worker") > first.indexOf(clip(longest, 24)), "the name never overlaps the profile");
+	assert.equal(lines.length, 4, "one rule, one header, one row per lane");
+
+	for (let length = 1; length <= 32; length += 1) {
+		const name = "x".repeat(length);
+		const rows = renderWidget([view({ lane: name }), view({ lane: "zzz", profile: "scout" })], 200, plain);
+		assert.equal(rows[2]!.indexOf("worker"), rows[3]!.indexOf("scout"), `a ${length} character name keeps the columns aligned`);
+	}
+}
+
+// 17. A single lane, missing numbers, and narrow terminals all still render.
+{
+	const plain = (text: string) => text;
+	const bare: LaneView = { lane: "solo", profile: "worker", status: "pending", contextPct: null, spendUsd: null, rang: false, unread: false };
+	const solo = renderWidget([bare], 120, plain);
+	assert.equal(solo.length, 3);
+	assert.match(solo[1]!, /1 lane$/, "the count is singular for one lane");
+	const cells = laneRows([bare])[1]!.cells;
+	assert.equal(cells[4]!.text, "— ctx", "a missing context reading shows a dash");
+	assert.equal(cells[5]!.text, "—", "a missing spend shows its own dash, not the context one");
+	assert.equal(solo[2]!.match(/—/g)?.length, 2, "context and spend each show a dash of their own");
+	assert.ok(!solo[2]!.includes("NaN") && !solo[2]!.includes("null"), "nulls never leak into the row");
+	assert.ok(solo[2]!.endsWith("—"), "an empty note leaves no trailing padding");
+
+	const narrow = renderWidget([{ lane: "a-very-long-lane-name-here", profile: "worker", status: "blocked", contextPct: 99.9, spendUsd: 12.5, rang: true, unread: true }], 24, plain);
+	for (const line of narrow) assert.ok(line.length <= 24, `every line fits the width: ${JSON.stringify(line)}`);
+	assert.ok(narrow[2]!.trimStart().startsWith("!"), "the attention marker sits leftmost so truncation cannot hide it");
+}
+
+// 18. Blocked and unread carry weight the other rows do not.
+{
+	const mark = (text: string, tone: string, bold: boolean) => `<${tone}${bold ? ":bold" : ""}>${text}</>`;
+	const lanes: LaneView[] = [
+		{ lane: "calm", profile: "worker", status: "working", contextPct: 5, spendUsd: 0.1, rang: false, unread: false },
+		{ lane: "stuck", profile: "worker", status: "blocked", contextPct: 5, spendUsd: 0.1, rang: true, unread: false },
+		{ lane: "waiting", profile: "scout", status: "done", contextPct: 5, spendUsd: 0.1, rang: true, unread: true },
+	];
+	const lines = renderWidget(lanes, 200, mark);
+	assert.match(lines[1]!, /2 need you/, "the header counts both states that need the operator");
+	assert.ok(lines[2]!.includes("<attention:bold>BLOCKED"), "blocked is painted with the attention tone and bold");
+	assert.ok(lines[2]!.includes("<attention:bold>needs you"), "the blocked note carries the same weight");
+	assert.ok(lines[4]!.includes("<notice>unread handoff"), "an unread handoff is painted with the notice tone");
+	assert.ok(!lines[3]!.includes("attention") && !lines[3]!.includes("notice"), "a calm lane borrows neither attention tone");
+	assert.ok(lines[3]!.includes("<text>working"), "a working lane stays quiet");
+
+	assert.deepEqual(sortLaneViews(lanes).map((lane) => lane.lane), ["stuck", "calm", "waiting"], "blocked sorts to the top, then working");
+	const rows = laneRows(lanes);
+	assert.equal(rows.length, 4);
+	assert.equal(rows[1]!.cells[0]!.text, "!", "the blocked lane gets the loud gutter mark");
+	assert.equal(rows[3]!.cells[0]!.text, "•", "the unread lane gets the quieter gutter mark");
+
+	// The component asks the theme for every color, so a theme switch repaints instead of freezing an escape.
+	const asked: string[] = [];
+	const theme = { fg: (color: string, text: string) => { asked.push(color); return `[${color}]${text}`; }, bold: (text: string) => `*${text}*` };
+	const component = laneWidgetFactory(lanes)(undefined, theme);
+	const painted = component.render(200);
+	assert.ok(asked.includes("error"), "the blocked row asks the theme for its error color");
+	assert.ok(asked.includes("warning"), "the unread row asks the theme for its warning color");
+	assert.ok(painted.every((line) => !line.includes("\u001b")), "the widget writes no escape of its own; every color comes from the theme");
+	assert.ok(painted[2]!.includes("[error]*BLOCKED*"), "bold is applied inside the color so the color reset cannot drop it");
+	assert.equal(component.render(200), painted, "an unchanged width reuses the cached paint");
+	component.invalidate();
+	assert.notEqual(component.render(200), painted, "invalidate drops the cache so a theme change takes effect");
+}
+
+// 19. The signature only changes when something the operator can see changes.
+{
+	const base: LaneView = { lane: "a", profile: "worker", status: "working", contextPct: 10, spendUsd: 1, rang: false, unread: false };
+	assert.equal(laneSignature([base]), laneSignature([{ ...base }]), "identical data produces one signature");
+	assert.notEqual(laneSignature([base]), laneSignature([{ ...base, contextPct: 11 }]), "a moved context reading repaints");
+	assert.notEqual(laneSignature([base]), laneSignature([{ ...base, status: "blocked" }]), "a status change repaints");
+	assert.notEqual(laneSignature([base]), laneSignature([{ ...base, unread: true }]), "an arriving handoff repaints");
+	assert.equal(laneSignature([base, { ...base, lane: "b" }]), laneSignature([{ ...base, lane: "b" }, base]), "row order is not part of the signature");
+	assert.equal(clip("abcdef", 4), "abc…");
+	assert.equal(clip("abc", 4), "abc");
+}
+
+// 20. The stats watcher reads only the bytes a transcript grew by.
+{
+	const dir = mkdtempSync(join(tmpdir(), "delegate-stats-"));
+	const file = join(dir, "session.jsonl");
+	// The real assistant entry shape, keys copied from a live transcript. There is no contextWindow
+	// on it, which is why the window can only come from the model registry.
+	const turn = (tokens: number, cost: number) => `${JSON.stringify({ message: { role: "assistant", api: "responses", provider: "openai-codex", model: "gpt-5.6-sol", stopReason: "stop", usage: { input: tokens - 2, output: 2, totalTokens: tokens, cost: { total: cost } } } })}\n`;
+	writeFileSync(file, turn(1_000, 0.01), "utf8");
+	const watcher = new SessionStatsWatcher();
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 0.5, spendUsd: 0.01 });
+
+	appendFileSync(file, turn(4_000, 0.02), "utf8");
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 2, spendUsd: 0.03 }, "the second sample adds the appended turn to the first");
+
+	const half = turn(9_000, 0.04);
+	appendFileSync(file, half.slice(0, 20), "utf8");
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 2, spendUsd: 0.03 }, "a half written line is held back, not parsed as garbage");
+	appendFileSync(file, half.slice(20), "utf8");
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 4.5, spendUsd: 0.07 }, "the line lands once it is complete");
+
+	assert.deepEqual(await watcher.sample(file, 100_000), { contextPct: 9, spendUsd: 0.07 }, "the configured context window drives the reading");
+	assert.deepEqual(await watcher.sample(file, null), { contextPct: null, spendUsd: 0.07 }, "a model registry miss leaves no window, so the context reading is dropped and spend is kept");
+	assert.deepEqual(await watcher.sample(join(dir, "missing.jsonl"), null), { contextPct: null, spendUsd: null }, "a missing transcript is not an error");
+
+	writeFileSync(file, turn(500, 0.005), "utf8");
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 0.3, spendUsd: 0.005 }, "a rewritten shorter file restarts from zero");
+
+	// A different file at the same path is not an appended one, even when it is longer.
+	const replacement = join(dir, "replacement.jsonl");
+	writeFileSync(replacement, turn(700, 0.001) + turn(800, 0.002) + turn(900, 0.003), "utf8");
+	assert.ok(statSync(replacement).size > statSync(file).size, "the replacement is longer than the file it takes over from");
+	renameSync(replacement, file);
+	assert.deepEqual(await watcher.sample(file, 200_000), { contextPct: 0.5, spendUsd: 0.006 }, "a swapped in transcript restarts the tally instead of keeping a stale offset");
+
+	// A long lane's transcript outgrows one read buffer. One sample must still consume all of it,
+	// or the widget shows numbers that crawl toward the truth over several ticks.
+	const big = join(dir, "big.jsonl");
+	const filler = `${JSON.stringify({ message: { role: "user", text: "x".repeat(900) } })}\n`;
+	writeFileSync(big, filler.repeat(5_000) + turn(80_000, 2), "utf8");
+	assert.ok(statSync(big).size > 4 * 1024 * 1024, "the fixture is larger than one read buffer");
+	assert.deepEqual(await new SessionStatsWatcher().sample(big, 200_000), { contextPct: 40, spendUsd: 2 }, "one sample reads past the buffer to the last turn");
+}
+
+// 21. The widget samples lanes from the registry without shelling out.
+{
+	const root = home();
+	const delegateRoot = join(root, ".pi", "agent", "delegate");
+	const handoff = join(delegateRoot, "parent-1", "live.md");
+	mkdirSync(join(delegateRoot, "parent-1"), { recursive: true });
+	writeFileSync(handoff, "done", "utf8");
+	const lane = (over: Record<string, unknown>) => ({
+		lane: "live", profile: "worker", pane: "w0:p1", session: "s", cwd: root, handoff,
+		started: "2026-01-01T00:00:00.000Z", read: false, closed: false, status: "working", ownerSession: "parent-1", ...over,
+	});
+	writeFileSync(join(delegateRoot, "parent-1", "lanes.json"), JSON.stringify({ lanes: [
+		lane({}),
+		lane({ lane: "gone", closed: true, closedAt: "2026-01-01T00:00:00.000Z", status: "closed" }),
+		lane({ lane: "elsewhere", cwd: "/other/checkout", ownerSession: "parent-9", handoff: join(delegateRoot, "parent-1", "elsewhere.md") }),
+		lane({ lane: "adopted", cwd: "/other/checkout", handoff: join(delegateRoot, "parent-1", "adopted.md"), read: true, status: "blocked" }),
+	] }), "utf8");
+
+	const views = await sampleLaneViews({ root: delegateRoot, cwd: root, parentId: "parent-1", watcher: new SessionStatsWatcher() });
+	assert.deepEqual(views.map((view) => view.lane), ["adopted", "live"], "closed lanes and another parent's lanes stay out; an adopted lane elsewhere stays in");
+	assert.equal(views[1]!.unread, true, "a present handoff on an unread lane is flagged");
+	assert.equal(views[1]!.contextPct, null, "a lane with no transcript reports no context");
+	assert.equal(views[0]!.unread, false, "a missing handoff file is not unread");
+
+	assert.deepEqual(await sampleLaneViews({ root: join(root, "nope"), cwd: root, parentId: "parent-1", watcher: new SessionStatsWatcher() }), [], "a missing delegate root is empty, not an error");
+}
+
+// 22. A rule tops the widget so it does not read as the tail of the todo list above it.
+{
+	const plain = (text: string) => text;
+	const lanes: LaneView[] = [{ lane: "solo", profile: "worker", status: "working", contextPct: 1, spendUsd: 0.1, rang: false, unread: false }];
+	const lines = renderWidget(lanes, 40, plain);
+	assert.equal(lines.length, 3, "the rule costs exactly one line");
+	assert.match(lines[0]!, /^\u2500{40}$/, "one rule spans the width, above the header");
+	assert.ok(!lines[1]!.includes("\u2500") && !lines[2]!.includes("\u2500"), "no bottom rule and no side borders");
+	assert.equal(separatorLine(1, plain), "\u2500", "a one column terminal still gets a rule");
+	assert.equal(separatorLine(0, plain), undefined, "no width means no rule");
+	for (const width of [1, 2, 5, 24]) assert.equal(renderWidget(lanes, width, plain)[0]!.length, width, `a ${width} column terminal gets a rule that fits it exactly`);
+	assert.deepEqual(renderWidget([], 40, plain), [], "a hidden widget adds no rule");
+
+	const asked: string[] = [];
+	const theme = { fg: (color: string, text: string) => { asked.push(color); return `[${color}]${text}`; }, bold: (text: string) => `*${text}*` };
+	const painted = laneWidgetFactory(lanes)(undefined, theme).render(30);
+	assert.equal(asked[0], "dim", "the rule asks the theme for a muted color instead of writing an escape");
+	assert.match(painted[0]!, /^ \[dim\]\u2500{29}$/, "the rule shares the body's inset and reaches the right edge");
+	assert.ok(painted.every((line) => !line.includes("\u001b")), "the rule writes no escape of its own");
+
+	const hostile = { fg: () => { throw new Error("Unknown theme color: nope"); }, bold: (text: string) => text };
+	const survived = laneWidgetFactory(lanes)(undefined, hostile).render(30);
+	assert.ok(survived[1]!.includes("delegate") && survived[2]!.includes("solo"), "a theme that rejects a color costs the color, not the widget");
+}
+
+// 23. A herdr that is present but failing still only syncs every fourth tick.
+{
+	const root = home();
+	const delegateRoot = join(root, ".pi", "agent", "delegate", "parent-1");
+	mkdirSync(delegateRoot, { recursive: true });
+	writeFileSync(join(delegateRoot, "lanes.json"), JSON.stringify({ lanes: [{
+		lane: "live", profile: "worker", pane: "w0:p1", session: "s", cwd: root, handoff: join(delegateRoot, "live.md"),
+		started: "2026-01-01T00:00:00.000Z", read: false, closed: false, status: "working", ownerSession: "parent-1",
+	}] }), "utf8");
+	const bin = join(root, "bin");
+	mkdirSync(bin, { recursive: true });
+	writeFileSync(join(bin, "herdr"), "#!/bin/sh\nexit 1\n", "utf8");
+	chmodSync(join(bin, "herdr"), 0o755);
+
+	const previous = { home: process.env.HOME, herdrEnv: process.env.HERDR_ENV, path: process.env.PATH, role: process.env.PI_DELEGATE_ROLE };
+	const realInterval = globalThis.setInterval;
+	let beat: (() => void) | undefined;
+	const handlers = new Map<string, (event: unknown, ctx: unknown) => Promise<void>>();
+	const syncTicks: number[] = [];
+	const widgetCalls: string[] = [];
+	let currentTick = 0;
+	delete process.env.PI_DELEGATE_ROLE;
+	process.env.HOME = root;
+	process.env.HERDR_ENV = "1";
+	process.env.PATH = `${bin}:${previous.path ?? ""}`;
+	globalThis.setInterval = ((callback: () => void) => { beat = callback; return { unref() {} }; }) as never;
+	try {
+		delegateExtension({
+			registerTool: () => {},
+			on: (event: string, handler: unknown) => { handlers.set(event, handler as (event: unknown, ctx: unknown) => Promise<void>); },
+			exec: async () => { if (currentTick) syncTicks.push(currentTick); throw new Error("herdr is down"); },
+		} as never);
+		const ctx = { hasUI: true, cwd: root, sessionManager: { getSessionId: () => "parent-1", getEntries: () => [] }, ui: { setWidget: (_key: string, value: unknown) => { widgetCalls.push(value === undefined ? "clear" : "paint"); }, notify: () => {} } };
+		await handlers.get("session_start")!({}, ctx);
+		assert.ok(beat, "the timer starts even though the startup herdr calls failed");
+		for (currentTick = 1; currentTick <= 12; currentTick += 1) {
+			beat();
+			// Long enough for one tick's file reads to land, so ticks never overlap and the count is the
+			// cadence rather than a race.
+			await new Promise((resolve) => setTimeout(resolve, 30));
+		}
+		currentTick = 0;
+		const synced = [...new Set(syncTicks)];
+		assert.deepEqual(synced, [5, 9], `twelve ticks with a failing herdr sync twice, four ticks apart, not on every tick: ${JSON.stringify(synced)}`);
+
+		// A tick that is already awaiting when the session shuts down must not put the cleared widget
+		// back on screen.
+		beat();
+		await new Promise((resolve) => setTimeout(resolve, 30));
+		const lanes = join(root, ".pi", "agent", "delegate", "parent-1", "lanes.json");
+		writeFileSync(lanes, readFileSync(lanes, "utf8").replace("\"working\"", "\"idle\""), "utf8");
+		const before = widgetCalls.length;
+		beat();
+		await handlers.get("session_shutdown")!({}, ctx);
+		for (let drain = 0; drain < 5; drain += 1) await new Promise((resolve) => setTimeout(resolve, 30));
+		assert.deepEqual(widgetCalls.slice(before), ["clear"], "a tick in flight during shutdown drops its repaint instead of restoring a cleared widget");
+	} finally {
+		globalThis.setInterval = realInterval;
+		for (const [key, value] of Object.entries({ HOME: previous.home, HERDR_ENV: previous.herdrEnv, PATH: previous.path, PI_DELEGATE_ROLE: previous.role })) {
+			if (value === undefined) delete process.env[key];
+			else process.env[key] = value;
+		}
+	}
 }
 
 console.log("delegate: all checks passed");

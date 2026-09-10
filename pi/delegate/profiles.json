@@ -11,13 +11,13 @@
   },
 
   "reviewer": {
-    "model": "amazon-bedrock/global.anthropic.claude-opus-5",
+    "model": "anthropic/claude-opus-5",
     "readOnly": true,
     "excludeTools": ["ask_user_question"]
   },
 
   "oracle": {
-    "model": "amazon-bedrock/global.anthropic.claude-opus-5",
+    "model": "anthropic/claude-opus-5",
     "readOnly": true,
     "excludeTools": ["ask_user_question"]
   }

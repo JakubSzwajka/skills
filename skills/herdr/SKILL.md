@@ -1,6 +1,6 @@
 ---
 name: herdr
-description: "Control Herdr, a terminal multiplexer for coding agents. Use when inspecting or controlling panes, tabs, workspaces, commands, or another agent, or when the user mentions Herdr. Delegation itself does not need this skill: the `delegate` tool owns worker lifecycle. Reach for raw herdr commands only for layout and for questions the delegate tool and lucy do not answer. Requires HERDR_ENV=1."
+description: "Control Herdr, a terminal multiplexer for coding agents. Use when inspecting or controlling panes, tabs, workspaces, commands, or another agent, or when the user mentions Herdr. Delegation itself does not need this skill: the `delegate` tool owns worker lifecycle. Reach for raw herdr commands only for layout and for questions the delegate tool does not answer. Requires HERDR_ENV=1."
 ---
 
 # Herdr
@@ -22,10 +22,6 @@ When the check passes, the `herdr` binary in `PATH` talks to the current session
 To run work in another session, use the `delegate` tool. It owns the pane split, the
 worker's return contract, the completion ring, and the cleanup. See
 `~/.agents/ORCHESTRATION.md` and `~/.agents/pi/extensions/delegate/README.md`.
-
-`lucy` covers cross-project questions from a terminal: `lucy sessions`, `lucy attention`
-for blocked agents anywhere, `lucy subagents` for delegate lanes. See
-`~/.agents/LUCY_CLI.md`.
 
 What is left for raw herdr, and worth knowing:
 

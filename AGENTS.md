@@ -62,9 +62,18 @@ Coordinate with other local pi sessions on related codebases. Use `/skill:pi-int
 ## Project State
 
 - Keep behavior-shaping preferences in the experience store only when clearly durable.
-- Keep active implementation state in repo-local task artifacts, not external trackers.
+- No task tool is loaded. Durable implementation state lives in delegate handoff files, the repository itself, and PRs.
 - Use external PM tools only when the repo declares them or the user asks.
-- Keep technical details in code, task artifacts, and PRs. External tracker updates should be short and PM-readable.
+- Keep technical details in the repository and PRs. External tracker updates should be short and PM-readable.
+
+## Where specs live
+
+A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-tickets` already writes to `.scratch/<feature-slug>/issues/NN-slug.md`. A module that owns its own spec keeps it at `<module>/.pi/SPEC.md`, which is what `pi/extensions-disabled/task-log/.pi/SPEC.md` already does. Both are existing shapes, so nothing new is invented and one feature's record stays in one folder.
+
+- Write the spec first, then the tickets next to it in the same feature folder.
+- `/spec` lists every `SPEC.md` and every `issues/NN-slug.md` it finds under the working directory, newest first, and links one to the session.
+- A linked spec adds a short note to each turn naming its path and title. Read the file when you need the content.
+- `/spec:clear` removes the link. Delegate children never see it.
 
 ## Git
 
