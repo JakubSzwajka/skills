@@ -29,8 +29,8 @@ Four commitments, and they are the whole point:
 2. **Every boundary states what it refuses**, not only what it contains.
 3. **Sections are earned.** Each has a trigger; a repo that does not meet it does not
    get that section. Six full sections beat twenty empty ones.
-4. **Discovery fans out to subagents; conclusions come back.** The main context draws
-   the map, it does not read the whole repo. See step 3.
+4. **Discovery is delegated; conclusions come back.** The main context draws the map,
+   it does not read the whole repo. See step 3.
 
 ## Files in this skill
 
@@ -62,19 +62,26 @@ or false. Write the list down before drafting. Typical outcomes:
 - A repo with no module boundaries: skip B5, B6, B10, B11, B12 and say plainly in B3
   that the layering is thin. **Do not draw a fiction.**
 
-### 3. Discovery — fan out with subagents
+### 3. Discovery — delegate one scout lane
 
 **Do not read the codebase serially in the main context.** A repo worth mapping is
 bigger than one context window, and reading it linearly burns the budget you need
-for drawing. Dispatch parallel subagents, one per investigation, and keep only their
-conclusions.
+for drawing. Start one read-only worker with the `delegate` tool and the `scout`
+profile:
 
-Launch them **in a single message with multiple tool calls** so they run at once.
-Each gets a narrow brief and a required output shape.
+```
+delegate({ action: "start", profile: "scout", brief: "<outcome, owned paths, inputs, non-goals, stop conditions, acceptance>", cwd: "<repo>" })
+```
 
-Typical fan-out for a monorepo — adjust to the sections you chose in step 2:
+Give that lane all the investigations selected in step 2. The table below describes
+parts of one brief, not one worker per row. Split the work only when one lane cannot
+cover it and the extra lanes can own disjoint directories or source sets. State that
+ownership and why the lanes cannot collide in every brief. Use the fewest lanes that
+can finish the work; after four, stop and re-plan.
 
-| Subagent | Brief | Must return |
+Typical investigations for a monorepo — adjust to the sections you chose in step 2:
+
+| Investigation | Brief | Must return |
 | --- | --- | --- |
 | Tree & counts | Run the numbers pass commands; break down every top-level dir one level deeper | Raw counts with the command that produced each |
 | Entry & docs | Root files, docs tree, any README/AGENTS/contributing scheme, the *kind* taxonomy if one exists | Per-file one-line purpose; quote any stated scheme |
@@ -86,26 +93,27 @@ Typical fan-out for a monorepo — adjust to the sections you chose in step 2:
 | Client layers | Client source tree, test file distribution by extension | Folder purposes, test counts by kind |
 | Build & release | Dockerfiles, deploy workflows, tags, environments | The path from commit to running, and the point of no return |
 
-Rules for the fan-out:
+Rules for the lane:
 
-- **Give each subagent the output shape you need**, not a topic. "Return a table of
+- **Give the worker the output shape you need**, not a topic. "Return a table of
   table-name → owning module, and flag every table written by more than one" beats
   "look at the database".
-- **Require file paths and commands as evidence.** A subagent claim with no path
+- **Require file paths and commands as evidence.** A worker claim with no path
   behind it does not go in the artifact.
-- **Re-derive every number yourself.** Subagents are for finding *where things are
-  and what they mean*; counts come from commands you ran in the main context. A
-  hallucinated count from a subagent is indistinguishable from a real one, and it
-  is the single most likely way this skill publishes something false.
-- **Never dump subagent reports into the artifact.** They are research; you write
+- **Re-derive every number yourself.** The worker finds *where things are and what
+  they mean*; counts come from commands you ran in the main context. A hallucinated
+  count in a handoff is indistinguishable from a real one, and it is the single most
+  likely way this skill publishes something false.
+- **Never dump the worker's handoff into the artifact.** It is research; you write
   the page.
-- Follow-ups go back to the same subagent so it keeps its context, rather than
-  spawning a fresh one that re-reads everything.
+
+When the worker rings, call `delegate({ action: "read", lane: "<lane>" })`, verify
+its evidence, then call `delegate({ action: "stop", lane: "<lane>" })`.
 
 ### 4. Read the load-bearing parts yourself
 
-Whatever a section's central claim rests on, read it directly. Subagent summaries
-are fine for inventory; they are not fine for the sentence a reader will act on.
+Whatever a section's central claim rests on, read it directly. The scout handoff is
+fine for inventory; it is not fine for the sentence a reader will act on.
 
 Read yourself, always: the state machine's transition guards, the one workflow that
 gets the close-up, and any refusal you are about to assert. Docs drift — where a doc

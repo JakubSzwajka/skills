@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { AssistantMessageComponent, initTheme, ToolExecutionComponent } from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import { patchAssistantMessages, patchToolRows } from "./patch.ts";
 import { presenters } from "./presenters.ts";
 import compactTools, { separate, THINKING_LABEL } from "./index.ts";
@@ -18,7 +19,11 @@ function load(overrides: Record<string, unknown> = {}) {
     registerTool: (tool: any) => tools.set(tool.name, tool),
     registerMarkdownTransformer: (fn: any) => transformers.push(fn),
     registerCommand: (name: string) => commands.push(name),
-    on: () => {},
+    on: (name: string, handler: any) => {
+      if (name === "session_start") {
+        handler({}, { ui: { theme, setHiddenThinkingLabel() {} } });
+      }
+    },
     ...overrides,
   } as any);
   return { tools, transformers, commands };
@@ -94,6 +99,61 @@ test("the patches apply once and survive a repeat call", () => {
   const proseRender = AssistantMessageComponent.prototype.render;
   assert.equal(patchAssistantMessages(), true);
   assert.equal(AssistantMessageComponent.prototype.render, proseRender);
+});
+
+test("subagent keeps its own live renderer and expanded child detail", () => {
+  initTheme("dark");
+  load();
+  const definition = {
+    renderCall: (args: { agent: string }) => new Text(`rich subagent ${args.agent}`, 0, 0),
+    renderResult: (_result: unknown, options: { expanded: boolean; isPartial: boolean }) =>
+      new Text(`rich ${options.isPartial ? "live async progress" : "result"}${options.expanded ? "\nexpanded child detail" : ""}`, 0, 0),
+  };
+  const row = new ToolExecutionComponent(
+    "subagent",
+    "call_subagent",
+    { agent: "reviewer", async: true },
+    {},
+    definition,
+    { requestRender() {} } as any,
+    process.cwd(),
+  );
+
+  row.markExecutionStarted();
+  row.setExpanded(true);
+  row.updateResult({ content: [{ type: "text", text: "generic output" }], details: {}, isError: false }, true);
+
+  const rendered = row.render(90).map((line: string) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
+  assert.ok(rendered.some((line) => line.includes("rich subagent reviewer")));
+  assert.ok(rendered.some((line) => line.includes("rich live async progress")));
+  assert.ok(rendered.some((line) => line.includes("expanded child detail")));
+  assert.ok(rendered.every((line) => !line.includes("┊ subagent")));
+});
+
+test("todo still uses the compact foreign row", () => {
+  initTheme("dark");
+  load();
+  const definition = {
+    renderCall: () => new Text("rich todo call", 0, 0),
+    renderResult: () => new Text("rich todo result", 0, 0),
+  };
+  const row = new ToolExecutionComponent(
+    "todo",
+    "call_todo",
+    { action: "update", id: 3, status: "completed" },
+    {},
+    definition,
+    { requestRender() {} } as any,
+    process.cwd(),
+  );
+
+  row.markExecutionStarted();
+  row.updateResult({ content: [{ type: "text", text: "task 3 completed" }], details: {}, isError: false });
+
+  const rendered = row.render(90).map((line: string) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
+  assert.equal(rendered.length, 1);
+  assert.match(rendered[0]!, /^ ┊ todo +update · 3 · completed +1 line/);
+  assert.doesNotMatch(rendered[0]!, /rich todo/);
 });
 
 test("a real tool row, driven end to end, renders as one line with its duration", async () => {

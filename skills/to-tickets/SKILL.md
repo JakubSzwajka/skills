@@ -10,6 +10,10 @@ Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet 
 
 The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
 
+## Task continuity
+
+After publishing the tickets, if `task_log` is active, add their local path or tracker URL with the `task_manage` reference action. Then append a concise structured `handoff` with the current state, next action, blockers, branch or worktree, latest commit, validation state, and references. Do not copy the artifact body into the task log. If `task_log` is inactive, skip these calls and continue the skill normally.
+
 ## Process
 
 ### 1. Gather context

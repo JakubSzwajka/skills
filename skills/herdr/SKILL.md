@@ -1,6 +1,6 @@
 ---
 name: herdr
-description: "Control Herdr, a terminal multiplexer for coding agents. Use only when the user explicitly mentions Herdr or asks to use Herdr to inspect or control panes, tabs, workspaces, commands, or another agent. Do not use merely because a task could benefit from a background terminal, delegation, or parallel work. Requires HERDR_ENV=1."
+description: "Control Herdr, a terminal multiplexer for coding agents. Use when inspecting or controlling panes, tabs, workspaces, commands, or another agent, or when the user mentions Herdr. Delegation itself does not need this skill: the `delegate` tool owns worker lifecycle. Reach for raw herdr commands only for layout and for questions the delegate tool and lucy do not answer. Requires HERDR_ENV=1."
 ---
 
 # Herdr
@@ -16,6 +16,33 @@ test "${HERDR_ENV:-}" = 1
 If the check fails, say that you are not running inside Herdr and stop. Do not inspect or control the focused Herdr session from outside Herdr.
 
 When the check passes, the `herdr` binary in `PATH` talks to the current session. Use it to inspect neighboring work, create terminal layout, start agents and commands, read output, and wait for state changes.
+
+## Delegation does not use this skill
+
+To run work in another session, use the `delegate` tool. It owns the pane split, the
+worker's return contract, the completion ring, and the cleanup. See
+`~/.agents/ORCHESTRATION.md` and `~/.agents/pi/extensions/delegate/README.md`.
+
+`lucy` covers cross-project questions from a terminal: `lucy sessions`, `lucy attention`
+for blocked agents anywhere, `lucy subagents` for delegate lanes. See
+`~/.agents/LUCY_CLI.md`.
+
+What is left for raw herdr, and worth knowing:
+
+```bash
+herdr agent wait <name> --until idle --until done --until blocked --timeout MS
+```
+
+`--until done` is required. `idle` also means "the tab has been seen in the focused UI",
+and CLI reads never mark a pane seen, so an agent you never looked at finishes in `done`.
+Waiting on `idle` alone against an unfocused pane blocks forever.
+
+Also herdr-only: creating workspaces and tabs, moving panes, running a plain command in a
+pane, and reading a pane you did not start.
+
+One trap the delegate tool already handles for you: a freshly split pane is not yet at a
+shell prompt, so `agent start` can fail with `agent_pane_busy`. If you drive herdr by
+hand, wait for the pane's foreground to be a shell before starting an agent.
 
 ## Learn the current CLI
 

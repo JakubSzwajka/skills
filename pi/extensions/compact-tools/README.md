@@ -13,7 +13,8 @@ The transcript view for this machine: one scannable line per tool call, rules ar
  ┊ write    agents/cli/src/commands.ts                                           76 written    0.1s
  ┊ Thinking...
  ┊ todo     update · 3 · completed                                                   1 line    0.0s
- ┊ subagent review the CLI help contract · reviewer · async                         2 lines    3.2s
+ subagent reviewer [async]
+   live progress and child details rendered by pi-subagents
  ✗ task_log next                                                                     failed    0.0s
  ✗ $        npm test                                                                 failed   12.4s
 ```
@@ -41,7 +42,7 @@ and a command that does change something announces it through its summary and du
 |---|---|---|
 | `mutate` | `write`, `edit` | bold light name, accent arguments — the only bright row |
 | `read` | `read`, `grep`, `find`, `ls`, `bash` | muted throughout, the same grey as a hidden thinking run |
-| `quiet` | every tool owned by another extension | dim throughout |
+| `quiet` | foreign tools without a rich-row exemption | dim throughout |
 | error | any failed call | red from gutter to summary, whatever the tone |
 
 `ctrl+o` expands every tool output at once (it is a global toggle, so rows carry no per-row hint);
@@ -72,12 +73,17 @@ Execution is unchanged — it delegates to the built-in definition for `ctx.cwd`
 schemas and prompt contributions come from that same definition. Interactive mode warns on startup
 that built-ins were overridden; that is expected.
 
-**Tools owned by other extensions** (`todo`, `subagent`, `task_log`, MCP tools) cannot be
-re-registered — their `execute` is not ours to reimplement. They are rendered from the patch
-instead, which reads `toolName`, `args`, `result` and `getTextOutput()` off the row and draws the
-same grid. Arguments are skimmed generically: known keys first (`path`, `command`, `subject`,
-`agent`, `action`, `id`, `status`, …), booleans shown by name when true, values joined with `·`.
-Rows carrying images, hidden rows, and rows we own fall through to the original renderer.
+**Tools owned by other extensions** (`todo`, `task_log`, MCP tools) cannot be re-registered because
+their `execute` is not ours to reimplement. The patch reads `toolName`, `args`, `result` and
+`getTextOutput()` off the row and draws the same grid. Arguments are skimmed generically: known
+keys first (`path`, `command`, `subject`, `agent`, `action`, `id`, `status`, …), booleans shown by
+name when true, values joined with `·`.
+
+`subagent` is an explicit exception. Pi-subagents owns a live, multi-line renderer for async
+progress and expanded child details, so that row falls through to its public `renderCall` and
+`renderResult`. Add any future rich-row exception to `RICH_ROW_TOOLS`; do not exempt every foreign
+tool that has a renderer. Rows carrying images, hidden rows, rows we own, and rich-row exceptions
+all fall through to the original renderer.
 
 Durations are stamped by wrapping `markExecutionStarted` and `updateResult` on the row, not by
 listening to `tool_execution_start`/`tool_execution_end`. The event carries a provider-composed

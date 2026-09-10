@@ -1,0 +1,1174 @@
+
+<meta charset="utf-8">
+<title>Task is the system hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+
+<style>
+/* ============================================================
+   visualize — base stylesheet.
+
+   Inline this file VERBATIM into the page's <style> block.
+   Two blocks may be edited at run time and nothing else:
+     - THEME  (six accent values, light + both dark copies)
+     - FONTS  (the three family stacks)
+
+   Colour carries meaning. Never pick a colour because it looks nice:
+     accent  the spine of the story, the affirmative, "this holds"
+     warn    risk, cost, gotcha, the thing that bites, the refusal
+     bad     failure, loss, removed, the negative number
+     muted   context, scaffolding, everything not being argued about
+   Never write a hex value in the HTML. Use the tokens.
+   ============================================================ */
+
+:root {
+  /* --- ground and ink --- */
+  --ground: #fbfaf5;
+  --surface: #ffffff;
+  --surface-2: #f4f3ed;
+  --ink: #14201d;
+  --ink-soft: #2c3a36;
+  --muted: #5d6b66;
+  --faint: #97a49f;
+  --line: #e3e7e0;
+  --line-strong: #cbd5cf;
+
+  /* --- THEME (light) — swap for another palette, see SKILL.md --- */
+  --accent: #347f71;
+  --accent-deep: #092f29;
+  --accent-wash: #e9f2ef;
+  --warn: #a85c08;
+  --warn-wash: #fbf0e1;
+  --bad: #9c2f2f;
+  --bad-wash: #f8e9e7;
+
+  /* --- categorical series, charts only, in this order --- */
+  --s1: #347f71;
+  --s2: #4a6fa5;
+  --s3: #a85c08;
+  --s4: #7a5ea8;
+  --s5: #6b7b52;
+
+  /* --- FONTS: display for headings, body for prose, mono for data --- */
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+/* Dark, when the viewer chose nothing (system) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0b1513;
+    --surface: #121f1c;
+    --surface-2: #182924;
+    --ink: #e8efeb;
+    --ink-soft: #c5d3cd;
+    --muted: #90a29c;
+    --faint: #6d817b;
+    --line: #223330;
+    --line-strong: #33473f;
+
+    --accent: #65b9a6;
+    --accent-deep: #a3d8ca;
+    --accent-wash: #14302b;
+    --warn: #dfa257;
+    --warn-wash: #2d2317;
+    --bad: #e08a80;
+    --bad-wash: #2e1a19;
+
+    --s1: #65b9a6;
+    --s2: #7fa5d8;
+    --s3: #dfa257;
+    --s4: #b096d8;
+    --s5: #9db37c;
+  }
+}
+
+/* Dark, when the viewer chose it explicitly */
+:root[data-theme="dark"] {
+  --ground: #0b1513;
+  --surface: #121f1c;
+  --surface-2: #182924;
+  --ink: #e8efeb;
+  --ink-soft: #c5d3cd;
+  --muted: #90a29c;
+  --faint: #6d817b;
+  --line: #223330;
+  --line-strong: #33473f;
+
+  --accent: #65b9a6;
+  --accent-deep: #a3d8ca;
+  --accent-wash: #14302b;
+  --warn: #dfa257;
+  --warn-wash: #2d2317;
+  --bad: #e08a80;
+  --bad-wash: #2e1a19;
+
+  --s1: #65b9a6;
+  --s2: #7fa5d8;
+  --s3: #dfa257;
+  --s4: #b096d8;
+  --s5: #9db37c;
+}
+
+* { box-sizing: border-box; }
+
+/* [hidden] has to beat every display: flex/grid below it, or the filter
+   chips and the stepper hide nothing. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 68px;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { display: flex; flex-direction: column; gap: 18px; }
+
+.stamp {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.stamp::after { content: ""; flex: 1; height: 1px; background: var(--line-strong); }
+
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(2.3rem, 6vw, 3.8rem);
+  line-height: 1.03;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.thesis { max-width: 64ch; font-size: 1.12rem; color: var(--ink-soft); margin: 0; }
+.thesis strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- contents grid ---------- */
+
+.contents {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--surface);
+}
+.contents a {
+  background: var(--surface);
+  outline: 1px solid var(--line);
+  padding: 13px 16px;
+  text-decoration: none;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background 120ms ease;
+}
+.contents a:hover, .contents a:focus-visible { background: var(--accent-wash); }
+.contents .n {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.contents .t { font-family: var(--display); font-weight: 600; font-size: 0.98rem; letter-spacing: -0.01em; }
+
+/* ---------- sticky rail ---------- */
+
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--ground);
+  border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.rail a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 3px 9px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+.rail a:hover, .rail a:focus-visible { color: var(--ink); border-color: var(--line-strong); }
+
+/* ---------- sections ---------- */
+
+section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 56px; }
+
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.45rem, 3vw, 1.95rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+section p { margin: 0; max-width: 68ch; color: var(--ink-soft); }
+section p + p { margin-top: 0.8em; }
+
+code, .c {
+  font-family: var(--mono);
+  font-size: 0.83em;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: var(--ink);
+}
+
+/* ---------- generic grids ---------- */
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+
+/* ---------- figures and diagrams ---------- */
+
+figure {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  padding: 22px 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: auto;
+}
+figure svg { display: block; width: 100%; height: auto; }
+figure.wide svg { min-width: 620px; }
+
+figcaption {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+/* SVG vocabulary — use these classes, never inline fills */
+svg text { font-family: var(--mono); }
+.node { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.4; }
+.node-on { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.4; }
+.node-flat { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1.4; }
+.node-store { fill: var(--surface-2); stroke: var(--accent); stroke-width: 1.4; }
+.node-warn { fill: var(--warn-wash); stroke: var(--warn); stroke-width: 1.4; }
+.zone { fill: none; stroke: var(--line-strong); stroke-width: 1.2; stroke-dasharray: 5 5; }
+.lbl { fill: var(--ink); font-size: 13px; font-weight: 500; }
+.lbl-sm { fill: var(--ink); font-size: 11.5px; font-weight: 500; }
+.sub { fill: var(--muted); font-size: 10.5px; }
+.sub-on { fill: var(--accent); font-size: 10.5px; }
+.sub-warn { fill: var(--warn); font-size: 10.5px; font-weight: 500; }
+.edge { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+.edge-on { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.edge-warn { stroke: var(--warn); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+.edge-dash { stroke: var(--muted); stroke-width: 1.2; fill: none; stroke-dasharray: 4 4; }
+.elabel { fill: var(--muted); font-size: 10.5px; }
+.chip { fill: var(--surface-2); stroke: var(--line); stroke-width: 1; }
+
+/* chart primitives, see reference/charts.md */
+.axis { stroke: var(--line-strong); stroke-width: 1; }
+.gridline { stroke: var(--line); stroke-width: 1; }
+.tick { fill: var(--muted); font-size: 10px; }
+.plot-1 { fill: var(--s1); }
+.plot-2 { fill: var(--s2); }
+.plot-3 { fill: var(--s3); }
+.plot-4 { fill: var(--s4); }
+.plot-5 { fill: var(--s5); }
+.plot-flat { fill: var(--faint); }
+.plot-warn { fill: var(--warn); }
+.line-1 { stroke: var(--s1); stroke-width: 2; fill: none; }
+.line-2 { stroke: var(--s2); stroke-width: 2; fill: none; }
+.line-3 { stroke: var(--s3); stroke-width: 2; fill: none; }
+.line-dash { stroke: var(--faint); stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
+.val { fill: var(--ink); font-size: 10.5px; font-weight: 500; }
+
+/* ---------- stat tiles ---------- */
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--surface); }
+.stat { background: var(--surface); outline: 1px solid var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 3px; }
+.stat .v {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.stat.on .v { color: var(--accent); }
+.stat.warn .v { color: var(--warn); }
+.stat.bad .v { color: var(--bad); }
+.stat .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted); }
+.stat .d { font-size: 0.84rem; color: var(--muted); }
+.stat .d.up { color: var(--accent); }
+.stat .d.down { color: var(--bad); }
+
+/* ---------- horizontal bars (HTML, not SVG) ---------- */
+
+.bars { display: flex; flex-direction: column; gap: 7px; }
+.bar { display: grid; grid-template-columns: minmax(110px, 200px) 1fr auto; gap: 12px; align-items: center; }
+.bar .bl { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.3; }
+.bar .bt { background: var(--surface-2); border: 1px solid var(--line); height: 18px; min-width: 40px; }
+.bar .bt i { display: block; height: 100%; background: var(--accent); }
+.bar.warn .bt i { background: var(--warn); }
+.bar.bad .bt i { background: var(--bad); }
+.bar.flat .bt i { background: var(--faint); }
+.bar .bv { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar.warn .bv { color: var(--warn); }
+
+/* stacked proportion bar */
+.meter { display: flex; height: 22px; border: 1px solid var(--line-strong); overflow: hidden; background: var(--surface-2); }
+.meter i { display: block; height: 100%; }
+.meter i[data-s="1"] { background: var(--s1); }
+.meter i[data-s="2"] { background: var(--s2); }
+.meter i[data-s="3"] { background: var(--s3); }
+.meter i[data-s="4"] { background: var(--s4); }
+.meter i[data-s="5"] { background: var(--s5); }
+.meter i[data-s="0"] { background: var(--faint); }
+.meter i[data-s="warn"] { background: var(--warn); }
+
+/* ---------- key / legend ---------- */
+
+.key {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  font-family: var(--mono); font-size: 11.5px; color: var(--muted); align-items: center;
+}
+.key span { display: inline-flex; align-items: center; gap: 6px; }
+.key i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
+.key i.on { background: var(--accent); }
+.key i.warn { background: var(--warn); }
+.key i.bad { background: var(--bad); }
+.key i.flat { background: var(--faint); }
+.key i.s1 { background: var(--s1); }
+.key i.s2 { background: var(--s2); }
+.key i.s3 { background: var(--s3); }
+.key i.s4 { background: var(--s4); }
+.key i.s5 { background: var(--s5); }
+.key i.hollow { background: none; border: 1.5px solid var(--accent); }
+
+/* ---------- cards, with a yes list and a no list ---------- */
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--accent);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card.secondary { border-top-color: var(--line-strong); }
+.card.warn { border-top-color: var(--warn); }
+.card h3 { font-family: var(--mono); font-weight: 700; font-size: 0.92rem; color: var(--ink); letter-spacing: -0.01em; }
+.card .role { font-family: var(--mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted); display: block; }
+.card p { font-size: 0.9rem; }
+.card ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.card li { font-size: 0.9rem; line-height: 1.45; padding-left: 17px; position: relative; color: var(--ink-soft); }
+.card ul.yes li::before {
+  content: "+"; position: absolute; left: 0; top: -1px;
+  font-family: var(--mono); font-size: 0.85rem; color: var(--accent); font-weight: 700;
+}
+.card ul.no li::before {
+  content: "\00d7"; position: absolute; left: 0; top: -1px;
+  font-family: var(--mono); font-size: 0.9rem; color: var(--warn); font-weight: 700;
+}
+.card .heading { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.card .no-block .heading { color: var(--warn); }
+
+/* ---------- numbered steps ---------- */
+
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
+.steps li { counter-increment: step; position: relative; padding-left: 38px; font-size: 0.95rem; color: var(--ink-soft); max-width: 70ch; }
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 1px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+}
+.steps li b { color: var(--ink); font-weight: 600; }
+.steps li.warn::before { color: var(--warn); border-color: var(--warn); }
+
+/* ---------- inline flow chain ---------- */
+
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; }
+.flow span {
+  background: var(--surface); border: 1px solid var(--line-strong);
+  padding: 5px 10px; border-radius: 2px; color: var(--ink-soft); white-space: nowrap;
+}
+.flow span.on { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+.flow span.warn { background: var(--warn-wash); border-color: var(--warn); color: var(--warn); }
+.flow span + span::before { content: none; }
+.flow .arw { border: none; background: none; padding: 0 2px; color: var(--muted); }
+
+/* ---------- timeline ---------- */
+
+.timeline { margin: 0; padding: 0 0 0 22px; list-style: none; border-left: 1px solid var(--line-strong); display: flex; flex-direction: column; gap: 20px; }
+.timeline li { position: relative; }
+.timeline li::before {
+  content: ""; position: absolute; left: -27px; top: 7px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--ground); border: 2px solid var(--accent);
+}
+.timeline li.warn::before { border-color: var(--warn); }
+.timeline li.flat::before { border-color: var(--line-strong); }
+.timeline .when { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); display: block; }
+.timeline b { display: block; font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink); margin-top: 2px; }
+.timeline p { font-size: 0.92rem; margin-top: 4px; }
+
+/* ---------- side-by-side comparison ---------- */
+
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--surface); }
+.side { background: var(--surface); outline: 1px solid var(--line-strong); border-top: 2px solid transparent; padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.side.on { background: var(--accent-wash); border-top-color: var(--accent); }
+.side.warn { background: var(--warn-wash); border-top-color: var(--warn); }
+.side-head { font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
+.side.on .side-head { color: var(--accent); }
+.side.warn .side-head { color: var(--warn); }
+.side ul { margin: 0; padding-left: 18px; font-size: 0.9rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 5px; }
+.side p { font-size: 0.92rem; }
+
+/* ---------- ledger: label on the left, anything on the right ---------- */
+
+.ledger { border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; }
+.ledger .row { display: grid; grid-template-columns: minmax(140px, 210px) 1fr; gap: 18px; padding: 14px 18px; border-bottom: 1px solid var(--line); align-items: start; }
+.ledger .row:last-child { border-bottom: none; }
+.ledger .row.flat { background: var(--surface-2); }
+.ledger .who { font-family: var(--mono); font-size: 0.85rem; font-weight: 500; color: var(--accent); word-break: break-word; }
+.ledger .row.flat .who { color: var(--muted); }
+.ledger .what { font-size: 0.93rem; color: var(--ink-soft); }
+.ledger .fine { font-size: 0.84rem; color: var(--muted); width: 100%; margin-top: 4px; line-height: 1.5; }
+
+/* ---------- tags ---------- */
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tag {
+  font-family: var(--mono); font-size: 0.78rem;
+  background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 2px;
+  padding: 2.5px 8px; color: var(--ink); white-space: nowrap;
+}
+.tag.on { border-color: var(--accent); color: var(--accent); background: var(--accent-wash); }
+.tag.warn { border-style: dashed; border-color: var(--warn); color: var(--warn); background: var(--warn-wash); }
+.tag.bad { border-color: var(--bad); color: var(--bad); background: var(--bad-wash); }
+
+/* ---------- tables ---------- */
+
+.tbl-wrap { border: 1px solid var(--line-strong); background: var(--surface); overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 600px; }
+th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--line-strong); white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--accent-wash); }
+td.path { font-family: var(--mono); font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+td.num { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.num.up { color: var(--accent); }
+td.num.down { color: var(--bad); }
+td.what { font-size: 0.92rem; color: var(--ink-soft); }
+td.no { font-size: 0.88rem; color: var(--warn); }
+tfoot td, tfoot th { border-top: 1px solid var(--line-strong); border-bottom: none; font-weight: 600; color: var(--ink); }
+
+/* dot matrix */
+table.matrix { font-family: var(--mono); font-size: 11.5px; min-width: 700px; font-variant-numeric: tabular-nums; }
+.matrix th, .matrix td { border-bottom: 1px solid var(--line); padding: 0; }
+.matrix thead th { text-align: center; padding: 12px 4px; font-size: 10px; letter-spacing: 0.06em; vertical-align: bottom; line-height: 1.3; }
+.matrix thead th.rowhead { text-align: left; padding-left: 16px; min-width: 200px; }
+.matrix tbody th { font-weight: 400; text-align: left; padding: 7px 10px 7px 16px; color: var(--ink); white-space: nowrap; }
+.matrix tbody td { text-align: center; width: 64px; }
+.matrix td::after { content: ""; display: inline-block; width: 11px; height: 11px; border-radius: 1px; vertical-align: middle; }
+.matrix .full::after { background: var(--accent); }
+.matrix .part::after { border: 1.5px solid var(--accent); }
+.matrix .both::after { background: var(--accent); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent); }
+.matrix .risk::after { background: var(--warn); }
+.matrix .off::after { border: 1px solid var(--line-strong); }
+.matrix tbody tr:hover .both::after { box-shadow: 0 0 0 2px var(--accent-wash), 0 0 0 3.5px var(--accent); }
+
+/* ---------- annotated tree / outline ---------- */
+
+.tree { border: 1px solid var(--line-strong); background: var(--surface); font-family: var(--mono); font-size: 12.5px; overflow-x: auto; }
+.tree .row { display: grid; grid-template-columns: minmax(190px, 260px) 1fr 56px; gap: 14px; padding: 5px 16px; align-items: baseline; min-width: 560px; }
+.tree .row:hover { background: var(--accent-wash); }
+.tree .row.head {
+  border-bottom: 1px solid var(--line-strong); padding: 10px 16px;
+  font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted);
+}
+.tree .row.head:hover { background: transparent; }
+.tree .row.gap { padding-top: 9px; }
+.tree .p { color: var(--ink); white-space: pre; }
+.tree .p .dim { color: var(--faint); }
+.tree .n { color: var(--muted); font-size: 11.5px; font-family: var(--body); line-height: 1.4; }
+.tree .ct { color: var(--accent); text-align: right; font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.tree .ct.none { color: var(--faint); }
+.tree .row.on .p { color: var(--accent); }
+.tree .row.warn .p { color: var(--warn); }
+.tree .row.flat .p { color: var(--faint); }
+
+/* ---------- callouts ---------- */
+
+.callout, .note, .aside {
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 6px;
+}
+.callout { border-left: 3px solid var(--warn); background: var(--warn-wash); }
+.note { border-left: 3px solid var(--accent); background: var(--accent-wash); }
+.aside { border-left: 3px solid var(--line-strong); background: var(--surface-2); }
+.callout .h, .note .h, .aside .h {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase;
+}
+.callout .h { color: var(--warn); }
+.note .h { color: var(--accent); }
+.aside .h { color: var(--muted); }
+.callout p, .note p, .aside p { font-size: 0.93rem; max-width: 72ch; color: var(--ink-soft); }
+.callout ul, .note ul, .aside ul { margin: 0; padding-left: 20px; font-size: 0.92rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- quote / verbatim evidence ---------- */
+
+.quote { margin: 0; border-left: 3px solid var(--line-strong); padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 8px; }
+.quote p { font-size: 1.02rem; color: var(--ink); max-width: 66ch; }
+.quote cite { font-family: var(--mono); font-size: 11px; font-style: normal; color: var(--muted); letter-spacing: 0.04em; }
+
+/* ---------- code block ---------- */
+
+.codeblock { border: 1px solid var(--line-strong); background: var(--surface); overflow: hidden; }
+.codeblock .cb-head {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.09em;
+  color: var(--muted); padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+}
+.codeblock pre { margin: 0; padding: 14px; overflow-x: auto; }
+.codeblock code {
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+  background: none; border: none; padding: 0; color: var(--ink-soft); white-space: pre;
+}
+
+/* ---------- interactive: tabs ---------- */
+
+.tabs { display: flex; flex-direction: column; gap: 14px; }
+.tabstrip { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line-strong); }
+.tabstrip button {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--muted); padding: 8px 12px; cursor: pointer; margin-bottom: -1px;
+}
+.tabstrip button:hover { color: var(--ink); }
+.tabstrip button.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ---------- interactive: filter chips ---------- */
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px;
+  color: var(--muted); padding: 4px 10px; cursor: pointer;
+}
+.chips button:hover { color: var(--ink); border-color: var(--muted); }
+.chips button.on { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+
+/* ---------- interactive: stepper ---------- */
+
+.stepper { display: flex; flex-direction: column; gap: 14px; }
+.stepnav { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.stepnav button {
+  font-family: var(--mono); font-size: 11.5px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px;
+  color: var(--ink); padding: 5px 12px; cursor: pointer;
+}
+.stepnav button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.stepnav button:disabled { color: var(--faint); cursor: default; }
+
+/* ---------- interactive: disclosure ---------- */
+
+details.disclose { border: 1px solid var(--line-strong); background: var(--surface); }
+details.disclose summary {
+  cursor: pointer; padding: 11px 16px; list-style: none;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--accent);
+}
+details.disclose summary::-webkit-details-marker { display: none; }
+details.disclose summary::before { content: "+ "; font-weight: 700; }
+details.disclose[open] summary::before { content: "\2212 "; }
+details.disclose[open] summary { border-bottom: 1px solid var(--line); }
+details.disclose .body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- colophon ---------- */
+
+.colophon {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 20px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.colophon strong { color: var(--ink); font-weight: 500; }
+
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.contents a:focus-visible { outline-offset: -2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .wrap { padding: 34px 14px 60px; gap: 48px; }
+  figure { padding: 14px 14px 12px; }
+  .ledger .row { grid-template-columns: 1fr; gap: 8px; }
+  .bar { grid-template-columns: 1fr auto; }
+  .bar .bt { grid-column: 1 / -1; }
+}
+
+
+/* Page-specific diagram vocabulary. Base stylesheet above is inlined verbatim. */
+.wrap { gap: 42px; }
+.masthead { gap: 12px; }
+.tabs { min-width: 0; }
+.tabstrip { overflow-x: auto; flex-wrap: nowrap; scrollbar-color: var(--line-strong) var(--surface-2); }
+.tabstrip button { flex: 0 0 auto; }
+[data-panel] { min-width: 0; }
+[data-panel] .sec-head { margin-bottom: 2px; }
+.system-figure { scrollbar-color: var(--line-strong) var(--surface-2); }
+.system-figure svg { min-width: 780px; }
+.system-figure.compact svg { min-width: 700px; }
+.node-task { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.7; }
+.node-spec { fill: color-mix(in srgb, var(--s2) 13%, var(--surface)); stroke: var(--s2); stroke-width: 1.6; }
+.node-agent { fill: color-mix(in srgb, var(--s4) 13%, var(--surface)); stroke: var(--s4); stroke-width: 1.6; }
+.node-neutral { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1.5; }
+.node-gap { fill: var(--warn-wash); stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.zone-spec { fill: none; stroke: var(--s2); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone-agent { fill: none; stroke: var(--s4); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.edge-task { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+.edge-spec { stroke: var(--s2); stroke-width: 1.7; fill: none; }
+.edge-agent { stroke: var(--s4); stroke-width: 1.7; fill: none; }
+.edge-neutral { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.edge-gap { stroke: var(--warn); stroke-width: 1.7; fill: none; stroke-dasharray: 5 4; }
+.sub-spec { fill: var(--s2); font-size: 10.5px; font-weight: 500; }
+.sub-agent { fill: var(--s4); font-size: 10.5px; font-weight: 500; }
+.lbl-gap { fill: var(--warn); font-size: 11px; font-weight: 700; }
+svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
+.colophon { margin-top: 8px; }
+::selection { background: var(--accent-wash); color: var(--ink); }
+@media (max-width: 640px) {
+  .wrap { gap: 34px; }
+  h1 { font-size: 2.25rem; }
+  .tabstrip { padding-bottom: 2px; }
+  .system-figure svg { min-width: 720px; }
+  .system-figure.compact svg { min-width: 660px; }
+}
+
+</style>
+
+<main class="wrap">
+  <header class="masthead">
+    <h1>Task is the system hub</h1>
+    <p class="thesis">Specs name the work, the Coordinator moves it, and Task keeps the thread.</p>
+  </header>
+
+  <div class="tabs" data-tabs>
+    <div class="tabstrip" role="tablist" aria-label="System views">
+      <button id="tab-fit" role="tab" aria-controls="panel-fit" data-tab="fit" class="on" aria-selected="true">How it fits</button>
+      <button id="tab-task" role="tab" aria-controls="panel-task" data-tab="task" aria-selected="false">Task</button>
+      <button id="tab-spec" role="tab" aria-controls="panel-spec" data-tab="spec" aria-selected="false">Spec and tickets</button>
+      <button id="tab-orchestration" role="tab" aria-controls="panel-orchestration" data-tab="orchestration" aria-selected="false">Orchestration</button>
+      <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false">Missing · 4 gaps + 1 decision</button>
+    </div>
+
+    <section id="panel-fit" role="tabpanel" aria-labelledby="tab-fit" data-panel="fit">
+      <div class="sec-head"><h2>One task carries the work through every handoff</h2></div>
+      <figure class="system-figure">
+        <div class="key" aria-label="System color key">
+          <span><i class="on"></i>Task</span><span><i class="s2"></i>Spec and tickets</span><span><i class="s4"></i>Coordinator and subagents</span><span><i class="flat"></i>Lucy and run artifacts</span>
+        </div>
+        <svg viewBox="0 0 1040 740" role="img" aria-label="Task links the operator's chosen spec or ticket to the Coordinator, nested subagents, run artifacts, and Lucy.">
+          <defs>
+            <marker id="fit-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+            <marker id="fit-task" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+            <marker id="fit-spec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
+            <marker id="fit-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
+          </defs>
+
+          <rect class="node-neutral" x="55" y="34" width="205" height="64" rx="9"/>
+          <text class="lbl" x="157" y="62" text-anchor="middle">Operator</text>
+          <text class="sub" x="157" y="82" text-anchor="middle">chooses what is in play</text>
+
+          <rect class="node-spec" x="455" y="25" width="345" height="58" rx="8"/>
+          <text class="lbl" x="475" y="59">Spec 1</text>
+          <text class="sub-spec" x="780" y="59" text-anchor="end">lone spec</text>
+
+          <rect class="zone-spec" x="455" y="105" width="345" height="176" rx="12"/>
+          <text class="lbl" x="475" y="136">Spec 2</text>
+          <rect class="node-spec" x="482" y="154" width="292" height="48" rx="8"/>
+          <text class="lbl-sm" x="628" y="183" text-anchor="middle">Ticket 1</text>
+          <rect class="node-spec" x="482" y="216" width="292" height="48" rx="8"/>
+          <text class="lbl-sm" x="628" y="245" text-anchor="middle">Ticket 2</text>
+
+          <rect class="node-neutral" x="842" y="92" width="160" height="72" rx="9"/>
+          <text class="lbl" x="922" y="122" text-anchor="middle">Lucy</text>
+          <text class="sub" x="922" y="143" text-anchor="middle">watch + parent control</text>
+
+          <rect class="node-task" x="90" y="232" width="260" height="72" rx="9"/>
+          <text class="lbl" x="220" y="262" text-anchor="middle">Task</text>
+          <text class="sub-on" x="220" y="283" text-anchor="middle">unit of work · shared memory</text>
+
+          <rect class="node-agent" x="70" y="395" width="730" height="70" rx="10"/>
+          <text class="lbl" x="435" y="425" text-anchor="middle">Coordinator</text>
+          <text class="sub-agent" x="435" y="446" text-anchor="middle">briefs lanes · integrates evidence</text>
+
+          <rect class="node-agent" x="90" y="540" width="190" height="62" rx="10"/>
+          <text class="lbl-sm" x="185" y="568" text-anchor="middle">Agent1</text>
+          <text class="sub-agent" x="185" y="587" text-anchor="middle">owned path</text>
+          <rect class="node-agent" x="328" y="540" width="190" height="62" rx="10"/>
+          <text class="lbl-sm" x="423" y="568" text-anchor="middle">Agent2</text>
+          <text class="sub-agent" x="423" y="587" text-anchor="middle">owned path</text>
+          <rect class="node-agent" x="566" y="540" width="190" height="62" rx="10"/>
+          <text class="lbl-sm" x="661" y="568" text-anchor="middle">Agent3</text>
+          <text class="sub-agent" x="661" y="587" text-anchor="middle">owned path</text>
+          <rect class="node-agent" x="90" y="652" width="190" height="58" rx="10"/>
+          <text class="lbl-sm" x="185" y="686" text-anchor="middle">Agent1.1</text>
+
+          <rect class="node-neutral" x="825" y="505" width="180" height="118" rx="9"/>
+          <text class="lbl-sm" x="915" y="535" text-anchor="middle">Run artifacts</text>
+          <text class="sub" x="915" y="559" text-anchor="middle">status · events</text>
+          <text class="sub" x="915" y="579" text-anchor="middle">outputs · receipts</text>
+          <text class="sub" x="915" y="599" text-anchor="middle">evidence</text>
+
+          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M157,98 V232"/>
+          <text class="elabel" x="169" y="172">sets the work</text>
+          <path class="edge-task" marker-end="url(#fit-task)" d="M350,258 H398 V72 H455"/>
+          <text class="sub-on" x="362" y="246">references whichever</text>
+          <text class="sub-on" x="410" y="90">spec or ticket is in play</text>
+          <path class="edge-task" marker-start="url(#fit-task)" marker-end="url(#fit-task)" d="M220,304 V395"/>
+          <text class="sub-on" x="232" y="342">context ↓</text>
+          <text class="sub-on" x="232" y="362">handoff ↑</text>
+
+          <path class="edge-agent" d="M120,465 V500 H720 V465"/>
+          <path class="edge-agent" marker-end="url(#fit-agent)" d="M185,500 V540"/>
+          <path class="edge-agent" marker-end="url(#fit-agent)" d="M423,500 V540"/>
+          <path class="edge-agent" marker-end="url(#fit-agent)" d="M661,500 V540"/>
+          <path class="edge-agent" marker-end="url(#fit-agent)" d="M120,602 V681 H90"/>
+          <text class="sub-agent" x="106" y="635">nested</text>
+          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M756,571 H825"/>
+          <text class="elabel" x="789" y="558" text-anchor="middle">emit</text>
+          <path class="edge-neutral" marker-start="url(#fit-neutral)" marker-end="url(#fit-neutral)" d="M922,164 V350 H800"/>
+          <text class="elabel" x="934" y="230">observe</text>
+          <text class="elabel" x="934" y="250">control parent</text>
+          <path class="edge-neutral" marker-end="url(#fit-neutral)" d="M915,505 V164"/>
+          <text class="elabel" x="826" y="474">Lucy reads live run state</text>
+        </svg>
+        <figcaption>Task links the operator's chosen spec or ticket to the Coordinator, nested subagents, run artifacts, and Lucy.</figcaption>
+      </figure>
+    </section>
+
+    <section id="panel-task" role="tabpanel" aria-labelledby="tab-task" data-panel="task" hidden>
+      <div class="sec-head"><h2>Attachment turns a task into live session context</h2></div>
+      <figure class="system-figure compact">
+        <svg viewBox="0 0 980 660" role="img" aria-label="The task picker attaches shared repository memory; attachment injects compact state each turn and enables task_log and task_read.">
+          <defs>
+            <marker id="task-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+            <marker id="task-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+          </defs>
+
+          <rect class="node-neutral" x="35" y="42" width="235" height="240" rx="9"/>
+          <text class="lbl" x="55" y="72">/task picker</text>
+          <text class="sub" x="55" y="102">new · attach · detach</text>
+          <text class="sub" x="55" y="126">status · references · done</text>
+          <text class="sub" x="55" y="150">show inactive</text>
+          <rect class="node-task" x="55" y="188" width="195" height="64" rx="8"/>
+          <text class="lbl-sm" x="152" y="216" text-anchor="middle">attach to session</text>
+          <text class="sub-on" x="152" y="236" text-anchor="middle">one current task</text>
+
+          <rect class="node-task" x="370" y="56" width="260" height="120" rx="10"/>
+          <text class="lbl" x="500" y="88" text-anchor="middle">Attached task</text>
+          <text class="sub-on" x="500" y="113" text-anchor="middle">title · objective · refs</text>
+          <text class="sub-on" x="500" y="134" text-anchor="middle">latest handoff · recent changes</text>
+          <text class="sub" x="500" y="157" text-anchor="middle">compact state injected each turn</text>
+
+          <rect class="node-neutral" x="718" y="45" width="225" height="145" rx="9"/>
+          <text class="lbl-sm" x="830" y="76" text-anchor="middle">Session tools</text>
+          <rect class="node-task" x="743" y="97" width="80" height="54" rx="7"/>
+          <text class="lbl-sm" x="783" y="129" text-anchor="middle">task_log</text>
+          <rect class="node-task" x="838" y="97" width="80" height="54" rx="7"/>
+          <text class="lbl-sm" x="878" y="129" text-anchor="middle">task_read</text>
+          <text class="sub" x="830" y="176" text-anchor="middle">appear only while attached</text>
+
+          <rect class="node-task" x="248" y="330" width="480" height="265" rx="11"/>
+          <text class="lbl" x="488" y="363" text-anchor="middle">.git/pi/task-log/tasks</text>
+          <text class="sub-on" x="488" y="385" text-anchor="middle">canonical store shared across worktrees</text>
+          <line class="edge-task" x1="278" y1="410" x2="698" y2="410"/>
+          <text class="lbl-sm" x="278" y="442">status</text>
+          <rect class="chip" x="360" y="423" width="78" height="32" rx="5"/><text class="sub" x="399" y="444" text-anchor="middle">active</text>
+          <rect class="chip" x="448" y="423" width="82" height="32" rx="5"/><text class="sub" x="489" y="444" text-anchor="middle">waiting</text>
+          <rect class="chip" x="540" y="423" width="78" height="32" rx="5"/><text class="sub" x="579" y="444" text-anchor="middle">paused</text>
+          <rect class="chip" x="628" y="423" width="62" height="32" rx="5"/><text class="sub" x="659" y="444" text-anchor="middle">done</text>
+          <text class="lbl-sm" x="278" y="500">append-only log</text>
+          <rect class="chip" x="278" y="521" width="88" height="34" rx="5"/><text class="sub" x="322" y="543" text-anchor="middle">decision</text>
+          <rect class="chip" x="376" y="521" width="82" height="34" rx="5"/><text class="sub" x="417" y="543" text-anchor="middle">context</text>
+          <rect class="chip" x="468" y="521" width="78" height="34" rx="5"/><text class="sub" x="507" y="543" text-anchor="middle">commit</text>
+          <rect class="chip" x="556" y="521" width="82" height="34" rx="5"/><text class="sub" x="597" y="543" text-anchor="middle">blocker</text>
+          <rect class="chip" x="648" y="521" width="55" height="34" rx="5"/><text class="sub" x="675" y="543" text-anchor="middle">next</text>
+          <rect class="chip" x="424" y="566" width="128" height="34" rx="5"/><text class="sub" x="488" y="588" text-anchor="middle">handoff</text>
+
+          <path class="edge-task" marker-end="url(#task-accent)" d="M270,220 H320 V116 H370"/>
+          <path class="edge-task" marker-end="url(#task-accent)" d="M630,116 H718"/>
+          <text class="sub-on" x="674" y="103" text-anchor="middle">enables</text>
+          <path class="edge-task" marker-start="url(#task-accent)" marker-end="url(#task-accent)" d="M500,176 V330"/>
+          <text class="sub-on" x="512" y="244">read state ↑</text>
+          <text class="sub-on" x="512" y="265">append entries ↓</text>
+          <path class="edge-neutral" marker-end="url(#task-neutral)" d="M35,615 H943"/>
+          <text class="elabel" x="489" y="640" text-anchor="middle">all worktrees resolve to the same repository store</text>
+        </svg>
+        <figcaption>The task picker attaches shared repository memory; attachment injects compact state each turn and enables task_log and task_read.</figcaption>
+      </figure>
+    </section>
+
+    <section id="panel-spec" role="tabpanel" aria-labelledby="tab-spec" data-panel="spec" hidden>
+      <div class="sec-head"><h2>Small specs stay whole; large specs become linked tickets</h2></div>
+      <figure class="system-figure compact">
+        <svg viewBox="0 0 980 650" role="img" aria-label="A small spec can remain one tracker artifact, while a large spec becomes tracer-bullet tickets published as local files or tracker issues with blocking edges; both attach a path or URL to Task.">
+          <defs>
+            <marker id="spec-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
+            <marker id="spec-task-ref" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/></marker>
+          </defs>
+
+          <text class="sub-spec" x="225" y="38" text-anchor="middle">SMALL</text>
+          <rect class="node-spec" x="55" y="60" width="175" height="66" rx="9"/>
+          <text class="lbl-sm" x="142" y="88" text-anchor="middle">/to-spec</text>
+          <text class="sub-spec" x="142" y="108" text-anchor="middle">publish to tracker</text>
+          <rect class="node-spec" x="300" y="60" width="270" height="66" rx="9"/>
+          <text class="lbl" x="435" y="89" text-anchor="middle">Spec 1</text>
+          <text class="sub-spec" x="435" y="109" text-anchor="middle">tracker issue · not a runtime object</text>
+          <path class="edge-spec" marker-end="url(#spec-blue)" d="M230,93 H300"/>
+          <text class="sub-spec" x="265" y="81" text-anchor="middle">writes</text>
+          <text class="sub" x="435" y="151" text-anchor="middle">no tickets needed</text>
+
+          <text class="sub-spec" x="730" y="38" text-anchor="middle">BIG</text>
+          <rect class="node-spec" x="628" y="60" width="170" height="66" rx="9"/>
+          <text class="lbl-sm" x="713" y="88" text-anchor="middle">/to-tickets</text>
+          <text class="sub-spec" x="713" y="108" text-anchor="middle">split + publish</text>
+          <rect class="zone-spec" x="610" y="172" width="320" height="238" rx="12"/>
+          <text class="lbl" x="634" y="204">Spec 2</text>
+          <text class="sub-spec" x="906" y="204" text-anchor="end">local files or tracker issues</text>
+          <rect class="node-spec" x="640" y="232" width="260" height="60" rx="9"/>
+          <text class="lbl-sm" x="770" y="259" text-anchor="middle">Ticket 1</text>
+          <text class="sub-spec" x="770" y="279" text-anchor="middle">tracer bullet · starts now</text>
+          <rect class="node-spec" x="640" y="326" width="260" height="60" rx="9"/>
+          <text class="lbl-sm" x="770" y="353" text-anchor="middle">Ticket 2</text>
+          <text class="sub-spec" x="770" y="373" text-anchor="middle">tracer bullet · blocked by Ticket 1</text>
+          <path class="edge-spec" marker-end="url(#spec-blue)" d="M713,126 V172"/>
+          <path class="edge-spec" marker-end="url(#spec-blue)" d="M770,292 V326"/>
+          <text class="sub-spec" x="782" y="314">blocking edge</text>
+
+          <rect class="node-task" x="250" y="500" width="480" height="92" rx="11"/>
+          <text class="lbl" x="490" y="534" text-anchor="middle">Task</text>
+          <text class="sub-on" x="490" y="558" text-anchor="middle">reference: path or URL</text>
+          <text class="sub" x="490" y="579" text-anchor="middle">body stays in the published artifact</text>
+          <path class="edge-task" marker-end="url(#spec-task-ref)" d="M435,126 V466 H390 V500"/>
+          <path class="edge-task" marker-end="url(#spec-task-ref)" d="M770,410 V466 H590 V500"/>
+          <text class="sub-on" x="490" y="454" text-anchor="middle">either published result attaches as a reference</text>
+        </svg>
+        <figcaption>A small spec can remain one tracker artifact, while a large spec becomes tracer-bullet tickets published as local files or tracker issues with blocking edges; both attach a path or URL to Task.</figcaption>
+      </figure>
+    </section>
+
+    <section id="panel-orchestration" role="tabpanel" aria-labelledby="tab-orchestration" data-panel="orchestration" hidden>
+      <div class="sec-head"><h2>The Coordinator gives each lane a boundary and takes evidence back</h2></div>
+      <figure class="system-figure compact">
+        <svg viewBox="0 0 980 650" role="img" aria-label="The Coordinator assigns path-owned lanes to subagents, receives evidence, permits bounded nesting, and stays visible to Lucy through run artifacts and parent-session controls.">
+          <defs>
+            <marker id="orch-agent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
+            <marker id="orch-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+          </defs>
+
+          <rect class="zone-agent" x="40" y="35" width="700" height="570" rx="12"/>
+          <text class="sub-agent" x="60" y="61">parent session</text>
+          <rect class="node-agent" x="75" y="92" width="630" height="82" rx="10"/>
+          <text class="lbl" x="390" y="125" text-anchor="middle">Coordinator</text>
+          <text class="sub-agent" x="390" y="149" text-anchor="middle">writes briefs · assigns paths · integrates results</text>
+
+          <rect class="node-agent" x="72" y="310" width="175" height="82" rx="10"/>
+          <text class="lbl-sm" x="159" y="340" text-anchor="middle">Agent1</text>
+          <text class="sub-agent" x="159" y="362" text-anchor="middle">lane: path A</text>
+          <text class="sub" x="159" y="380" text-anchor="middle">returns diff + checks</text>
+          <rect class="node-agent" x="285" y="310" width="175" height="82" rx="10"/>
+          <text class="lbl-sm" x="372" y="340" text-anchor="middle">Agent2</text>
+          <text class="sub-agent" x="372" y="362" text-anchor="middle">lane: path B</text>
+          <text class="sub" x="372" y="380" text-anchor="middle">returns findings</text>
+          <rect class="node-agent" x="498" y="310" width="175" height="82" rx="10"/>
+          <text class="lbl-sm" x="585" y="340" text-anchor="middle">Agent3</text>
+          <text class="sub-agent" x="585" y="362" text-anchor="middle">lane: path C</text>
+          <text class="sub" x="585" y="380" text-anchor="middle">returns validation</text>
+          <rect class="node-agent" x="72" y="500" width="175" height="68" rx="10"/>
+          <text class="lbl-sm" x="159" y="529" text-anchor="middle">Agent1.1</text>
+          <text class="sub-agent" x="159" y="550" text-anchor="middle">nested when allowed</text>
+
+          <path class="edge-agent" d="M110,174 V245 H635 V174"/>
+          <path class="edge-agent" marker-start="url(#orch-agent-arrow)" marker-end="url(#orch-agent-arrow)" d="M159,245 V310"/>
+          <path class="edge-agent" marker-start="url(#orch-agent-arrow)" marker-end="url(#orch-agent-arrow)" d="M372,245 V310"/>
+          <path class="edge-agent" marker-start="url(#orch-agent-arrow)" marker-end="url(#orch-agent-arrow)" d="M585,245 V310"/>
+          <text class="sub-agent" x="390" y="228" text-anchor="middle">brief + owned path ↓ / evidence ↑</text>
+          <path class="edge-agent" marker-end="url(#orch-agent-arrow)" d="M159,392 V500"/>
+          <text class="sub-agent" x="171" y="452">child can delegate</text>
+
+          <rect class="node-neutral" x="790" y="62" width="155" height="78" rx="9"/>
+          <text class="lbl" x="867" y="94" text-anchor="middle">Lucy</text>
+          <text class="sub" x="867" y="116" text-anchor="middle">observe + control</text>
+          <rect class="node-neutral" x="775" y="270" width="180" height="152" rx="9"/>
+          <text class="lbl-sm" x="865" y="302" text-anchor="middle">Run artifacts</text>
+          <text class="sub" x="865" y="330" text-anchor="middle">status · events</text>
+          <text class="sub" x="865" y="352" text-anchor="middle">outputs · receipts</text>
+          <text class="sub" x="865" y="374" text-anchor="middle">supervisor requests</text>
+          <text class="sub" x="865" y="402" text-anchor="middle">execution evidence</text>
+          <path class="edge-neutral" marker-start="url(#orch-neutral-arrow)" marker-end="url(#orch-neutral-arrow)" d="M705,133 H757 V101 H790"/>
+          <text class="elabel" x="750" y="88" text-anchor="middle">parent controls</text>
+          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M673,351 H775"/>
+          <text class="elabel" x="724" y="338" text-anchor="middle">emit</text>
+          <path class="edge-neutral" marker-end="url(#orch-neutral-arrow)" d="M865,270 V140"/>
+          <text class="elabel" x="877" y="210">Lucy reads</text>
+        </svg>
+        <figcaption>The Coordinator assigns path-owned lanes to subagents, receives evidence, permits bounded nesting, and stays visible to Lucy through run artifacts and parent-session controls.</figcaption>
+      </figure>
+    </section>
+
+    <section id="panel-missing" role="tabpanel" aria-labelledby="tab-missing" data-panel="missing" hidden>
+      <div class="sec-head"><h2>Four gaps remain; child detachment is by design</h2></div>
+      <figure class="system-figure">
+        <div class="key" aria-label="System, gap, and design decision color key">
+          <span><i class="on"></i>Task</span><span><i class="s2"></i>Spec and tickets</span><span><i class="s4"></i>Coordination</span><span><i class="flat"></i>Lucy and runs</span><span><i class="warn"></i>Missing link</span><span><i class="hollow"></i>By design</span>
+        </div>
+        <svg viewBox="0 0 1040 760" role="img" aria-label="Four orange gaps show missing reference types, current-ticket state, automatic run evidence links, and Lucy task visibility. Child task detachment is by design because the brief carries everything the child needs.">
+          <defs>
+            <marker id="missing-warn-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--warn)"/></marker>
+            <marker id="missing-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+          </defs>
+
+          <rect class="node-spec" x="420" y="35" width="340" height="65" rx="9"/>
+          <text class="lbl" x="590" y="63" text-anchor="middle">Spec 1</text>
+          <text class="sub-spec" x="590" y="83" text-anchor="middle">document or tracker issue</text>
+          <rect class="zone-spec" x="420" y="122" width="340" height="150" rx="11"/>
+          <text class="lbl" x="442" y="151">Spec 2</text>
+          <rect class="node-spec" x="448" y="168" width="132" height="76" rx="8"/>
+          <text class="lbl-sm" x="514" y="198" text-anchor="middle">Ticket 1</text>
+          <rect class="node-spec" x="600" y="168" width="132" height="76" rx="8"/>
+          <text class="lbl-sm" x="666" y="198" text-anchor="middle">Ticket 2</text>
+
+          <rect class="node-task" x="70" y="202" width="240" height="76" rx="9"/>
+          <text class="lbl" x="190" y="234" text-anchor="middle">Task</text>
+          <text class="sub-on" x="190" y="256" text-anchor="middle">refs: string[]</text>
+          <path class="edge-gap" marker-end="url(#missing-warn-arrow)" d="M310,231 H365 V68 H420"/>
+          <rect class="node-gap" x="42" y="28" width="330" height="92" rx="9"/>
+          <text class="lbl-gap" x="62" y="57">Reference has no type</text>
+          <text class="sub-warn" x="62" y="80">plain text cannot distinguish</text>
+          <text class="sub-warn" x="62" y="100">spec · ticket · artifact</text>
+          <path class="edge-gap" d="M190,120 V202"/>
+
+          <rect class="node-gap" x="790" y="165" width="220" height="86" rx="9"/>
+          <text class="lbl-gap" x="810" y="196">No current ticket</text>
+          <text class="sub-warn" x="810" y="219">Task cannot name which</text>
+          <text class="sub-warn" x="810" y="238">ticket is being worked</text>
+          <path class="edge-gap" d="M790,208 H732"/>
+
+          <rect class="node-agent" x="60" y="350" width="700" height="68" rx="10"/>
+          <text class="lbl" x="410" y="379" text-anchor="middle">Coordinator</text>
+          <text class="sub-agent" x="410" y="399" text-anchor="middle">carries task context into each brief</text>
+          <path class="edge-neutral" marker-end="url(#missing-neutral-arrow)" d="M190,278 V350"/>
+
+          <rect class="node-agent" x="75" y="515" width="180" height="66" rx="9"/>
+          <text class="lbl-sm" x="165" y="544" text-anchor="middle">Agent1</text>
+          <text class="sub-agent" x="165" y="564" text-anchor="middle">briefed child</text>
+          <rect class="node-agent" x="290" y="515" width="180" height="66" rx="9"/>
+          <text class="lbl-sm" x="380" y="544" text-anchor="middle">Agent2</text>
+          <text class="sub-agent" x="380" y="564" text-anchor="middle">briefed child</text>
+          <rect class="node-agent" x="505" y="515" width="180" height="66" rx="9"/>
+          <text class="lbl-sm" x="595" y="544" text-anchor="middle">Agent3</text>
+          <text class="sub-agent" x="595" y="564" text-anchor="middle">briefed child</text>
+          <path class="edge-agent" d="M105,418 V468 H640 V418"/>
+          <path class="edge-agent" d="M165,468 V515 M380,468 V515 M595,468 V515"/>
+
+          <rect class="node-on" x="62" y="625" width="430" height="105" rx="9"/>
+          <text class="lbl" x="82" y="655">Child task detachment</text>
+          <text class="sub-on" x="82" y="679">by design</text>
+          <text class="sub-on" x="82" y="700">the brief carries everything the child needs</text>
+          <path class="edge-task" d="M165,581 V625"/>
+
+          <rect class="node-neutral" x="805" y="360" width="190" height="92" rx="9"/>
+          <text class="lbl" x="900" y="392" text-anchor="middle">Lucy</text>
+          <text class="sub" x="900" y="416" text-anchor="middle">parent sessions</text>
+          <text class="sub" x="900" y="436" text-anchor="middle">task: not shown</text>
+          <rect class="node-gap" x="788" y="275" width="220" height="64" rx="9"/>
+          <text class="lbl-gap" x="808" y="304">Lucy does not show attached Task</text>
+          <text class="sub-warn" x="808" y="325">session view has no task</text>
+          <path class="edge-gap" d="M900,339 V360"/>
+
+          <rect class="node-neutral" x="760" y="558" width="245" height="78" rx="9"/>
+          <text class="lbl-sm" x="882" y="589" text-anchor="middle">Runs · events · receipts</text>
+          <text class="sub" x="882" y="614" text-anchor="middle">no automatic task backlink</text>
+          <path class="edge-neutral" marker-end="url(#missing-neutral-arrow)" d="M685,548 H760"/>
+          <rect class="node-gap" x="690" y="658" width="318" height="72" rx="9"/>
+          <text class="lbl-gap" x="710" y="684">Coordinator records evidence by hand</text>
+          <text class="sub-warn" x="710" y="704">run ID + artifact path</text>
+          <text class="sub-warn" x="710" y="722">so evidence can be lost</text>
+          <path class="edge-gap" d="M882,636 V658"/>
+        </svg>
+        <figcaption>Four orange gaps show missing reference types, current-ticket state, automatic run evidence links, and Lucy task visibility. Child task detachment is by design because the brief carries everything the child needs.</figcaption>
+      </figure>
+    </section>
+  </div>
+
+  <footer class="colophon">
+    <div><strong>Built from:</strong> Task log source, /to-spec and /to-tickets, pi-subagents docs, coordinator policy, and Lucy's README.</div>
+    <div><strong>Next discussion:</strong> <a href="https://mega.dev/autonomous-product-development#drop-gate-inline">Autonomous product development</a> · <a href="https://mega.dev/ai-changed-programming">AI changed programming</a> · <a href="https://mega.dev/wrong-about-mcps">Wrong about MCPs</a>.</div>
+  </footer>
+</main>
+
+<script>
+/* ============================================================
+   visualize — interactive behaviours.
+
+   Inline verbatim into a <script> block at the end of the page,
+   and ONLY if the page actually uses [data-tabs], [data-filter]
+   or [data-stepper]. A static page ships no script.
+
+   No dependencies, no network, no innerHTML. Safe to run twice.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+
+  /* ---- tabs -------------------------------------------------
+     <div class="tabs" data-tabs>
+       <div class="tabstrip" role="tablist">
+         <button data-tab="a" class="on" aria-selected="true">A</button>
+         <button data-tab="b" aria-selected="false">B</button>
+       </div>
+       <div data-panel="a">…</div>
+       <div data-panel="b" hidden>…</div>
+     </div>                                                    */
+  each(document.querySelectorAll("[data-tabs]"), function (root) {
+    root.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-tab]");
+      if (!btn || !root.contains(btn)) return;
+      var name = btn.getAttribute("data-tab");
+      each(root.querySelectorAll("[data-tab]"), function (b) {
+        var on = b === btn;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      each(root.querySelectorAll("[data-panel]"), function (p) {
+        p.hidden = p.getAttribute("data-panel") !== name;
+      });
+    });
+  });
+
+  /* ---- filter chips -----------------------------------------
+     <div class="chips" data-filter="#grid">
+       <button data-tag="*" class="on">All</button>
+       <button data-tag="risk">Risk</button>
+     </div>
+     <span data-filter-count>12</span> shown
+     <div id="grid"><article data-tags="risk cost">…</article></div>  */
+  each(document.querySelectorAll("[data-filter]"), function (bar) {
+    var target = document.querySelector(bar.getAttribute("data-filter"));
+    if (!target) return;
+    var items = target.querySelectorAll("[data-tags]");
+    var count = document.querySelector("[data-filter-count]");
+    bar.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-tag]");
+      if (!btn || !bar.contains(btn)) return;
+      var tag = btn.getAttribute("data-tag");
+      each(bar.querySelectorAll("[data-tag]"), function (b) { b.classList.toggle("on", b === btn); });
+      var shown = 0;
+      each(items, function (el) {
+        var hit = tag === "*" ||
+          (" " + (el.getAttribute("data-tags") || "") + " ").indexOf(" " + tag + " ") > -1;
+        el.hidden = !hit;
+        if (hit) shown++;
+      });
+      if (count) count.textContent = String(shown);
+    });
+  });
+
+  /* ---- stepper ----------------------------------------------
+     <div class="stepper" data-stepper>
+       <div data-step>…</div>
+       <div data-step hidden>…</div>
+       <div class="stepnav">
+         <button data-prev>Back</button>
+         <span data-pos></span>
+         <button data-next>Next</button>
+       </div>
+     </div>                                                    */
+  each(document.querySelectorAll("[data-stepper]"), function (root) {
+    var steps = Array.prototype.slice.call(root.querySelectorAll("[data-step]"));
+    if (!steps.length) return;
+    var pos = root.querySelector("[data-pos]");
+    var prev = root.querySelector("[data-prev]");
+    var next = root.querySelector("[data-next]");
+    var i = 0;
+    function draw() {
+      steps.forEach(function (s, n) { s.hidden = n !== i; });
+      if (pos) pos.textContent = (i + 1) + " / " + steps.length;
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === steps.length - 1;
+    }
+    if (prev) prev.addEventListener("click", function () { if (i > 0) { i--; draw(); } });
+    if (next) next.addEventListener("click", function () { if (i < steps.length - 1) { i++; draw(); } });
+    draw();
+  });
+})();
+
+</script>

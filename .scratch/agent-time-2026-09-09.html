@@ -1,0 +1,903 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Pi sessions 2026-09-09 to 2026-09-09</title>
+<style>
+:root{--ink:#17212b;--muted:#607080;--line:#d9e0e6;--paper:#fff;--wash:#f4f6f8}*{box-sizing:border-box}
+body{margin:0;background:var(--wash);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:auto;padding:24px}h1{margin:0 0 4px;font-size:28px}h2{margin-top:34px;border-bottom:1px solid var(--line);padding-bottom:7px}
+.sub{color:var(--muted)}.metric-card{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:14px;margin:10px 0}
+.metric-card h3{margin:0 0 5px}.numbers{margin-bottom:10px}.bar{height:18px;display:flex;overflow:hidden;background:#e9edf0;border-radius:4px}
+.bar span{display:block;min-width:1px}.legend{display:flex;flex-wrap:wrap;gap:5px 13px;margin:7px 0;color:var(--muted);font-size:12px}
+.legend i{display:inline-block;width:9px;height:9px;margin-right:4px;border-radius:2px}.taxonomy{font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:10px}.grid .metric-card{margin:0}
+.summary{display:flex;gap:20px;flex-wrap:wrap;background:#17212b;color:white;padding:16px;border-radius:7px}.summary b{font-size:22px}
+.table-wrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:7px}table{border-collapse:collapse;width:100%;min-width:850px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{position:sticky;top:0;background:#edf1f4}
+.session-card,.phase-card{background:white;border:1px solid var(--line);border-radius:7px;padding:14px;margin:12px 0}.session-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.session-head h3,.phase-card h3{margin:0 0 3px}.session-head>b{font-size:20px;white-space:nowrap}.session-numbers{margin:10px 0}.split-bar{height:14px}
+.gantt{margin-top:12px;border-top:1px solid var(--line);padding-top:7px}.gantt-row{display:grid;grid-template-columns:190px minmax(0,1fr);gap:8px;align-items:center;min-height:21px}
+.gantt-label{font:11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.agent-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.gantt-track{position:relative;height:12px;background:#edf1f4;border-radius:2px;overflow:hidden}.gantt-run{position:absolute;top:1px;height:10px;min-width:2px;border-radius:2px}.gantt-run.failed{background-image:repeating-linear-gradient(135deg,transparent 0 4px,rgba(0,0,0,.55) 4px 6px)!important;outline:1px solid #9b1c1c;outline-offset:-1px}
+.phase-card{margin:0}.phase-card .bar{margin-top:8px}.two-tables{display:grid;grid-template-columns:1fr 1fr;gap:10px}.two-tables table{min-width:0}
+code{font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}footer{color:var(--muted);margin:25px 0}@media(max-width:700px){main{padding:12px}.grid,.two-tables{grid-template-columns:1fr}.gantt-row{grid-template-columns:130px minmax(0,1fr)}}
+</style></head><body><main><h1>Pi sessions 2026-09-09 to 2026-09-09</h1>
+<p class="sub">15 artifact-date parent sessions · 18 activity-date sessions · source /Users/jakubszwajka/.pi/agent/sessions</p>
+<h2>Level 1 · all child agents</h2><section class="metric-card">
+<h3>All child runs</h3>
+<div class="numbers"><b>110</b> runs · <b>27</b> failed (24.5%) · <b>936.9</b> wall min<br>
+median 5.8 · p90 20.4 · max 50.8 min · $157.34 · 2107 turns</div>
+<div class="bar"><span title="model_stall: 254.6 min" style="width:62.201%;background:#ef8354"></span><span title="bash: 114.3 min" style="width:27.923%;background:#4f86c6"></span><span title="write: 29.1 min" style="width:7.107%;background:#66a182"></span><span title="find: 10.0 min" style="width:2.441%;background:#cb997e"></span><span title="ls: 1.3 min" style="width:0.327%;background:#ddbea9"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 254.6m</span> <span><i style="background:#4f86c6"></i>bash 114.3m</span> <span><i style="background:#66a182"></i>write 29.1m</span> <span><i style="background:#cb997e"></i>find 10.0m</span> <span><i style="background:#ddbea9"></i>ls 1.3m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> provider 429 <b>14</b> · run timeout <b>11</b> · tool timeout <b>2</b> · output contract <b>2</b> · extension load <b>3</b> · provider auth <b>3</b> · tool capability mismatch <b>1</b> · stopped by user <b>4</b></div>
+</section>
+<h2>Level 2 · agent types</h2><div class="grid"><section class="metric-card">
+<h3>worker</h3>
+<div class="numbers"><b>31</b> runs · <b>9</b> failed (29.0%) · <b>498.7</b> wall min<br>
+median 12.2 · p90 29.9 · max 50.8 min · $96.16 · 1015 turns</div>
+<div class="bar"><span title="model_stall: 99.2 min" style="width:51.656%;background:#ef8354"></span><span title="bash: 58.7 min" style="width:30.587%;background:#4f86c6"></span><span title="write: 29.1 min" style="width:15.153%;background:#66a182"></span><span title="find: 5.0 min" style="width:2.604%;background:#cb997e"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 99.2m</span> <span><i style="background:#4f86c6"></i>bash 58.7m</span> <span><i style="background:#66a182"></i>write 29.1m</span> <span><i style="background:#cb997e"></i>find 5.0m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> run timeout <b>7</b> · tool timeout <b>1</b> · stopped by user <b>1</b></div>
+</section><section class="metric-card">
+<h3>reviewer</h3>
+<div class="numbers"><b>38</b> runs · <b>10</b> failed (26.3%) · <b>220.0</b> wall min<br>
+median 3.8 · p90 10.8 · max 29.9 min · $38.95 · 593 turns</div>
+<div class="bar"><span title="model_stall: 98.6 min" style="width:98.659%;background:#ef8354"></span><span title="ls: 1.3 min" style="width:1.341%;background:#ddbea9"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 98.6m</span> <span><i style="background:#ddbea9"></i>ls 1.3m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> provider 429 <b>13</b> · run timeout <b>3</b> · output contract <b>1</b> · provider auth <b>2</b> · stopped by user <b>3</b></div>
+</section><section class="metric-card">
+<h3>delegate</h3>
+<div class="numbers"><b>24</b> runs · <b>6</b> failed (25.0%) · <b>149.5</b> wall min<br>
+median 5.4 · p90 11.9 · max 16.3 min · $15.40 · 366 turns</div>
+<div class="bar"><span title="model_stall: 33.2 min" style="width:45.897%;background:#ef8354"></span><span title="bash: 34.2 min" style="width:47.195%;background:#4f86c6"></span><span title="find: 5.0 min" style="width:6.908%;background:#cb997e"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 33.2m</span> <span><i style="background:#4f86c6"></i>bash 34.2m</span> <span><i style="background:#cb997e"></i>find 5.0m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> run timeout <b>1</b> · tool timeout <b>1</b> · output contract <b>1</b> · extension load <b>3</b></div>
+</section><section class="metric-card">
+<h3>scout</h3>
+<div class="numbers"><b>13</b> runs · <b>1</b> failed (7.7%) · <b>48.8</b> wall min<br>
+median 1.6 · p90 3.6 · max 28.2 min · $0.51 · 105 turns</div>
+<div class="bar"><span title="model_stall: 15.2 min" style="width:50.248%;background:#ef8354"></span><span title="bash: 15.0 min" style="width:49.752%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 15.2m</span> <span><i style="background:#4f86c6"></i>bash 15.0m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> provider auth <b>1</b></div>
+</section><section class="metric-card">
+<h3>oracle</h3>
+<div class="numbers"><b>3</b> runs · <b>0</b> failed (0.0%) · <b>19.0</b> wall min<br>
+median 5.9 · p90 9.9 · max 9.9 min · $6.27 · 25 turns</div>
+<div class="bar"><span title="model_stall: 8.4 min" style="width:56.941%;background:#ef8354"></span><span title="bash: 6.4 min" style="width:43.059%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 8.4m</span> <span><i style="background:#4f86c6"></i>bash 6.4m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> provider 429 <b>1</b></div>
+</section><section class="metric-card">
+<h3>researcher</h3>
+<div class="numbers"><b>1</b> runs · <b>1</b> failed (100.0%) · <b>0.8</b> wall min<br>
+median 0.8 · p90 0.8 · max 0.8 min · $0.05 · 3 turns</div>
+<div class="bar"></div><div class="legend"><span>No gaps over 60 seconds</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> tool capability mismatch <b>1</b></div>
+</section><section class="metric-card">
+<h3>orchestrator (parent)</h3>
+<div class="numbers"><b>15</b> runs · <b>0</b> failed (0.0%) · <b>3280.6</b> wall min<br>
+median 74.5 · p90 849.9 · max 1077.0 min · $0.00 · 0 turns</div>
+<div class="bar"><span title="model_stall: 2073.3 min" style="width:56.551%;background:#ef8354"></span><span title="read: 544.6 min" style="width:14.855%;background:#9b7ede"></span><span title="other_tool: 1048.3 min" style="width:28.594%;background:#8d99ae"></span></div><div class="legend"><span><i style="background:#ef8354"></i>model stall 2073.3m</span> <span><i style="background:#9b7ede"></i>read 544.6m</span> <span><i style="background:#8d99ae"></i>other tool 1048.3m</span></div>
+<div class="taxonomy"><b>Failed attempts:</b> none</div>
+</section></div>
+<h2>Level 3 · repeated work</h2><div class="summary"><span><b>9.3</b><br>wasted minutes</span>
+<span><b>1.8%</b><br>of measured tool time</span><span><b>496</b><br>repeated keys</span></div>
+<p>A repeat is wasted only when it has the same normalized key and repository HEAD as the prior occurrence, with no write/edit in that repo between them. Unknown SHA can match unknown only within the same resolved repo (or both unresolved).</p>
+<div class="table-wrap"><table><thead><tr><th>Normalized key</th><th>Calls</th><th>Wasted</th><th>Informative</th><th>Agents and runs</th></tr></thead><tbody><tr><td><code>bash | /Users/jakubszwajka/.agents | node image-gen/node_modules/typescript/bin/tsc --noEmit --strict --target ES2022 --module ESNext --moduleResolution Bundler --allowImportingTsExtensions --skipLibCheck pi/extensions/task-log/*.ts</code></td><td>10</td>
+<td>2 / 1.96m</td><td>7 / 7.05m</td><td>worker:16a74125, worker:24d9e4de, worker:c39bb1d6</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/src/runs/background/subagent-runner.ts</code></td><td>27</td>
+<td>20 / 0.59m</td><td>6 / 0.06m</td><td>delegate:3848ae86, delegate:62717b9c, delegate:70943cf8, reviewer:d5ceaa7a, worker:0a9c42d3, worker:1eeb8471</td></tr><tr><td><code>grep | nvm|node/v22|node/v24|NVM_DIR|PATH= | /Users/jakubszwajka</code></td><td>2</td>
+<td>1 / 0.40m</td><td>0 / 0.00m</td><td>orchestrator:01a0868f</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/src/shared/types.ts</code></td><td>24</td>
+<td>16 / 0.31m</td><td>7 / 0.05m</td><td>delegate:3848ae86, delegate:62717b9c, delegate:70943cf8, reviewer:56986940, reviewer:d5ceaa7a, worker:0a9c42d3, worker:1eeb8471, worker:c8478744</td></tr><tr><td><code>read | test/cli.test.ts</code></td><td>20</td>
+<td>11 / 0.22m</td><td>8 / 0.24m</td><td>delegate:62717b9c, reviewer:089c3532, reviewer:22d43787, reviewer:7b1d6568, scout:947c8c60, worker:1eeb8471, worker:35c1db4d, worker:6a6d8c45, worker:c8478744</td></tr><tr><td><code>read | /Users/jakubszwajka/DEV/priv/lucy-harness/test/cli.test.ts</code></td><td>3</td>
+<td>2 / 0.20m</td><td>0 / 0.00m</td><td>worker:0a9c42d3</td></tr><tr><td><code>read | apps/site/src/i18n/en.ts</code></td><td>14</td>
+<td>5 / 0.16m</td><td>8 / 0.27m</td><td>delegate:0bd11a3c, delegate:383060a5, orchestrator:01a086e7, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, reviewer:d1d714f7, worker:0c53401a, worker:b0b946a1, worker:d474971f, worker:d8e9b173, worker:f74f9cd1</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/index.ts</code></td><td>50</td>
+<td>18 / 0.15m</td><td>31 / 0.31m</td><td>delegate:41e98401, delegate:4c10e760, delegate:5d9e2ee2, delegate:77b1f9b4, orchestrator:01a084de, orchestrator:01a0866f, orchestrator:01a0868f, orchestrator:01a086a8, reviewer:26124f21, reviewer:361c1ba2, reviewer:3c66779a, reviewer:4063416a, reviewer:4cca6523, reviewer:56986940, reviewer:6448aef2, reviewer:799c79b3, reviewer:97580268, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:813f4184, worker:1301c122, worker:16a74125, worker:24d9e4de, worker:301bc6ad, worker:42780897, worker:48aaf124, worker:6f131bbd, worker:8b3affc7, worker:c39bb1d6, worker:e848727e</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/repository.ts</code></td><td>18</td>
+<td>4 / 0.14m</td><td>13 / 0.30m</td><td>delegate:41e98401, delegate:5d9e2ee2, delegate:77b1f9b4, orchestrator:01a086a8, reviewer:26124f21, reviewer:293a445a, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:813f4184, worker:1301c122, worker:16a74125, worker:42780897, worker:6f131bbd, worker:8b3affc7</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/service.ts</code></td><td>29</td>
+<td>5 / 0.14m</td><td>23 / 0.34m</td><td>delegate:4c10e760, delegate:5d9e2ee2, delegate:77b1f9b4, orchestrator:01a084de, orchestrator:01a0868f, orchestrator:01a086a8, reviewer:26124f21, reviewer:361c1ba2, reviewer:4063416a, reviewer:4cca6523, reviewer:56986940, reviewer:799c79b3, reviewer:97580268, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:813f4184, worker:16a74125, worker:24d9e4de, worker:42780897, worker:48aaf124, worker:6f131bbd, worker:c39bb1d6, worker:e848727e</td></tr><tr><td><code>read | apps/site/src/i18n/en-home.ts</code></td><td>12</td>
+<td>4 / 0.14m</td><td>7 / 0.20m</td><td>delegate:383060a5, orchestrator:01a086e7, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, worker:0c53401a, worker:b0b946a1, worker:d474971f, worker:d8e9b173, worker:f74f9cd1</td></tr><tr><td><code>read | apps/site/src/i18n/types.ts</code></td><td>11</td>
+<td>3 / 0.14m</td><td>7 / 0.26m</td><td>delegate:383060a5, orchestrator:01a086e7, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:bb7320b0, worker:0c53401a, worker:1ecf22ee, worker:b0b946a1, worker:d474971f, worker:d8e9b173, worker:f74f9cd1</td></tr><tr><td><code>read | /Users/jakubszwajka/.nvm/versions/node/v24.16.0/lib/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md</code></td><td>13</td>
+<td>8 / 0.13m</td><td>4 / 0.08m</td><td>oracle:b5ce5c91, orchestrator:01a084de, orchestrator:01a084e9, orchestrator:01a0864b, orchestrator:01a0868f, worker:301bc6ad</td></tr><tr><td><code>read | apps/site/src/components/LandingPage.astro</code></td><td>14</td>
+<td>6 / 0.12m</td><td>7 / 0.06m</td><td>delegate:0b581084, delegate:232967bc, delegate:383060a5, orchestrator:01a086e7, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:b0b946a1, worker:f74f9cd1</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/storage.ts</code></td><td>17</td>
+<td>3 / 0.12m</td><td>13 / 0.58m</td><td>delegate:5d9e2ee2, orchestrator:01a0868f, orchestrator:01a086a8, reviewer:26124f21, reviewer:293a445a, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:813f4184, worker:16a74125, worker:42780897, worker:6f131bbd, worker:8b3affc7, worker:c39bb1d6</td></tr><tr><td><code>read | apps/site/src/styles/global.css</code></td><td>12</td>
+<td>4 / 0.12m</td><td>7 / 0.06m</td><td>delegate:0b93550b, delegate:232967bc, delegate:383060a5, orchestrator:01a086e7, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:b5e6c127, reviewer:b61a65da, reviewer:d1d714f7, worker:b0b946a1, worker:d474971f</td></tr><tr><td><code>bash | /Users/jakubszwajka/DEV/priv/order-buddy | npm run check -w @order-buddy/site</code></td><td>9</td>
+<td>1 / 0.11m</td><td>7 / 0.88m</td><td>orchestrator:01a08703, worker:1ecf22ee, worker:479083ed, worker:d474971f, worker:d8e9b173, worker:f74f9cd1, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/store.ts</code></td><td>19</td>
+<td>4 / 0.10m</td><td>14 / 0.36m</td><td>delegate:5d9e2ee2, delegate:77b1f9b4, orchestrator:01a0868f, orchestrator:01a086a8, reviewer:26124f21, reviewer:56986940, reviewer:799c79b3, reviewer:97580268, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:813f4184, worker:16a74125, worker:42780897, worker:48aaf124, worker:6f131bbd</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/history.ts</code></td><td>20</td>
+<td>3 / 0.10m</td><td>16 / 0.62m</td><td>delegate:41e98401, delegate:5d9e2ee2, delegate:77b1f9b4, orchestrator:01a086a8, reviewer:26124f21, reviewer:4063416a, reviewer:4cca6523, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, worker:1301c122, worker:24d9e4de, worker:42780897, worker:6f131bbd, worker:8b3affc7, worker:e848727e</td></tr><tr><td><code>read | apps/site/src/components/FeaturePage.astro</code></td><td>14</td>
+<td>4 / 0.10m</td><td>9 / 0.20m</td><td>delegate:0b581084, delegate:0b93550b, delegate:232967bc, delegate:383060a5, orchestrator:01a086e7, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b5e6c127, worker:0c53401a, worker:1ecf22ee, worker:b0b946a1, worker:d474971f</td></tr><tr><td><code>read | apps/site/src/i18n/pl.ts</code></td><td>14</td>
+<td>4 / 0.08m</td><td>9 / 0.30m</td><td>delegate:0b581084, delegate:0bd11a3c, delegate:383060a5, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, reviewer:d1d714f7, worker:0c53401a, worker:b0b946a1, worker:d474971f, worker:d8e9b173, worker:f74f9cd1</td></tr><tr><td><code>read | apps/site/src/styles/creative.css</code></td><td>10</td>
+<td>5 / 0.08m</td><td>4 / 0.04m</td><td>delegate:0b93550b, delegate:232967bc, reviewer:482014f0, reviewer:5a6a548c, reviewer:91debd4c, reviewer:b5e6c127, worker:1ecf22ee, worker:d8e9b173</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/src/runs/background/async-execution.ts</code></td><td>5</td>
+<td>2 / 0.07m</td><td>2 / 0.06m</td><td>delegate:62717b9c, reviewer:56986940, worker:1eeb8471</td></tr><tr><td><code>read | apps/site/src/components/PricingSection.astro</code></td><td>10</td>
+<td>4 / 0.07m</td><td>5 / 0.04m</td><td>delegate:0bd11a3c, delegate:383060a5, orchestrator:01a08703, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:f74f9cd1</td></tr><tr><td><code>read | package.json</code></td><td>15</td>
+<td>3 / 0.07m</td><td>11 / 0.11m</td><td>delegate:383060a5, delegate:70943cf8, delegate:e417471b, orchestrator:01a086e7, reviewer:089c3532, reviewer:22d43787, reviewer:7b1d6568, reviewer:ab0f5ddf, scout:947c8c60, worker:1eeb8471, worker:6a6d8c45, worker:6fc6b1b5, worker:b0b946a1, worker:c8478744, worker:d474971f</td></tr><tr><td><code>read | apps/site/src/components/SiteFooter.astro</code></td><td>9</td>
+<td>5 / 0.07m</td><td>3 / 0.04m</td><td>delegate:3dc9f005, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:d8e9b173, worker:f74f9cd1, worker:ff3ee518</td></tr><tr><td><code>read | docs/sdlc/design/copy-voice.md</code></td><td>18</td>
+<td>6 / 0.07m</td><td>11 / 0.16m</td><td>delegate:0b581084, delegate:0b93550b, delegate:232967bc, delegate:383060a5, delegate:e417471b, delegate:fe230626, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b5e6c127, reviewer:bb7320b0, reviewer:d1d714f7, worker:0c53401a, worker:1ecf22ee, worker:d474971f, worker:f74f9cd1</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/locking.ts</code></td><td>11</td>
+<td>3 / 0.07m</td><td>7 / 0.47m</td><td>reviewer:26124f21, reviewer:293a445a, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:42780897, worker:6f131bbd</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/sessions/--Users-jakubszwajka-DEV-priv-order-buddy--/subagent-artifacts/outputs/ad66e46b-bd46-463e-812b-18e32d2494ff/implementation/landing-round-two-finish.md</code></td><td>2</td>
+<td>1 / 0.07m</td><td>0 / 0.00m</td><td>delegate:0bd11a3c, orchestrator:01a08703</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/test-harness.ts</code></td><td>17</td>
+<td>3 / 0.07m</td><td>13 / 0.20m</td><td>delegate:4c10e760, orchestrator:01a084de, reviewer:361c1ba2, reviewer:3c66779a, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:301bc6ad, worker:42780897, worker:48aaf124, worker:c39bb1d6</td></tr><tr><td><code>read | apps/site/src/styles/feature-proof.css</code></td><td>14</td>
+<td>3 / 0.06m</td><td>10 / 0.08m</td><td>delegate:0b581084, delegate:0b93550b, delegate:383060a5, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:b5e6c127, reviewer:bb7320b0, worker:1ecf22ee, worker:ad797cfc, worker:b0b946a1, worker:d474971f, worker:d8e9b173</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/ORCHESTRATION.md</code></td><td>29</td>
+<td>7 / 0.06m</td><td>21 / 0.41m</td><td>delegate:287900b7, delegate:41e98401, delegate:77b1f9b4, delegate:c4a5d790, delegate:da470b33, oracle:b5ce5c91, orchestrator:01a0864b, orchestrator:01a0866f, orchestrator:01a0868f, orchestrator:01a086a8, orchestrator:01a08703, orchestrator:01a0877a, reviewer:4063416a, reviewer:4cca6523, reviewer:6448aef2, reviewer:c912755d, scout:073bf259, scout:330ea07d, scout:491be068, worker:1301c122, worker:301bc6ad, worker:42780897, worker:48aaf124, worker:6f131bbd, worker:6fc6b1b5, worker:8b3affc7, worker:e848727e</td></tr><tr><td><code>read | apps/site/src/i18n/pl-home.ts</code></td><td>13</td>
+<td>4 / 0.06m</td><td>8 / 0.22m</td><td>delegate:0b581084, delegate:0b93550b, delegate:383060a5, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, worker:0c53401a, worker:b0b946a1, worker:d474971f, worker:d8e9b173, worker:f74f9cd1</td></tr><tr><td><code>read | src/sessions.ts</code></td><td>6</td>
+<td>3 / 0.06m</td><td>2 / 0.01m</td><td>reviewer:089c3532, reviewer:22d43787, reviewer:7b1d6568, scout:947c8c60, worker:35c1db4d, worker:6a6d8c45</td></tr><tr><td><code>read | apps/site/src/components/RevealScript.astro</code></td><td>9</td>
+<td>4 / 0.06m</td><td>4 / 0.06m</td><td>delegate:0b581084, delegate:3dc9f005, reviewer:643c6ecc, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:d8e9b173, worker:f74f9cd1, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/repository-storage.test.ts</code></td><td>8</td>
+<td>2 / 0.06m</td><td>5 / 0.12m</td><td>reviewer:26124f21, reviewer:293a445a, reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:42780897</td></tr><tr><td><code>read | /Users/jakubszwajka/DEV/priv/board/map/data/sources.yaml</code></td><td>3</td>
+<td>1 / 0.06m</td><td>1 / 0.00m</td><td>orchestrator:01a08652, orchestrator:01a0865e</td></tr><tr><td><code>read | /Users/jakubszwajka/DEV/priv/board/user/inbox.md</code></td><td>3</td>
+<td>1 / 0.06m</td><td>1 / 0.00m</td><td>orchestrator:01a08652, orchestrator:01a0865e</td></tr><tr><td><code>read | /Users/jakubszwajka/DEV/priv/board/user/voice.md</code></td><td>3</td>
+<td>1 / 0.06m</td><td>1 / 0.03m</td><td>orchestrator:01a08652, orchestrator:01a0865e</td></tr><tr><td><code>bash | /Users/jakubszwajka/DEV/priv/board | board doctor</code></td><td>2</td>
+<td>1 / 0.06m</td><td>0 / 0.00m</td><td>orchestrator:01a08652, orchestrator:01a0865e</td></tr><tr><td><code>read | apps/site/src/styles/rules.css</code></td><td>2</td>
+<td>1 / 0.05m</td><td>0 / 0.00m</td><td>orchestrator:01a08703, reviewer:b61a65da</td></tr><tr><td><code>read | apps/site/src/i18n/pl-chrome.ts</code></td><td>7</td>
+<td>3 / 0.05m</td><td>3 / 0.03m</td><td>delegate:3dc9f005, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/src/runs/foreground/subagent-executor.ts</code></td><td>6</td>
+<td>2 / 0.05m</td><td>3 / 0.11m</td><td>delegate:3848ae86, reviewer:56986940, worker:1eeb8471</td></tr><tr><td><code>read | apps/site/src/styles/sections.css</code></td><td>3</td>
+<td>1 / 0.05m</td><td>1 / 0.02m</td><td>orchestrator:01a08703, reviewer:643c6ecc, reviewer:b61a65da</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/subagent-skill-integration.test.ts</code></td><td>14</td>
+<td>1 / 0.05m</td><td>12 / 0.21m</td><td>delegate:4c10e760, orchestrator:01a0866f, reviewer:26124f21, reviewer:361c1ba2, reviewer:56986940, reviewer:6448aef2, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, worker:301bc6ad, worker:42780897, worker:c39bb1d6</td></tr><tr><td><code>read | src/commands/sessions.ts</code></td><td>5</td>
+<td>2 / 0.05m</td><td>2 / 0.01m</td><td>reviewer:089c3532, reviewer:22d43787, reviewer:7b1d6568, scout:947c8c60, worker:6a6d8c45</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/.pi/SPEC.md</code></td><td>17</td>
+<td>2 / 0.05m</td><td>14 / 0.20m</td><td>delegate:41e98401, delegate:4c10e760, delegate:5d9e2ee2, orchestrator:01a086a8, reviewer:26124f21, reviewer:361c1ba2, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, scout:813f4184, worker:16a74125, worker:301bc6ad, worker:42780897, worker:48aaf124, worker:8b3affc7, worker:c39bb1d6</td></tr><tr><td><code>read | apps/site/src/components/ModuleLedger.astro</code></td><td>13</td>
+<td>6 / 0.05m</td><td>6 / 0.06m</td><td>delegate:0b581084, delegate:232967bc, delegate:383060a5, delegate:3dc9f005, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/codec.ts</code></td><td>17</td>
+<td>1 / 0.04m</td><td>15 / 0.82m</td><td>delegate:41e98401, delegate:77b1f9b4, orchestrator:01a0868f, reviewer:26124f21, reviewer:56986940, reviewer:799c79b3, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, scout:813f4184, worker:1301c122, worker:16a74125, worker:42780897, worker:48aaf124, worker:6f131bbd, worker:8b3affc7</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/child-binding.ts</code></td><td>8</td>
+<td>1 / 0.04m</td><td>6 / 0.23m</td><td>orchestrator:01a0866f, reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, worker:42780897, worker:6f131bbd, worker:c39bb1d6</td></tr><tr><td><code>read | apps/site/src/components/FaqSection.astro</code></td><td>8</td>
+<td>3 / 0.04m</td><td>4 / 0.11m</td><td>delegate:0bd11a3c, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:b61a65da, reviewer:d1d714f7, worker:f74f9cd1</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/extension.contract.test.ts</code></td><td>21</td>
+<td>2 / 0.04m</td><td>18 / 0.27m</td><td>delegate:4c10e760, orchestrator:01a084de, reviewer:26124f21, reviewer:361c1ba2, reviewer:3c66779a, reviewer:56986940, reviewer:799c79b3, reviewer:97580268, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:301bc6ad, worker:42780897, worker:48aaf124, worker:c39bb1d6</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/concurrency.test.ts</code></td><td>7</td>
+<td>2 / 0.04m</td><td>4 / 0.10m</td><td>reviewer:293a445a, reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:42780897</td></tr><tr><td><code>read | apps/site/src/styles/footer.css</code></td><td>6</td>
+<td>3 / 0.04m</td><td>2 / 0.03m</td><td>delegate:3dc9f005, reviewer:643c6ecc, reviewer:bb7320b0, worker:d8e9b173, worker:f74f9cd1, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/skills/setup-matt-pocock-skills/issue-tracker-local.md</code></td><td>2</td>
+<td>1 / 0.04m</td><td>0 / 0.00m</td><td>scout:813f4184, worker:8b3affc7</td></tr><tr><td><code>read | apps/site/src/components/FitSection.astro</code></td><td>5</td>
+<td>3 / 0.04m</td><td>1 / 0.02m</td><td>orchestrator:01a08703, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:b61a65da, reviewer:d1d714f7</td></tr><tr><td><code>read | apps/site/src/styles/hero.css</code></td><td>3</td>
+<td>2 / 0.04m</td><td>0 / 0.00m</td><td>orchestrator:01a08703, reviewer:5a6a548c, reviewer:b61a65da</td></tr><tr><td><code>read | docs/sdlc/design/design-system.md</code></td><td>18</td>
+<td>7 / 0.04m</td><td>10 / 0.09m</td><td>delegate:0b581084, delegate:0b93550b, delegate:383060a5, delegate:e417471b, delegate:fe230626, orchestrator:01a086e7, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b5e6c127, reviewer:b61a65da, reviewer:bb7320b0, reviewer:d1d714f7, worker:0c53401a, worker:1ecf22ee, worker:d474971f</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/.scratch/show-me-task-tool.html</code></td><td>19</td>
+<td>11 / 0.04m</td><td>7 / 0.09m</td><td>delegate:287900b7, delegate:77b1f9b4, delegate:c4a5d790, delegate:da470b33, reviewer:26124f21, reviewer:4063416a, reviewer:4cca6523, reviewer:5f09fe90, reviewer:6448aef2, reviewer:c912755d, scout:813f4184, worker:e848727e, worker:ff441a68</td></tr><tr><td><code>read | .uxproof/conventions.md</code></td><td>5</td>
+<td>3 / 0.04m</td><td>1 / 0.08m</td><td>orchestrator:01a08703, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:ab0f5ddf, reviewer:d1d714f7</td></tr><tr><td><code>read | src/types.ts</code></td><td>3</td>
+<td>1 / 0.04m</td><td>1 / 0.00m</td><td>reviewer:089c3532, scout:947c8c60, worker:6a6d8c45</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/continuation-history-context.test.ts</code></td><td>16</td>
+<td>2 / 0.03m</td><td>13 / 0.22m</td><td>orchestrator:01a0866f, reviewer:26124f21, reviewer:56986940, reviewer:6448aef2, reviewer:799c79b3, reviewer:97580268, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, worker:24d9e4de, worker:301bc6ad, worker:42780897, worker:48aaf124</td></tr><tr><td><code>read | apps/site/src/components/Hero.astro</code></td><td>8</td>
+<td>4 / 0.03m</td><td>3 / 0.03m</td><td>delegate:0b93550b, orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:91debd4c, reviewer:b61a65da, reviewer:d1d714f7, worker:f74f9cd1</td></tr><tr><td><code>read | AGENTS.md</code></td><td>16</td>
+<td>5 / 0.03m</td><td>10 / 0.06m</td><td>delegate:0b581084, delegate:0b93550b, delegate:230398a4, delegate:232967bc, delegate:383060a5, delegate:e417471b, delegate:fe230626, orchestrator:01a086e7, reviewer:1a8cbe72, reviewer:482014f0, reviewer:91debd4c, reviewer:b5e6c127, reviewer:f83022da, worker:0c53401a, worker:1f2e126e, worker:d474971f</td></tr><tr><td><code>read | apps/site/src/i18n/en-chrome.ts</code></td><td>5</td>
+<td>2 / 0.03m</td><td>2 / 0.02m</td><td>delegate:3dc9f005, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:bb7320b0, worker:ff3ee518</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/picker.ts</code></td><td>8</td>
+<td>1 / 0.03m</td><td>6 / 0.15m</td><td>reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, worker:16a74125, worker:42780897, worker:48aaf124, worker:6f131bbd</td></tr><tr><td><code>read | VISION.md</code></td><td>13</td>
+<td>4 / 0.03m</td><td>8 / 0.09m</td><td>delegate:0b581084, delegate:0b93550b, delegate:232967bc, delegate:383060a5, delegate:fe230626, orchestrator:01a086e7, reviewer:482014f0, reviewer:5a6a548c, reviewer:65ffd8b6, reviewer:91debd4c, reviewer:b5e6c127, worker:0c53401a, worker:d474971f</td></tr><tr><td><code>read | docs/sdlc/design/brand.md</code></td><td>9</td>
+<td>5 / 0.03m</td><td>3 / 0.11m</td><td>orchestrator:01a08703, reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:b5e6c127, reviewer:bb7320b0, reviewer:d1d714f7</td></tr><tr><td><code>read | pi/extensions/task-log/.pi/SPEC.md</code></td><td>3</td>
+<td>1 / 0.03m</td><td>1 / 0.00m</td><td>reviewer:7703a460, reviewer:f258e7a4</td></tr><tr><td><code>read | pi/extensions/task-log/test-harness.ts</code></td><td>5</td>
+<td>1 / 0.03m</td><td>3 / 0.09m</td><td>reviewer:2e891925, reviewer:7703a460, reviewer:d3e601eb, worker:6fc6b1b5</td></tr><tr><td><code>bash | /Users/jakubszwajka/.agents | cd /Users/jakubszwajka/DEV/priv/lucy-harness &amp;&amp; npm run check</code></td><td>2</td>
+<td>1 / 0.03m</td><td>0 / 0.00m</td><td>worker:0a9c42d3</td></tr><tr><td><code>read | docs/crm/sales/acquisition-segment.md</code></td><td>13</td>
+<td>4 / 0.03m</td><td>8 / 0.06m</td><td>delegate:0b581084, delegate:0b93550b, delegate:232967bc, delegate:383060a5, delegate:fe230626, orchestrator:01a086e7, reviewer:482014f0, reviewer:65ffd8b6, reviewer:91debd4c, reviewer:b5e6c127, worker:0c53401a, worker:d474971f, worker:f74f9cd1</td></tr><tr><td><code>read | apps/site/src/i18n/platform-copy.ts</code></td><td>6</td>
+<td>2 / 0.03m</td><td>3 / 0.11m</td><td>reviewer:482014f0, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:91debd4c, reviewer:bb7320b0, worker:d8e9b173</td></tr><tr><td><code>bash | /Users/jakubszwajka/.agents | cd /Users/jakubszwajka/DEV/priv/lucy-harness &amp;&amp; npm test</code></td><td>3</td>
+<td>1 / 0.03m</td><td>1 / 0.02m</td><td>worker:0a9c42d3</td></tr><tr><td><code>read | apps/site/src/styles/feature-responsive.css</code></td><td>11</td>
+<td>2 / 0.02m</td><td>8 / 0.07m</td><td>delegate:0b581084, delegate:0b93550b, delegate:383060a5, delegate:e417471b, reviewer:482014f0, reviewer:5a6a548c, reviewer:b5e6c127, worker:1ecf22ee, worker:b0b946a1, worker:d474971f</td></tr><tr><td><code>read | design/minimal-session-control.md</code></td><td>7</td>
+<td>3 / 0.02m</td><td>3 / 0.10m</td><td>delegate:70943cf8, reviewer:089c3532, reviewer:22d43787, reviewer:7b1d6568, scout:947c8c60, worker:35c1db4d, worker:6a6d8c45</td></tr><tr><td><code>bash | /Users/jakubszwajka/.agents | cd /Users/jakubszwajka/DEV/priv/lucy-harness &amp;&amp; npm run typecheck</code></td><td>3</td>
+<td>1 / 0.02m</td><td>1 / 0.03m</td><td>worker:0a9c42d3</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/sessions/--Users-jakubszwajka-DEV-priv/order-buddy--/subagent-artifacts/outputs/75b24c7a-5487-45ba-9f71-e33dd25677a7/implementation/landing-review-fixes.md</code></td><td>5</td>
+<td>4 / 0.02m</td><td>0 / 0.00m</td><td>delegate:3dc9f005, orchestrator:01a08703, reviewer:bb7320b0</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/src/workflows/workflow-receipt.ts</code></td><td>7</td>
+<td>2 / 0.02m</td><td>4 / 0.06m</td><td>delegate:3848ae86, delegate:62717b9c, delegate:70943cf8, reviewer:d5ceaa7a, worker:1eeb8471, worker:c8478744</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/picker.test.ts</code></td><td>12</td>
+<td>3 / 0.02m</td><td>8 / 0.16m</td><td>delegate:4c10e760, orchestrator:01a084de, reviewer:361c1ba2, reviewer:3c66779a, reviewer:56986940, reviewer:799c79b3, worker:16a74125, worker:301bc6ad, worker:42780897, worker:6f131bbd</td></tr><tr><td><code>read | pi/extensions/task-log/index.ts</code></td><td>10</td>
+<td>4 / 0.02m</td><td>5 / 0.04m</td><td>reviewer:2e891925, reviewer:7703a460, reviewer:d3e601eb, reviewer:f258e7a4, worker:6fc6b1b5</td></tr><tr><td><code>grep | pi.on(&quot;session_tree&quot; | /Users/jakubszwajka/.agents/pi/extensions/task-log/index.ts</code></td><td>2</td>
+<td>1 / 0.02m</td><td>0 / 0.00m</td><td>reviewer:56986940, reviewer:799c79b3</td></tr><tr><td><code>read | .agents/skills/impeccable/SKILL.md</code></td><td>13</td>
+<td>3 / 0.02m</td><td>9 / 0.54m</td><td>delegate:0b581084, delegate:0b93550b, delegate:383060a5, delegate:fe230626, orchestrator:01a084de, reviewer:482014f0, reviewer:91debd4c, reviewer:ab0f5ddf, reviewer:b5e6c127, worker:0c53401a, worker:1ecf22ee, worker:b0b946a1, worker:d474971f</td></tr><tr><td><code>read | docs/sdlc/code-review.md</code></td><td>9</td>
+<td>2 / 0.02m</td><td>6 / 0.08m</td><td>delegate:e417471b, orchestrator:01a086e7, reviewer:65ffd8b6, reviewer:91debd4c, reviewer:b5e6c127, reviewer:b61a65da, reviewer:bb7320b0, worker:1ecf22ee, worker:d474971f</td></tr><tr><td><code>read | .git/logs/HEAD</code></td><td>8</td>
+<td>6 / 0.02m</td><td>1 / 0.01m</td><td>reviewer:22d43787, reviewer:5a6a548c, reviewer:65ffd8b6, reviewer:ab0f5ddf</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/skills/handoff/SKILL.md</code></td><td>7</td>
+<td>2 / 0.02m</td><td>4 / 0.61m</td><td>orchestrator:01a0868f, reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, scout:7adcf8e0, worker:42780897, worker:c39bb1d6</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents/package.json</code></td><td>7</td>
+<td>1 / 0.02m</td><td>5 / 0.03m</td><td>delegate:70943cf8, orchestrator:01a084de, orchestrator:01a0864b, orchestrator:01a0868f, reviewer:56986940, scout:3a70c06c, worker:c39bb1d6</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/pi/extensions/task-log/concurrency-worker.ts</code></td><td>5</td>
+<td>1 / 0.02m</td><td>3 / 0.04m</td><td>reviewer:56986940, reviewer:799c79b3, reviewer:a4461d9c, reviewer:a63613b2, worker:42780897</td></tr><tr><td><code>ls | /Users/jakubszwajka/.agents/pi/extensions/task-log</code></td><td>22</td>
+<td>3 / 0.02m</td><td>18 / 0.23m</td><td>delegate:41e98401, delegate:4c10e760, orchestrator:01a084de, orchestrator:01a086a8, reviewer:26124f21, reviewer:361c1ba2, reviewer:56986940, reviewer:9e492631, reviewer:a4461d9c, reviewer:a63613b2, reviewer:c912755d, scout:5321bac3, scout:7adcf8e0, scout:813f4184, scout:e5e14587, worker:1301c122, worker:16a74125, worker:301bc6ad, worker:48aaf124, worker:6f131bbd, worker:c39bb1d6</td></tr><tr><td><code>read | apps/site/src/styles/quote-pricing.css</code></td><td>7</td>
+<td>2 / 0.02m</td><td>4 / 0.05m</td><td>delegate:0bd11a3c, orchestrator:01a08703, reviewer:643c6ecc, reviewer:bb7320b0, worker:479083ed, worker:f74f9cd1</td></tr><tr><td><code>read | docs/crm/sales/messaging.md</code></td><td>5</td>
+<td>2 / 0.02m</td><td>2 / 0.03m</td><td>orchestrator:01a086e7, reviewer:5a6a548c, reviewer:65ffd8b6, reviewer:91debd4c, worker:f74f9cd1</td></tr><tr><td><code>read | docs/product/scope.md</code></td><td>3</td>
+<td>2 / 0.02m</td><td>0 / 0.00m</td><td>orchestrator:01a086e7, reviewer:5a6a548c, reviewer:65ffd8b6</td></tr><tr><td><code>read | docs/sdlc/design/principles.md</code></td><td>4</td>
+<td>1 / 0.02m</td><td>2 / 0.10m</td><td>orchestrator:01a08703, reviewer:643c6ecc, reviewer:bb7320b0, reviewer:d1d714f7</td></tr><tr><td><code>read | /Users/jakubszwajka/.pi/agent/extensions/module-graph/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md</code></td><td>3</td>
+<td>2 / 0.02m</td><td>0 / 0.00m</td><td>reviewer:9e492631</td></tr><tr><td><code>read | apps/site/public/images/catalog-photos-pl.webp</code></td><td>3</td>
+<td>1 / 0.02m</td><td>1 / 0.02m</td><td>delegate:0b581084, reviewer:482014f0, reviewer:91debd4c</td></tr><tr><td><code>read | /Users/jakubszwajka/.agents/skills/agent-browser/SKILL.md</code></td><td>13</td>
+<td>2 / 0.02m</td><td>10 / 0.06m</td><td>delegate:0b581084, delegate:0b93550b, delegate:41e98401, delegate:77b1f9b4, delegate:93469c1e, orchestrator:01a084de, orchestrator:01a0864b, orchestrator:01a0868f, orchestrator:01a086a8, orchestrator:01a08703, reviewer:482014f0, reviewer:b5e6c127, worker:b0b946a1</td></tr><tr><td><code>read | .agents/skills/impeccable/reference/critique.md</code></td><td>6</td>
+<td>3 / 0.02m</td><td>2 / 0.01m</td><td>delegate:0b581084, delegate:0b93550b, orchestrator:01a084de, reviewer:482014f0, reviewer:91debd4c, reviewer:b5e6c127</td></tr><tr><td><code>read | apps/site/src/styles/foundation.css</code></td><td>6</td>
+<td>2 / 0.02m</td><td>3 / 0.05m</td><td>delegate:232967bc, delegate:383060a5, orchestrator:01a08703, reviewer:5a6a548c, reviewer:643c6ecc, reviewer:b61a65da</td></tr><tr><td><code>read | apps/site/public/images/offer-catalog-admin.png</code></td><td>3</td>
+<td>1 / 0.02m</td><td>1 / 0.02m</td><td>delegate:0b581084, reviewer:482014f0, reviewer:91debd4c</td></tr><tr><td><code>read | apps/site/public/images/operator-queue-pl.webp</code></td><td>3</td>
+<td>1 / 0.02m</td><td>1 / 0.02m</td><td>delegate:0b581084, reviewer:482014f0, reviewer:91debd4c</td></tr></tbody></table></div>
+<h2>Level 4 · session wall clock</h2>
+<p>Levels 1 to 3 and 5 select child runs by artifact date. Level 4 selects parent sessions and children by activity date, so counts can differ slightly.</p>
+<p>Sessions are sorted by active time, with complete-inactivity gaps over 15 minutes excluded. Elapsed time remains visible. Parallelism is summed child wall time divided by the union of child run intervals; 1× means serial child work. Failed runs are striped.</p>
+<p><b>0 unattributed children.</b> Reasons: none.</p>
+<section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-order-buddy--</h3>
+<code>01a084de-a3b9-7af4-ba9f-1d2a521519d2</code></div><b>3h 59m active</b></div>
+<div class="session-numbers"><b>20</b> children · <b>6</b> failed · $40.52 · 167.3 child min · parallelism <b>1.21×</b><br>
+569.3 elapsed min · 330.2 idle min excluded · 138.3 child busy min</div>
+<div class="bar split-bar"><span title="human wait: 59.2 min" style="width:10.402%;background:#e0a458"></span><span title="child running: 138.3 min" style="width:24.295%;background:#287271"></span><span title="parent only: 371.7 min" style="width:65.302%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 59.2m</span> <span><i style="background:#287271"></i>child running 138.3m</span> <span><i style="background:#4f86c6"></i>parent only 371.7m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="232967bc-438a-456c-b83c-a6ff6bb2961c">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 232967bc · 2.7m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 232967bc-438a-456c-b83c-a6ff6bb2961c: 2.7 min" style="left:0.5770%;width:0.4803%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="482014f0-5782-4e5e-8a1a-4dcdb633ed50">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 482014f0 · 4.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 482014f0-5782-4e5e-8a1a-4dcdb633ed50: 4.3 min" style="left:1.0641%;width:0.7497%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="b5e6c127-5d69-45f2-b820-4dba8176c417">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · b5e6c127 · 1.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer b5e6c127-5d69-45f2-b820-4dba8176c417: 1.1 min" style="left:1.0673%;width:0.1908%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="91debd4c-9e5f-4286-895e-fdcc318619d5">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 91debd4c · 3.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 91debd4c-9e5f-4286-895e-fdcc318619d5: 3.4 min" style="left:1.0705%;width:0.5936%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="230398a4-5804-4e0c-a643-e0888b17c7af">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 230398a4 · 1.7m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 230398a4-5804-4e0c-a643-e0888b17c7af: 1.7 min" style="left:1.8221%;width:0.2995%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0b581084-24a3-4163-a589-d7d158737d93">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 0b581084 · 11.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 0b581084-24a3-4163-a589-d7d158737d93: 11.9 min" style="left:2.3533%;width:2.0884%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0b93550b-4d3f-4b23-859e-854066fc7f16">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 0b93550b · 9.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 0b93550b-4d3f-4b23-859e-854066fc7f16: 9.9 min" style="left:2.3565%;width:1.7383%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="1275cca4-bfff-4ae6-a65c-dca0c4834a8f">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 1275cca4 · 0.1m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate 1275cca4-bfff-4ae6-a65c-dca0c4834a8f: 0.1 min" style="left:4.4482%;width:0.0100%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="21897ecd-aa2a-4096-92d6-3820c9ba0916">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 21897ecd · 0.1m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate 21897ecd-aa2a-4096-92d6-3820c9ba0916: 0.1 min" style="left:7.2322%;width:0.0225%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0bdf47a8-084b-41ef-bfa9-98bbc93d80b5">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 0bdf47a8 · 0.1m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate 0bdf47a8-084b-41ef-bfa9-98bbc93d80b5: 0.1 min" style="left:7.2374%;width:0.0173%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="4c10e760-04ae-49bd-838f-b7082d9cf565">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 4c10e760 · 4.5m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate 4c10e760-04ae-49bd-838f-b7082d9cf565: 4.5 min" style="left:72.4170%;width:0.7970%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="383060a5-9bcf-4d0b-b073-0c3924271135">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 383060a5 · 3.8m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 383060a5-9bcf-4d0b-b073-0c3924271135: 3.8 min" style="left:73.3723%;width:0.6700%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="c396980a-1968-4f15-bc62-f7bb91faa2ef">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · c396980a · 5.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate c396980a-1968-4f15-bc62-f7bb91faa2ef: 5.1 min" style="left:73.3757%;width:0.8889%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="b0b946a1-5ac6-4aaf-a202-71a7fa7e0676">
+<span class="agent-dot" style="background:#287271"></span>worker · b0b946a1 · 29.7m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker b0b946a1-5ac6-4aaf-a202-71a7fa7e0676: 29.7 min" style="left:75.1016%;width:5.2218%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="1ecf22ee-9951-4edd-9d7f-f692ca835f0e">
+<span class="agent-dot" style="background:#287271"></span>worker · 1ecf22ee · 24.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 1ecf22ee-9951-4edd-9d7f-f692ca835f0e: 24.2 min" style="left:80.6774%;width:4.2576%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d1467fc6-91c0-41b8-8868-16f6e586e4e5">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · d1467fc6 · 10.8m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer d1467fc6-91c0-41b8-8868-16f6e586e4e5: 10.8 min" style="left:84.9411%;width:1.8971%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="e417471b-af19-43a8-ab11-90391aaff490">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · e417471b · 10.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate e417471b-af19-43a8-ab11-90391aaff490: 10.9 min" style="left:84.9464%;width:1.9133%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d474971f-ff38-4095-8135-aa5557e1c2bf">
+<span class="agent-dot" style="background:#287271"></span>worker · d474971f · 19.9m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker d474971f-ff38-4095-8135-aa5557e1c2bf: 19.9 min" style="left:86.8691%;width:3.4933%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0c53401a-5e00-44c3-920c-6cf1649b6fa9">
+<span class="agent-dot" style="background:#287271"></span>worker · 0c53401a · 8.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 0c53401a-5e00-44c3-920c-6cf1649b6fa9: 8.3 min" style="left:91.8892%;width:1.4519%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="fe230626-c855-42c7-9ca2-e1a2a77e1f5f">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · fe230626 · 14.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate fe230626-c855-42c7-9ca2-e1a2a77e1f5f: 14.9 min" style="left:93.3505%;width:2.6123%;background:#d17b49"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a0868f-dc8a-729b-97b5-ac21de48e602</code></div><b>3h 30m active</b></div>
+<div class="session-numbers"><b>10</b> children · <b>4</b> failed · $19.26 · 97.2 child min · parallelism <b>1.02×</b><br>
+573.8 elapsed min · 364.3 idle min excluded · 95.6 child busy min</div>
+<div class="bar split-bar"><span title="human wait: 12.1 min" style="width:2.111%;background:#e0a458"></span><span title="child running: 95.6 min" style="width:16.664%;background:#287271"></span><span title="parent only: 383.6 min" style="width:66.850%;background:#4f86c6"></span><span title="dead air: 82.5 min" style="width:14.375%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 12.1m</span> <span><i style="background:#287271"></i>child running 95.6m</span> <span><i style="background:#4f86c6"></i>parent only 383.6m</span> <span><i style="background:#ef8354"></i>dead air 82.5m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="b79f7e8b-7448-45f0-a0b4-a92c4e44c6ec">
+<span class="agent-dot" style="background:#287271"></span>worker · b79f7e8b · 6.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker b79f7e8b-7448-45f0-a0b4-a92c4e44c6ec: 6.5 min" style="left:2.1489%;width:1.1335%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0a9c42d3-a58e-4031-ad8b-4212894caadc">
+<span class="agent-dot" style="background:#287271"></span>worker · 0a9c42d3 · 30.0m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker 0a9c42d3-a58e-4031-ad8b-4212894caadc: 30.0 min" style="left:3.2955%;width:5.2200%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="330ea07d-75da-4a66-9655-9727bc4d6633">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 330ea07d · 1.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 330ea07d-75da-4a66-9655-9727bc4d6633: 1.6 min" style="left:27.4799%;width:0.2810%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="813f4184-568e-451b-ab0e-d9e8cdaa78a2">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 813f4184 · 2.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 813f4184-568e-451b-ab0e-d9e8cdaa78a2: 2.1 min" style="left:27.4799%;width:0.3646%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591">
+<span class="agent-dot" style="background:#287271"></span>worker · 8b3affc7 · 6.1m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker 8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591: 6.1 min" style="left:27.8566%;width:1.0565%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="1301c122-e1e9-4d24-bb09-ebd89a8df836">
+<span class="agent-dot" style="background:#287271"></span>worker · 1301c122 · 19.6m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker 1301c122-e1e9-4d24-bb09-ebd89a8df836: 19.6 min" style="left:29.3934%;width:3.4206%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6a43410d-3efa-4d8a-8c8b-84d8b0395ece">
+<span class="agent-dot" style="background:#287271"></span>worker · 6a43410d · 3.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 6a43410d-3efa-4d8a-8c8b-84d8b0395ece: 3.6 min" style="left:33.0382%;width:0.6227%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="41e98401-321f-44f5-980f-8a92af9043f7">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 41e98401 · 10.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 41e98401-321f-44f5-980f-8a92af9043f7: 10.3 min" style="left:33.8194%;width:1.7902%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6b6720c3-c702-4828-82b6-db33ba05601a">
+<span class="agent-dot" style="background:#287271"></span>worker · 6b6720c3 · 1.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 6b6720c3-c702-4828-82b6-db33ba05601a: 1.2 min" style="left:38.9293%;width:0.2084%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="93469c1e-ea43-4bbc-9ccd-f13a5a6c6865">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 93469c1e · 16.3m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate 93469c1e-ea43-4bbc-9ccd-f13a5a6c6865: 16.3 min" style="left:39.2328%;width:2.8480%;background:#d17b49"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-board--</h3>
+<code>01a0865e-3684-7195-88ef-8fa63208cc7a</code></div><b>2h 53m active</b></div>
+<div class="session-numbers"><b>2</b> children · <b>0</b> failed · $4.30 · 9.1 child min · parallelism <b>1.00×</b><br>
+252.5 elapsed min · 79.8 idle min excluded · 9.1 child busy min</div>
+<div class="bar split-bar"><span title="human wait: 14.1 min" style="width:5.576%;background:#e0a458"></span><span title="child running: 9.1 min" style="width:3.595%;background:#287271"></span><span title="parent only: 95.2 min" style="width:37.694%;background:#4f86c6"></span><span title="dead air: 134.2 min" style="width:53.135%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 14.1m</span> <span><i style="background:#287271"></i>child running 9.1m</span> <span><i style="background:#4f86c6"></i>parent only 95.2m</span> <span><i style="background:#ef8354"></i>dead air 134.2m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="124a0875-8d49-4602-99b4-2123169a9f8e">
+<span class="agent-dot" style="background:#bd4f6c"></span>oracle · 124a0875 · 5.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="oracle 124a0875-8d49-4602-99b4-2123169a9f8e: 5.9 min" style="left:18.8345%;width:2.3431%;background:#bd4f6c"></span></div></div><div class="gantt-row"><div class="gantt-label" title="7e039208-4675-4c22-aad6-bb844843d4ed">
+<span class="agent-dot" style="background:#bd4f6c"></span>oracle · 7e039208 · 3.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="oracle 7e039208-4675-4c22-aad6-bb844843d4ed: 3.2 min" style="left:50.6622%;width:1.2520%;background:#bd4f6c"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a08264-be3a-75f3-846a-558522dd05c2</code></div><b>2h 31m active</b></div>
+<div class="session-numbers"><b>13</b> children · <b>2</b> failed · $13.67 · 161.9 child min · parallelism <b>1.39×</b><br>
+799.6 elapsed min · 648.2 idle min excluded · 116.5 child busy min</div>
+<div class="bar split-bar"><span title="child running: 116.5 min" style="width:14.575%;background:#287271"></span><span title="parent only: 683.0 min" style="width:85.425%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 116.5m</span> <span><i style="background:#4f86c6"></i>parent only 683.0m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="293a445a-f280-49e2-be06-01a8eaf119d8">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 293a445a · 3.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 293a445a-f280-49e2-be06-01a8eaf119d8: 3.3 min" style="left:49.4139%;width:0.4180%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="16a74125-d86a-4cf3-90da-2a084b80689e">
+<span class="agent-dot" style="background:#287271"></span>worker · 16a74125 · 29.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 16a74125-d86a-4cf3-90da-2a084b80689e: 29.9 min" style="left:49.8391%;width:3.7358%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="2e891925-3074-43e1-8b8f-e39411dca84d">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 2e891925 · 9.8m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 2e891925-3074-43e1-8b8f-e39411dca84d: 9.8 min" style="left:65.7848%;width:1.2238%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="7adcf8e0-33c9-4c21-9311-9faaa81a0171">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 7adcf8e0 · 28.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 7adcf8e0-33c9-4c21-9311-9faaa81a0171: 28.2 min" style="left:65.7850%;width:3.5331%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="a4461d9c-14dd-4d39-b399-f3964439620a">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · a4461d9c · 29.9m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer a4461d9c-14dd-4d39-b399-f3964439620a: 29.9 min" style="left:65.7851%;width:3.7454%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6f131bbd-a36f-4ad3-a5c0-f39d97bc0ee1">
+<span class="agent-dot" style="background:#287271"></span>worker · 6f131bbd · 12.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 6f131bbd-a36f-4ad3-a5c0-f39d97bc0ee1: 12.0 min" style="left:70.0729%;width:1.4993%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="e5e14587-c5cb-4a1f-9461-9e73c9f346a3">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · e5e14587 · 3.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout e5e14587-c5cb-4a1f-9461-9e73c9f346a3: 3.2 min" style="left:71.5809%;width:0.4008%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="a63613b2-7c00-457d-84f0-9cdfcc90adce">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · a63613b2 · 2.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer a63613b2-7c00-457d-84f0-9cdfcc90adce: 2.2 min" style="left:71.5809%;width:0.2702%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="f258e7a4-3bc6-4d3b-a713-62a53d16070e">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · f258e7a4 · 5.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer f258e7a4-3bc6-4d3b-a713-62a53d16070e: 5.5 min" style="left:71.5809%;width:0.6931%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="48aaf124-bd95-4396-8f02-8b5b23a60d90">
+<span class="agent-dot" style="background:#287271"></span>worker · 48aaf124 · 12.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 48aaf124-bd95-4396-8f02-8b5b23a60d90: 12.3 min" style="left:72.4278%;width:1.5339%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="5321bac3-18c5-4b52-8e91-122ab73211bb">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 5321bac3 · 3.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 5321bac3-18c5-4b52-8e91-122ab73211bb: 3.6 min" style="left:73.9695%;width:0.4555%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="97580268-18d4-4668-8fab-f32c0e539740">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 97580268 · 1.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 97580268-18d4-4668-8fab-f32c0e539740: 1.9 min" style="left:73.9695%;width:0.2427%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="301bc6ad-a8cf-4360-b8f2-fecdf0c7b589">
+<span class="agent-dot" style="background:#287271"></span>worker · 301bc6ad · 19.9m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker 301bc6ad-a8cf-4360-b8f2-fecdf0c7b589: 19.9 min" style="left:96.7955%;width:2.4940%;background:#287271"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-order-buddy--</h3>
+<code>01a08703-3087-7325-8450-a2b4aa403b74</code></div><b>2h 18m active</b></div>
+<div class="session-numbers"><b>11</b> children · <b>6</b> failed · $22.87 · 111.7 child min · parallelism <b>1.02×</b><br>
+173.5 elapsed min · 35.1 idle min excluded · 109.3 child busy min</div>
+<div class="bar split-bar"><span title="human wait: 1.5 min" style="width:0.881%;background:#e0a458"></span><span title="child running: 107.7 min" style="width:62.097%;background:#287271"></span><span title="parent only: 64.2 min" style="width:37.022%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 1.5m</span> <span><i style="background:#287271"></i>child running 107.7m</span> <span><i style="background:#4f86c6"></i>parent only 64.2m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="d1d714f7-e317-4b20-9273-fb484cb5617e">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · d1d714f7 · 2.4m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer d1d714f7-e317-4b20-9273-fb484cb5617e: 2.4 min" style="left:2.2309%;width:1.3979%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="b61a65da-76aa-4392-a2ff-8c92e3d8cc27">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · b61a65da · 2.4m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer b61a65da-76aa-4392-a2ff-8c92e3d8cc27: 2.4 min" style="left:2.2313%;width:1.3996%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d8e9b173-a59d-4cff-ac17-91c54d317613">
+<span class="agent-dot" style="background:#287271"></span>worker · d8e9b173 · 30.0m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker d8e9b173-a59d-4cff-ac17-91c54d317613: 30.0 min" style="left:9.3222%;width:17.2909%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="ad797cfc-f176-4def-8048-4255e672fa74">
+<span class="agent-dot" style="background:#287271"></span>worker · ad797cfc · 6.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker ad797cfc-f176-4def-8048-4255e672fa74: 6.0 min" style="left:28.9052%;width:3.4678%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="643c6ecc-1dc1-462a-8ea9-9a33142b157c">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 643c6ecc · 6.1m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer 643c6ecc-1dc1-462a-8ea9-9a33142b157c: 6.1 min" style="left:32.9011%;width:3.5175%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="ff3ee518-6044-48af-a7df-0c593a42c58e">
+<span class="agent-dot" style="background:#287271"></span>worker · ff3ee518 · 8.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker ff3ee518-6044-48af-a7df-0c593a42c58e: 8.3 min" style="left:37.1623%;width:4.7958%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="bb7320b0-0fb0-4966-8d89-2dc57969edf3">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · bb7320b0 · 20.4m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer bb7320b0-0fb0-4966-8d89-2dc57969edf3: 20.4 min" style="left:42.8401%;width:11.7661%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="3dc9f005-29a0-4ed9-be10-2e6a2f94460f">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 3dc9f005 · 0.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 3dc9f005-29a0-4ed9-be10-2e6a2f94460f: 0.6 min" style="left:56.1480%;width:0.3417%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="f74f9cd1-28cb-4af3-82db-e58418acee25">
+<span class="agent-dot" style="background:#287271"></span>worker · f74f9cd1 · 24.9m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="worker f74f9cd1-28cb-4af3-82db-e58418acee25: 24.9 min" style="left:78.1470%;width:14.3528%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="479083ed-42e8-4ece-844e-67cf11dbf8d5">
+<span class="agent-dot" style="background:#287271"></span>worker · 479083ed · 10.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 479083ed-42e8-4ece-844e-67cf11dbf8d5: 10.0 min" style="left:93.1507%;width:5.7793%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="0bd11a3c-f3be-4440-9e70-dfbf5eb86643">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 0bd11a3c · 0.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 0bd11a3c-f3be-4440-9e70-dfbf5eb86643: 0.5 min" style="left:99.2935%;width:0.2655%;background:#d17b49"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a084e9-dc68-7306-a893-49d73aa74937</code></div><b>1h 43m active</b></div>
+<div class="session-numbers"><b>11</b> children · <b>3</b> failed · $16.92 · 95.0 child min · parallelism <b>1.26×</b><br>
+102.8 elapsed min · 0.0 idle min excluded · 75.5 child busy min</div>
+<div class="bar split-bar"><span title="human wait: 10.8 min" style="width:10.504%;background:#e0a458"></span><span title="child running: 67.3 min" style="width:65.517%;background:#287271"></span><span title="parent only: 24.6 min" style="width:23.913%;background:#4f86c6"></span><span title="dead air: 0.1 min" style="width:0.065%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 10.8m</span> <span><i style="background:#287271"></i>child running 67.3m</span> <span><i style="background:#4f86c6"></i>parent only 24.6m</span> <span><i style="background:#ef8354"></i>dead air 0.1m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="cfbdd080-e528-480a-adda-952f0bd87327">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · cfbdd080 · 0.2m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="scout cfbdd080-e528-480a-adda-952f0bd87327: 0.2 min" style="left:9.4351%;width:0.2175%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="556e49d5-5252-4a7a-b38b-b881862ec07a">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 556e49d5 · 0.2m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer 556e49d5-5252-4a7a-b38b-b881862ec07a: 0.2 min" style="left:9.4351%;width:0.2174%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="4841a2f6-c3e5-4093-9bc3-144c877548a9">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 4841a2f6 · 0.2m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer 4841a2f6-c3e5-4093-9bc3-144c877548a9: 0.2 min" style="left:9.4351%;width:0.2175%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="9e492631-a2e4-4a4a-888c-5ca5bd1f867e">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 9e492631 · 10.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 9e492631-a2e4-4a4a-888c-5ca5bd1f867e: 10.3 min" style="left:22.5823%;width:10.0578%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="24d9e4de-0633-4c64-b07a-2438276e7f6a">
+<span class="agent-dot" style="background:#287271"></span>worker · 24d9e4de · 8.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 24d9e4de-0633-4c64-b07a-2438276e7f6a: 8.5 min" style="left:36.5532%;width:8.2999%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="c39bb1d6-0c10-44c2-bdae-5d233cf2362a">
+<span class="agent-dot" style="background:#287271"></span>worker · c39bb1d6 · 25.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker c39bb1d6-0c10-44c2-bdae-5d233cf2362a: 25.1 min" style="left:44.9187%;width:24.4726%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="7703a460-29a1-4fca-8b33-67cd258aebcb">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 7703a460 · 9.7m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 7703a460-29a1-4fca-8b33-67cd258aebcb: 9.7 min" style="left:69.4561%;width:9.4809%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="799c79b3-2e21-41dd-9b6a-cb9f941df457">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 799c79b3 · 9.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 799c79b3-2e21-41dd-9b6a-cb9f941df457: 9.2 min" style="left:69.4561%;width:8.9297%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="56986940-fe7d-405a-84d4-f9f7982da51f">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 56986940 · 13.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 56986940-fe7d-405a-84d4-f9f7982da51f: 13.9 min" style="left:69.4562%;width:13.5550%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="42780897-b4fa-4126-91ad-050e13da38fd">
+<span class="agent-dot" style="background:#287271"></span>worker · 42780897 · 17.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 42780897-b4fa-4126-91ad-050e13da38fd: 17.4 min" style="left:83.0855%;width:16.9145%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="073bf259-4f66-43af-84d2-585e5365844d">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 073bf259 · 0.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 073bf259-4f66-43af-84d2-585e5365844d: 0.1 min" style="left:89.6683%;width:0.1354%;background:#4f86c6"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a086a8-1e17-75ba-aee1-866afd4e42ae</code></div><b>1h 36m active</b></div>
+<div class="session-numbers"><b>19</b> children · <b>4</b> failed · $14.48 · 117.5 child min · parallelism <b>1.43×</b><br>
+96.0 elapsed min · 0.0 idle min excluded · 82.2 child busy min</div>
+<div class="bar split-bar"><span title="child running: 82.2 min" style="width:85.689%;background:#287271"></span><span title="parent only: 5.3 min" style="width:5.516%;background:#4f86c6"></span><span title="dead air: 8.4 min" style="width:8.795%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 82.2m</span> <span><i style="background:#4f86c6"></i>parent only 5.3m</span> <span><i style="background:#ef8354"></i>dead air 8.4m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="5d9e2ee2-3399-4f03-b9c7-d1d955fb2ba4">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 5d9e2ee2 · 5.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 5d9e2ee2-3399-4f03-b9c7-d1d955fb2ba4: 5.6 min" style="left:4.7857%;width:5.8092%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="c912755d-c0ba-4c62-b8b7-f366d6ed6aec">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · c912755d · 5.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer c912755d-c0ba-4c62-b8b7-f366d6ed6aec: 5.4 min" style="left:10.6603%;width:5.6705%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="77b1f9b4-50f9-407e-be8e-17cf7101912a">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 77b1f9b4 · 10.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 77b1f9b4-50f9-407e-be8e-17cf7101912a: 10.4 min" style="left:16.3964%;width:10.7963%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d5ceaa7a-a221-4d0d-aa9a-594beb39c06e">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · d5ceaa7a · 2.4m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer d5ceaa7a-a221-4d0d-aa9a-594beb39c06e: 2.4 min" style="left:24.6064%;width:2.4555%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="26124f21-d2f2-49a7-bf23-d331a40f37e7">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 26124f21 · 6.2m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer 26124f21-d2f2-49a7-bf23-d331a40f37e7: 6.2 min" style="left:27.2636%;width:6.4862%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="3848ae86-7e6c-4983-ba0b-055e8a3b035e">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 3848ae86 · 6.8m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 3848ae86-7e6c-4983-ba0b-055e8a3b035e: 6.8 min" style="left:30.7387%;width:7.0448%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="c4a5d790-4319-4341-97ab-0d69590e0715">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · c4a5d790 · 10.8m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate c4a5d790-4319-4341-97ab-0d69590e0715: 10.8 min" style="left:36.4629%;width:11.2866%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="1eeb8471-2ef9-4d07-926e-394bf4e9b7ae">
+<span class="agent-dot" style="background:#287271"></span>worker · 1eeb8471 · 13.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 1eeb8471-2ef9-4d07-926e-394bf4e9b7ae: 13.5 min" style="left:41.3222%;width:14.0975%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="4cca6523-e2a4-450b-bfe0-aab3ba4b30d6">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 4cca6523 · 2.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 4cca6523-e2a4-450b-bfe0-aab3ba4b30d6: 2.9 min" style="left:47.8220%;width:2.9774%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="287900b7-f0b0-4176-bb3b-0597db5d840b">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 287900b7 · 4.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 287900b7-f0b0-4176-bb3b-0597db5d840b: 4.4 min" style="left:50.9545%;width:4.5336%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="62717b9c-968b-401c-b502-e023dc6a7a8c">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 62717b9c · 7.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 62717b9c-968b-401c-b502-e023dc6a7a8c: 7.0 min" style="left:55.5074%;width:7.3420%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6448aef2-c6d4-4997-88f1-92b3c71fbc7a">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 6448aef2 · 1.6m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="reviewer 6448aef2-c6d4-4997-88f1-92b3c71fbc7a: 1.6 min" style="left:55.5654%;width:1.6687%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="da470b33-07d9-47dd-a1f9-53ec4c35d5d2">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · da470b33 · 5.2m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="delegate da470b33-07d9-47dd-a1f9-53ec4c35d5d2: 5.2 min" style="left:62.6407%;width:5.4564%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="c8478744-cc5f-42c6-af92-8ebf71c2bce7">
+<span class="agent-dot" style="background:#287271"></span>worker · c8478744 · 12.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker c8478744-cc5f-42c6-af92-8ebf71c2bce7: 12.2 min" style="left:64.8867%;width:12.6599%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="e848727e-be83-48f4-8481-d5c57f3d30d3">
+<span class="agent-dot" style="background:#287271"></span>worker · e848727e · 7.7m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker e848727e-be83-48f4-8481-d5c57f3d30d3: 7.7 min" style="left:72.7369%;width:7.9920%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="70943cf8-8e20-494b-a5a2-caaf4d263d73">
+<span class="agent-dot" style="background:#d17b49"></span>delegate · 70943cf8 · 6.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="delegate 70943cf8-8e20-494b-a5a2-caaf4d263d73: 6.0 min" style="left:77.6302%;width:6.2195%;background:#d17b49"></span></div></div><div class="gantt-row"><div class="gantt-label" title="4063416a-503f-406d-aeda-91d35ca07e4d">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 4063416a · 3.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 4063416a-503f-406d-aeda-91d35ca07e4d: 3.4 min" style="left:80.7990%;width:3.5175%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="ff441a68-5fc7-4606-9726-28d56ca5a30c">
+<span class="agent-dot" style="background:#287271"></span>worker · ff441a68 · 5.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker ff441a68-5fc7-4606-9726-28d56ca5a30c: 5.6 min" style="left:84.4072%;width:5.8345%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="5f09fe90-ec49-48e8-8f02-96df6bdccb8a">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 5f09fe90 · 0.5m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 5f09fe90-ec49-48e8-8f02-96df6bdccb8a: 0.5 min" style="left:90.3132%;width:0.5453%;background:#8f5aa2"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a0864b-7e05-729b-97b5-ac1b5a4ecd02</code></div><b>1h 15m active</b></div>
+<div class="session-numbers"><b>7</b> children · <b>1</b> failed · $2.32 · 18.4 child min · parallelism <b>1.22×</b><br>
+74.5 elapsed min · 0.0 idle min excluded · 15.1 child busy min</div>
+<div class="bar split-bar"><span title="child running: 15.1 min" style="width:20.271%;background:#287271"></span><span title="parent only: 29.3 min" style="width:39.298%;background:#4f86c6"></span><span title="dead air: 30.1 min" style="width:40.431%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 15.1m</span> <span><i style="background:#4f86c6"></i>parent only 29.3m</span> <span><i style="background:#ef8354"></i>dead air 30.1m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="b5ce5c91-26d4-40b4-99ad-379146d88cb1">
+<span class="agent-dot" style="background:#bd4f6c"></span>oracle · b5ce5c91 · 9.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="oracle b5ce5c91-26d4-40b4-99ad-379146d88cb1: 9.9 min" style="left:7.4324%;width:13.3490%;background:#bd4f6c"></span></div></div><div class="gantt-row"><div class="gantt-label" title="3c66779a-7c59-4867-9dbf-ad472eb73028">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 3c66779a · 1.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 3c66779a-7c59-4867-9dbf-ad472eb73028: 1.3 min" style="left:8.2794%;width:1.6844%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="3a70c06c-234a-434b-9f7d-01ec52710a1f">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 3a70c06c · 1.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 3a70c06c-234a-434b-9f7d-01ec52710a1f: 1.2 min" style="left:31.8412%;width:1.5984%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="87996fdf-fad3-48ce-ad51-bc893ae03d5c">
+<span class="agent-dot" style="background:#6b8e23"></span>researcher · 87996fdf · 0.8m ×</div>
+<div class="gantt-track"><span class="gantt-run failed" title="researcher 87996fdf-fad3-48ce-ad51-bc893ae03d5c: 0.8 min" style="left:31.8412%;width:1.1126%;background:#6b8e23"></span></div></div><div class="gantt-row"><div class="gantt-label" title="491be068-ea75-4bb5-8659-492fcb4308f1">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 491be068 · 1.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 491be068-ea75-4bb5-8659-492fcb4308f1: 1.6 min" style="left:31.8413%;width:2.1525%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6d9d06c4-e134-42dd-af3e-4cf1a4f2fc4a">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 6d9d06c4 · 1.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 6d9d06c4-e134-42dd-af3e-4cf1a4f2fc4a: 1.3 min" style="left:36.2598%;width:1.7126%;background:#4f86c6"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d21f5437-0348-45e8-997f-001cc3f774aa">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · d21f5437 · 2.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout d21f5437-0348-45e8-997f-001cc3f774aa: 2.3 min" style="left:38.9780%;width:3.0572%;background:#4f86c6"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a0866f-9b38-7598-9af9-b4824cfad217</code></div><b>42m active</b></div>
+<div class="session-numbers"><b>3</b> children · <b>0</b> failed · $5.28 · 21.2 child min · parallelism <b>1.00×</b><br>
+41.6 elapsed min · 0.0 idle min excluded · 21.2 child busy min</div>
+<div class="bar split-bar"><span title="child running: 21.2 min" style="width:51.026%;background:#287271"></span><span title="parent only: 12.5 min" style="width:30.103%;background:#4f86c6"></span><span title="dead air: 7.8 min" style="width:18.871%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 21.2m</span> <span><i style="background:#4f86c6"></i>parent only 12.5m</span> <span><i style="background:#ef8354"></i>dead air 7.8m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="6fc6b1b5-e1af-4608-a464-be208b79983c">
+<span class="agent-dot" style="background:#287271"></span>worker · 6fc6b1b5 · 11.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 6fc6b1b5-e1af-4608-a464-be208b79983c: 11.0 min" style="left:40.2269%;width:26.4726%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="361c1ba2-12b8-4fd6-8126-ebad9332fcea">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 361c1ba2 · 5.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 361c1ba2-12b8-4fd6-8126-ebad9332fcea: 5.1 min" style="left:66.8451%;width:12.2602%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="d3e601eb-27ba-4ee5-9a9c-693a314d9314">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · d3e601eb · 5.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer d3e601eb-27ba-4ee5-9a9c-693a314d9314: 5.1 min" style="left:79.2881%;width:12.2931%;background:#8f5aa2"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-lucy-harness--</h3>
+<code>01a08254-8234-72cb-a92d-11255d6e0ee8</code></div><b>36m active</b></div>
+<div class="session-numbers"><b>6</b> children · <b>0</b> failed · $3.99 · 29.3 child min · parallelism <b>1.09×</b><br>
+435.2 elapsed min · 399.1 idle min excluded · 26.8 child busy min</div>
+<div class="bar split-bar"><span title="child running: 26.8 min" style="width:6.167%;background:#287271"></span><span title="parent only: 8.9 min" style="width:2.053%;background:#4f86c6"></span><span title="dead air: 399.4 min" style="width:91.780%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 26.8m</span> <span><i style="background:#4f86c6"></i>parent only 8.9m</span> <span><i style="background:#ef8354"></i>dead air 399.4m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="089c3532-de31-48ba-8eef-d09b8b076c35">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 089c3532 · 8.6m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 089c3532-de31-48ba-8eef-d09b8b076c35: 8.6 min" style="left:92.3702%;width:1.9809%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="6a6d8c45-d86f-4eb7-9581-bac17e0c3975">
+<span class="agent-dot" style="background:#287271"></span>worker · 6a6d8c45 · 9.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 6a6d8c45-d86f-4eb7-9581-bac17e0c3975: 9.3 min" style="left:94.3670%;width:2.1409%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="22d43787-2d32-4693-99ac-d7020ef5b811">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 22d43787 · 2.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 22d43787-2d32-4693-99ac-d7020ef5b811: 2.9 min" style="left:96.5264%;width:0.6664%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="7b1d6568-28b9-43f0-84e5-8e2cc8a72f98">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 7b1d6568 · 2.4m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 7b1d6568-28b9-43f0-84e5-8e2cc8a72f98: 2.4 min" style="left:96.5264%;width:0.5555%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="35c1db4d-728f-4316-922c-a8250ecfaed0">
+<span class="agent-dot" style="background:#287271"></span>worker · 35c1db4d · 3.9m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 35c1db4d-728f-4316-922c-a8250ecfaed0: 3.9 min" style="left:97.2051%;width:0.9033%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="947c8c60-ecf5-4350-8264-67df0fee8565">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 947c8c60 · 2.1m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 947c8c60-ecf5-4350-8264-67df0fee8565: 2.1 min" style="left:98.1223%;width:0.4754%;background:#4f86c6"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-board--</h3>
+<code>01a0828d-d052-75c4-8610-92544c4640c1</code></div><b>32m active</b></div>
+<div class="session-numbers"><b>3</b> children · <b>0</b> failed · $5.00 · 15.9 child min · parallelism <b>1.09×</b><br>
+434.7 elapsed min · 402.9 idle min excluded · 14.7 child busy min</div>
+<div class="bar split-bar"><span title="child running: 14.7 min" style="width:3.374%;background:#287271"></span><span title="parent only: 9.1 min" style="width:2.090%;background:#4f86c6"></span><span title="dead air: 411.0 min" style="width:94.536%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 14.7m</span> <span><i style="background:#4f86c6"></i>parent only 9.1m</span> <span><i style="background:#ef8354"></i>dead air 411.0m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="1f2e126e-5b74-4049-b294-2e0713e40688">
+<span class="agent-dot" style="background:#287271"></span>worker · 1f2e126e · 13.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="worker 1f2e126e-5b74-4049-b294-2e0713e40688: 13.3 min" style="left:93.8545%;width:3.0705%;background:#287271"></span></div></div><div class="gantt-row"><div class="gantt-label" title="f83022da-36ee-4015-a722-d5fb1cb8d725">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · f83022da · 1.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer f83022da-36ee-4015-a722-d5fb1cb8d725: 1.3 min" style="left:96.9374%;width:0.2926%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="1a8cbe72-e840-4c24-a56e-274345d11f37">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 1a8cbe72 · 1.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 1a8cbe72-e840-4c24-a56e-274345d11f37: 1.3 min" style="left:96.9374%;width:0.3029%;background:#8f5aa2"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-order-buddy--</h3>
+<code>01a086e7-ec45-7f27-af76-fefe4753c846</code></div><b>29m active</b></div>
+<div class="session-numbers"><b>4</b> children · <b>0</b> failed · $5.40 · 23.6 child min · parallelism <b>2.97×</b><br>
+28.9 elapsed min · 0.0 idle min excluded · 8.0 child busy min</div>
+<div class="bar split-bar"><span title="child running: 8.0 min" style="width:27.546%;background:#287271"></span><span title="parent only: 5.9 min" style="width:20.596%;background:#4f86c6"></span><span title="dead air: 15.0 min" style="width:51.858%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 8.0m</span> <span><i style="background:#4f86c6"></i>parent only 5.9m</span> <span><i style="background:#ef8354"></i>dead air 15.0m</span></div>
+<div class="gantt"><div class="gantt-row"><div class="gantt-label" title="65ffd8b6-d364-4c45-939b-e5b847becc13">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 65ffd8b6 · 8.0m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 65ffd8b6-d364-4c45-939b-e5b847becc13: 8.0 min" style="left:6.3590%;width:27.5468%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="5a6a548c-ee60-4c00-82dc-06d40caa8187">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · 5a6a548c · 7.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer 5a6a548c-ee60-4c00-82dc-06d40caa8187: 7.2 min" style="left:6.3671%;width:24.9816%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="ab0f5ddf-4d16-4248-b333-f014c3b12995">
+<span class="agent-dot" style="background:#8f5aa2"></span>reviewer · ab0f5ddf · 7.3m</div>
+<div class="gantt-track"><span class="gantt-run" title="reviewer ab0f5ddf-4d16-4248-b333-f014c3b12995: 7.3 min" style="left:6.3759%;width:25.1306%;background:#8f5aa2"></span></div></div><div class="gantt-row"><div class="gantt-label" title="5565f38d-360b-48d7-b071-284a6d793945">
+<span class="agent-dot" style="background:#4f86c6"></span>scout · 5565f38d · 1.2m</div>
+<div class="gantt-track"><span class="gantt-run" title="scout 5565f38d-360b-48d7-b071-284a6d793945: 1.2 min" style="left:6.3924%;width:4.1778%;background:#4f86c6"></span></div></div></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-board--</h3>
+<code>01a08652-6f08-7195-88ef-8fa224272118</code></div><b>10m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+9.9 elapsed min · 0.0 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 9.9 min" style="width:100.000%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 9.9m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a0877a-8179-72f1-a61f-4af5c391526f</code></div><b>10m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+317.5 elapsed min · 307.9 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 9.7 min" style="width:3.044%;background:#4f86c6"></span><span title="dead air: 307.9 min" style="width:96.956%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 9.7m</span> <span><i style="background:#ef8354"></i>dead air 307.9m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-board--</h3>
+<code>01a084e8-d09a-7770-b4bc-043be570c814</code></div><b>2m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+2.5 elapsed min · 0.0 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 2.5 min" style="width:100.000%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 2.5m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-lucy-harness--</h3>
+<code>01a08506-b7fc-72cb-a92d-113018fa40a4</code></div><b>2m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+2.2 elapsed min · 0.0 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 2.2 min" style="width:100.000%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 2.2m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-DEV-priv-board--</h3>
+<code>01a084e8-a713-75c4-8610-9258b002abd8</code></div><b>1m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+404.0 elapsed min · 402.9 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 1.1 min" style="width:0.284%;background:#4f86c6"></span><span title="dead air: 402.9 min" style="width:99.716%;background:#ef8354"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 1.1m</span> <span><i style="background:#ef8354"></i>dead air 402.9m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section><section class="session-card"><div class="session-head"><div><h3>--Users-jakubszwajka-.agents--</h3>
+<code>01a086ff-e2c1-7564-9352-b67c036ed37c</code></div><b>0m active</b></div>
+<div class="session-numbers"><b>0</b> children · <b>0</b> failed · $0.00 · 0.0 child min · parallelism <b>n/a</b><br>
+0.1 elapsed min · 0.0 idle min excluded · 0.0 child busy min</div>
+<div class="bar split-bar"><span title="parent only: 0.1 min" style="width:100.000%;background:#4f86c6"></span></div><div class="legend"><span><i style="background:#e0a458"></i>human wait 0.0m</span> <span><i style="background:#287271"></i>child running 0.0m</span> <span><i style="background:#4f86c6"></i>parent only 0.1m</span> <span><i style="background:#ef8354"></i>dead air 0.0m</span></div>
+<div class="gantt"><p class="sub">No child started in this session during the requested range.</p></div></section>
+<h2>Level 5 · where a child’s life goes</h2>
+<p>Orientation ends at the first edit/write, or the first source-changing shell command when there is no edit. Doing runs through the last edit/write/bash. A read-only run has no doing phase.</p>
+<div class="grid"><section class="phase-card"><h3>All children</h3>
+<div><b>936.9</b> wall min · orientation 488.0m · doing 401.6m · reporting 47.2m</div>
+<div class="bar"><span title="orientation: 52.1%" style="width:52.1%;background:#9b7ede"></span><span title="doing: 42.9%" style="width:42.9%;background:#287271"></span><span title="reporting: 5.0%" style="width:5.0%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 52.1%</span> <span><i style="background:#287271"></i>doing 42.9%</span> <span><i style="background:#e0a458"></i>reporting 5.0%</span></div></section><section class="phase-card"><h3>delegate</h3>
+<div><b>149.5</b> wall min · orientation 95.2m · doing 52.3m · reporting 2.0m</div>
+<div class="bar"><span title="orientation: 63.7%" style="width:63.7%;background:#9b7ede"></span><span title="doing: 35.0%" style="width:35.0%;background:#287271"></span><span title="reporting: 1.3%" style="width:1.3%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 63.7%</span> <span><i style="background:#287271"></i>doing 35.0%</span> <span><i style="background:#e0a458"></i>reporting 1.3%</span></div></section><section class="phase-card"><h3>oracle</h3>
+<div><b>19.0</b> wall min · orientation 18.7m · doing 0.0m · reporting 0.3m</div>
+<div class="bar"><span title="orientation: 98.3%" style="width:98.3%;background:#9b7ede"></span><span title="reporting: 1.7%" style="width:1.7%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 98.3%</span> <span><i style="background:#287271"></i>doing 0.0%</span> <span><i style="background:#e0a458"></i>reporting 1.7%</span></div></section><section class="phase-card"><h3>researcher</h3>
+<div><b>0.8</b> wall min · orientation 0.7m · doing 0.0m · reporting 0.1m</div>
+<div class="bar"><span title="orientation: 89.3%" style="width:89.3%;background:#9b7ede"></span><span title="doing: 2.5%" style="width:2.5%;background:#287271"></span><span title="reporting: 8.2%" style="width:8.2%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 89.3%</span> <span><i style="background:#287271"></i>doing 2.5%</span> <span><i style="background:#e0a458"></i>reporting 8.2%</span></div></section><section class="phase-card"><h3>reviewer</h3>
+<div><b>220.0</b> wall min · orientation 220.0m · doing 0.0m · reporting 0.0m</div>
+<div class="bar"><span title="orientation: 100.0%" style="width:100.0%;background:#9b7ede"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 100.0%</span> <span><i style="background:#287271"></i>doing 0.0%</span> <span><i style="background:#e0a458"></i>reporting 0.0%</span></div></section><section class="phase-card"><h3>scout</h3>
+<div><b>48.8</b> wall min · orientation 32.4m · doing 0.2m · reporting 16.1m</div>
+<div class="bar"><span title="orientation: 66.5%" style="width:66.5%;background:#9b7ede"></span><span title="doing: 0.5%" style="width:0.5%;background:#287271"></span><span title="reporting: 33.0%" style="width:33.0%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 66.5%</span> <span><i style="background:#287271"></i>doing 0.5%</span> <span><i style="background:#e0a458"></i>reporting 33.0%</span></div></section><section class="phase-card"><h3>worker</h3>
+<div><b>498.7</b> wall min · orientation 120.9m · doing 349.1m · reporting 28.7m</div>
+<div class="bar"><span title="orientation: 24.2%" style="width:24.2%;background:#9b7ede"></span><span title="doing: 70.0%" style="width:70.0%;background:#287271"></span><span title="reporting: 5.8%" style="width:5.8%;background:#e0a458"></span></div><div class="legend"><span><i style="background:#9b7ede"></i>orientation 24.2%</span> <span><i style="background:#287271"></i>doing 70.0%</span> <span><i style="background:#e0a458"></i>reporting 5.8%</span></div></section></div>
+<h3>Every child run</h3><div class="table-wrap"><table><thead><tr><th>Agent</th><th>Run</th><th>Wall min</th><th>Orientation min / share</th><th>Doing min / share</th><th>Reporting min / share</th></tr></thead><tbody><tr><td>worker</td><td><code>5a92b7a8-95a3-4478-9805-06ddb0f19d5d</code></td><td>50.84</td>
+<td>3.47 / 6.8%</td>
+<td>30.02 / 59.0%</td>
+<td>17.35 / 34.2%</td></tr><tr><td>worker</td><td><code>42780897-b4fa-4126-91ad-050e13da38fd</code></td><td>35.30</td>
+<td>3.10 / 8.8%</td>
+<td>31.60 / 89.5%</td>
+<td>0.60 / 1.7%</td></tr><tr><td>worker</td><td><code>d8e9b173-a59d-4cff-ac17-91c54d317613</code></td><td>30.00</td>
+<td>4.03 / 13.4%</td>
+<td>25.93 / 86.4%</td>
+<td>0.04 / 0.2%</td></tr><tr><td>worker</td><td><code>0a9c42d3-a58e-4031-ad8b-4212894caadc</code></td><td>29.95</td>
+<td>6.53 / 21.8%</td>
+<td>23.07 / 77.0%</td>
+<td>0.35 / 1.2%</td></tr><tr><td>reviewer</td><td><code>a4461d9c-14dd-4d39-b399-f3964439620a</code></td><td>29.95</td>
+<td>29.95 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>16a74125-d86a-4cf3-90da-2a084b80689e</code></td><td>29.87</td>
+<td>2.81 / 9.4%</td>
+<td>26.64 / 89.2%</td>
+<td>0.42 / 1.4%</td></tr><tr><td>worker</td><td><code>b0b946a1-5ac6-4aaf-a202-71a7fa7e0676</code></td><td>29.73</td>
+<td>19.90 / 66.9%</td>
+<td>9.82 / 33.1%</td>
+<td>0.00 / -0.0%</td></tr><tr><td>scout</td><td><code>7adcf8e0-33c9-4c21-9311-9faaa81a0171</code></td><td>28.25</td>
+<td>13.00 / 46.0%</td>
+<td>0.00 / 0.0%</td>
+<td>15.25 / 54.0%</td></tr><tr><td>worker</td><td><code>c39bb1d6-0c10-44c2-bdae-5d233cf2362a</code></td><td>25.15</td>
+<td>4.94 / 19.6%</td>
+<td>19.66 / 78.2%</td>
+<td>0.55 / 2.2%</td></tr><tr><td>worker</td><td><code>f74f9cd1-28cb-4af3-82db-e58418acee25</code></td><td>24.90</td>
+<td>4.21 / 16.9%</td>
+<td>20.55 / 82.5%</td>
+<td>0.14 / 0.6%</td></tr><tr><td>worker</td><td><code>1ecf22ee-9951-4edd-9d7f-f692ca835f0e</code></td><td>24.24</td>
+<td>5.38 / 22.2%</td>
+<td>18.25 / 75.3%</td>
+<td>0.61 / 2.5%</td></tr><tr><td>reviewer</td><td><code>bb7320b0-0fb0-4966-8d89-2dc57969edf3</code></td><td>20.41</td>
+<td>20.41 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>301bc6ad-a8cf-4360-b8f2-fecdf0c7b589</code></td><td>19.94</td>
+<td>3.01 / 15.1%</td>
+<td>16.87 / 84.6%</td>
+<td>0.06 / 0.3%</td></tr><tr><td>worker</td><td><code>d474971f-ff38-4095-8135-aa5557e1c2bf</code></td><td>19.89</td>
+<td>5.86 / 29.5%</td>
+<td>14.02 / 70.5%</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>1301c122-e1e9-4d24-bb09-ebd89a8df836</code></td><td>19.63</td>
+<td>13.43 / 68.4%</td>
+<td>6.20 / 31.6%</td>
+<td>0.00 / -0.0%</td></tr><tr><td>delegate</td><td><code>93469c1e-ea43-4bbc-9ccd-f13a5a6c6865</code></td><td>16.34</td>
+<td>0.65 / 4.0%</td>
+<td>15.69 / 96.0%</td>
+<td>0.01 / 0.0%</td></tr><tr><td>delegate</td><td><code>fe230626-c855-42c7-9ca2-e1a2a77e1f5f</code></td><td>14.87</td>
+<td>14.26 / 95.9%</td>
+<td>0.52 / 3.5%</td>
+<td>0.09 / 0.6%</td></tr><tr><td>reviewer</td><td><code>56986940-fe7d-405a-84d4-f9f7982da51f</code></td><td>13.93</td>
+<td>13.93 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>1eeb8471-2ef9-4d07-926e-394bf4e9b7ae</code></td><td>13.53</td>
+<td>3.51 / 25.9%</td>
+<td>9.67 / 71.5%</td>
+<td>0.35 / 2.6%</td></tr><tr><td>worker</td><td><code>1f2e126e-5b74-4049-b294-2e0713e40688</code></td><td>13.35</td>
+<td>1.85 / 13.9%</td>
+<td>10.98 / 82.2%</td>
+<td>0.52 / 3.9%</td></tr><tr><td>worker</td><td><code>48aaf124-bd95-4396-8f02-8b5b23a60d90</code></td><td>12.26</td>
+<td>3.58 / 29.2%</td>
+<td>8.05 / 65.7%</td>
+<td>0.63 / 5.1%</td></tr><tr><td>worker</td><td><code>c8478744-cc5f-42c6-af92-8ebf71c2bce7</code></td><td>12.15</td>
+<td>4.17 / 34.3%</td>
+<td>7.41 / 61.0%</td>
+<td>0.57 / 4.7%</td></tr><tr><td>worker</td><td><code>6f131bbd-a36f-4ad3-a5c0-f39d97bc0ee1</code></td><td>11.99</td>
+<td>3.35 / 28.0%</td>
+<td>8.19 / 68.3%</td>
+<td>0.44 / 3.7%</td></tr><tr><td>delegate</td><td><code>0b581084-24a3-4163-a589-d7d158737d93</code></td><td>11.89</td>
+<td>11.79 / 99.1%</td>
+<td>0.01 / 0.0%</td>
+<td>0.10 / 0.9%</td></tr><tr><td>worker</td><td><code>6fc6b1b5-e1af-4608-a464-be208b79983c</code></td><td>11.00</td>
+<td>2.02 / 18.4%</td>
+<td>8.11 / 73.7%</td>
+<td>0.87 / 7.9%</td></tr><tr><td>delegate</td><td><code>e417471b-af19-43a8-ab11-90391aaff490</code></td><td>10.89</td>
+<td>3.43 / 31.5%</td>
+<td>7.37 / 67.6%</td>
+<td>0.09 / 0.9%</td></tr><tr><td>delegate</td><td><code>c4a5d790-4319-4341-97ab-0d69590e0715</code></td><td>10.83</td>
+<td>3.04 / 28.1%</td>
+<td>7.63 / 70.4%</td>
+<td>0.16 / 1.5%</td></tr><tr><td>reviewer</td><td><code>d1467fc6-91c0-41b8-8868-16f6e586e4e5</code></td><td>10.80</td>
+<td>10.80 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>77b1f9b4-50f9-407e-be8e-17cf7101912a</code></td><td>10.36</td>
+<td>3.38 / 32.6%</td>
+<td>6.76 / 65.3%</td>
+<td>0.22 / 2.1%</td></tr><tr><td>reviewer</td><td><code>9e492631-a2e4-4a4a-888c-5ca5bd1f867e</code></td><td>10.33</td>
+<td>10.33 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>41e98401-321f-44f5-980f-8a92af9043f7</code></td><td>10.27</td>
+<td>10.13 / 98.6%</td>
+<td>0.03 / 0.3%</td>
+<td>0.11 / 1.1%</td></tr><tr><td>worker</td><td><code>479083ed-42e8-4ece-844e-67cf11dbf8d5</code></td><td>10.03</td>
+<td>1.93 / 19.2%</td>
+<td>7.54 / 75.2%</td>
+<td>0.56 / 5.6%</td></tr><tr><td>oracle</td><td><code>b5ce5c91-26d4-40b4-99ad-379146d88cb1</code></td><td>9.95</td>
+<td>9.95 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>0b93550b-4d3f-4b23-859e-854066fc7f16</code></td><td>9.90</td>
+<td>1.84 / 18.6%</td>
+<td>7.93 / 80.2%</td>
+<td>0.12 / 1.2%</td></tr><tr><td>reviewer</td><td><code>2e891925-3074-43e1-8b8f-e39411dca84d</code></td><td>9.79</td>
+<td>9.79 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>7703a460-29a1-4fca-8b33-67cd258aebcb</code></td><td>9.74</td>
+<td>9.74 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>6a6d8c45-d86f-4eb7-9581-bac17e0c3975</code></td><td>9.32</td>
+<td>0.75 / 8.1%</td>
+<td>8.10 / 86.9%</td>
+<td>0.47 / 5.0%</td></tr><tr><td>reviewer</td><td><code>799c79b3-2e21-41dd-9b6a-cb9f941df457</code></td><td>9.18</td>
+<td>9.18 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>089c3532-de31-48ba-8eef-d09b8b076c35</code></td><td>8.62</td>
+<td>8.62 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>24d9e4de-0633-4c64-b07a-2438276e7f6a</code></td><td>8.53</td>
+<td>2.52 / 29.5%</td>
+<td>5.61 / 65.8%</td>
+<td>0.40 / 4.7%</td></tr><tr><td>worker</td><td><code>ff3ee518-6044-48af-a7df-0c593a42c58e</code></td><td>8.32</td>
+<td>1.13 / 13.6%</td>
+<td>6.71 / 80.6%</td>
+<td>0.49 / 5.8%</td></tr><tr><td>worker</td><td><code>0c53401a-5e00-44c3-920c-6cf1649b6fa9</code></td><td>8.27</td>
+<td>4.00 / 48.4%</td>
+<td>4.13 / 50.0%</td>
+<td>0.14 / 1.6%</td></tr><tr><td>reviewer</td><td><code>65ffd8b6-d364-4c45-939b-e5b847becc13</code></td><td>7.96</td>
+<td>7.96 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>e848727e-be83-48f4-8481-d5c57f3d30d3</code></td><td>7.67</td>
+<td>4.87 / 63.5%</td>
+<td>2.65 / 34.5%</td>
+<td>0.15 / 2.0%</td></tr><tr><td>reviewer</td><td><code>ab0f5ddf-4d16-4248-b333-f014c3b12995</code></td><td>7.26</td>
+<td>7.26 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>5a6a548c-ee60-4c00-82dc-06d40caa8187</code></td><td>7.21</td>
+<td>7.21 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>62717b9c-968b-401c-b502-e023dc6a7a8c</code></td><td>7.05</td>
+<td>6.94 / 98.4%</td>
+<td>0.01 / 0.1%</td>
+<td>0.10 / 1.5%</td></tr><tr><td>delegate</td><td><code>3848ae86-7e6c-4983-ba0b-055e8a3b035e</code></td><td>6.76</td>
+<td>6.76 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>b79f7e8b-7448-45f0-a0b4-a92c4e44c6ec</code></td><td>6.50</td>
+<td>1.47 / 22.6%</td>
+<td>4.57 / 70.3%</td>
+<td>0.46 / 7.1%</td></tr><tr><td>reviewer</td><td><code>26124f21-d2f2-49a7-bf23-d331a40f37e7</code></td><td>6.22</td>
+<td>6.22 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>643c6ecc-1dc1-462a-8ea9-9a33142b157c</code></td><td>6.10</td>
+<td>6.10 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td><td>6.06</td>
+<td>6.06 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>ad797cfc-f176-4def-8048-4255e672fa74</code></td><td>6.02</td>
+<td>0.94 / 15.6%</td>
+<td>4.52 / 75.1%</td>
+<td>0.56 / 9.3%</td></tr><tr><td>delegate</td><td><code>70943cf8-8e20-494b-a5a2-caaf4d263d73</code></td><td>5.97</td>
+<td>5.85 / 98.0%</td>
+<td>0.01 / 0.1%</td>
+<td>0.11 / 1.9%</td></tr><tr><td>oracle</td><td><code>124a0875-8d49-4602-99b4-2123169a9f8e</code></td><td>5.92</td>
+<td>5.60 / 94.6%</td>
+<td>0.00 / 0.0%</td>
+<td>0.32 / 5.4%</td></tr><tr><td>worker</td><td><code>ff441a68-5fc7-4606-9726-28d56ca5a30c</code></td><td>5.60</td>
+<td>0.55 / 9.9%</td>
+<td>4.44 / 79.2%</td>
+<td>0.61 / 10.9%</td></tr><tr><td>delegate</td><td><code>5d9e2ee2-3399-4f03-b9c7-d1d955fb2ba4</code></td><td>5.58</td>
+<td>3.12 / 55.9%</td>
+<td>2.35 / 42.1%</td>
+<td>0.11 / 2.0%</td></tr><tr><td>reviewer</td><td><code>f258e7a4-3bc6-4d3b-a713-62a53d16070e</code></td><td>5.54</td>
+<td>5.54 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>c912755d-c0ba-4c62-b8b7-f366d6ed6aec</code></td><td>5.44</td>
+<td>5.44 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>da470b33-07d9-47dd-a1f9-53ec4c35d5d2</code></td><td>5.24</td>
+<td>5.24 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>d3e601eb-27ba-4ee5-9a9c-693a314d9314</code></td><td>5.11</td>
+<td>5.11 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>361c1ba2-12b8-4fd6-8126-ebad9332fcea</code></td><td>5.09</td>
+<td>5.09 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>c396980a-1968-4f15-bc62-f7bb91faa2ef</code></td><td>5.06</td>
+<td>4.92 / 97.2%</td>
+<td>0.06 / 1.3%</td>
+<td>0.08 / 1.5%</td></tr><tr><td>delegate</td><td><code>4c10e760-04ae-49bd-838f-b7082d9cf565</code></td><td>4.54</td>
+<td>4.38 / 96.6%</td>
+<td>0.07 / 1.6%</td>
+<td>0.08 / 1.8%</td></tr><tr><td>delegate</td><td><code>287900b7-f0b0-4176-bb3b-0597db5d840b</code></td><td>4.35</td>
+<td>0.40 / 9.3%</td>
+<td>3.77 / 86.6%</td>
+<td>0.18 / 4.1%</td></tr><tr><td>reviewer</td><td><code>482014f0-5782-4e5e-8a1a-4dcdb633ed50</code></td><td>4.27</td>
+<td>4.27 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>worker</td><td><code>35c1db4d-728f-4316-922c-a8250ecfaed0</code></td><td>3.93</td>
+<td>0.84 / 21.3%</td>
+<td>2.66 / 67.7%</td>
+<td>0.43 / 11.0%</td></tr><tr><td>delegate</td><td><code>383060a5-9bcf-4d0b-b073-0c3924271135</code></td><td>3.81</td>
+<td>3.67 / 96.3%</td>
+<td>0.07 / 1.8%</td>
+<td>0.07 / 1.9%</td></tr><tr><td>scout</td><td><code>5321bac3-18c5-4b52-8e91-122ab73211bb</code></td><td>3.64</td>
+<td>3.59 / 98.4%</td>
+<td>0.00 / 0.0%</td>
+<td>0.06 / 1.6%</td></tr><tr><td>worker</td><td><code>6a43410d-3efa-4d8a-8c8b-84d8b0395ece</code></td><td>3.57</td>
+<td>0.48 / 13.4%</td>
+<td>2.41 / 67.3%</td>
+<td>0.69 / 19.3%</td></tr><tr><td>reviewer</td><td><code>91debd4c-9e5f-4286-895e-fdcc318619d5</code></td><td>3.38</td>
+<td>3.38 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>4063416a-503f-406d-aeda-91d35ca07e4d</code></td><td>3.38</td>
+<td>3.38 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>293a445a-f280-49e2-be06-01a8eaf119d8</code></td><td>3.34</td>
+<td>3.34 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>e5e14587-c5cb-4a1f-9461-9e73c9f346a3</code></td><td>3.21</td>
+<td>3.15 / 98.4%</td>
+<td>0.00 / 0.0%</td>
+<td>0.05 / 1.6%</td></tr><tr><td>oracle</td><td><code>7e039208-4675-4c22-aad6-bb844843d4ed</code></td><td>3.16</td>
+<td>3.16 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>22d43787-2d32-4693-99ac-d7020ef5b811</code></td><td>2.90</td>
+<td>2.90 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>4cca6523-e2a4-450b-bfe0-aab3ba4b30d6</code></td><td>2.86</td>
+<td>2.86 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>232967bc-438a-456c-b83c-a6ff6bb2961c</code></td><td>2.73</td>
+<td>2.51 / 91.8%</td>
+<td>0.01 / 0.2%</td>
+<td>0.22 / 8.0%</td></tr><tr><td>reviewer</td><td><code>b61a65da-76aa-4392-a2ff-8c92e3d8cc27</code></td><td>2.43</td>
+<td>2.43 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>d1d714f7-e317-4b20-9273-fb484cb5617e</code></td><td>2.42</td>
+<td>2.42 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>7b1d6568-28b9-43f0-84e5-8e2cc8a72f98</code></td><td>2.42</td>
+<td>2.42 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>d5ceaa7a-a221-4d0d-aa9a-594beb39c06e</code></td><td>2.36</td>
+<td>2.36 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>d21f5437-0348-45e8-997f-001cc3f774aa</code></td><td>2.28</td>
+<td>2.19 / 96.3%</td>
+<td>0.02 / 0.8%</td>
+<td>0.07 / 2.9%</td></tr><tr><td>reviewer</td><td><code>a63613b2-7c00-457d-84f0-9cdfcc90adce</code></td><td>2.16</td>
+<td>2.16 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>813f4184-568e-451b-ab0e-d9e8cdaa78a2</code></td><td>2.09</td>
+<td>1.79 / 85.8%</td>
+<td>0.02 / 1.0%</td>
+<td>0.28 / 13.2%</td></tr><tr><td>scout</td><td><code>947c8c60-ecf5-4350-8264-67df0fee8565</code></td><td>2.07</td>
+<td>2.01 / 96.9%</td>
+<td>0.00 / 0.0%</td>
+<td>0.06 / 3.1%</td></tr><tr><td>reviewer</td><td><code>97580268-18d4-4668-8fab-f32c0e539740</code></td><td>1.94</td>
+<td>1.94 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>230398a4-5804-4e0c-a643-e0888b17c7af</code></td><td>1.71</td>
+<td>1.59 / 93.4%</td>
+<td>0.01 / 0.3%</td>
+<td>0.11 / 6.3%</td></tr><tr><td>scout</td><td><code>330ea07d-75da-4a66-9655-9727bc4d6633</code></td><td>1.61</td>
+<td>1.51 / 93.7%</td>
+<td>0.03 / 1.8%</td>
+<td>0.07 / 4.5%</td></tr><tr><td>scout</td><td><code>491be068-ea75-4bb5-8659-492fcb4308f1</code></td><td>1.60</td>
+<td>1.49 / 92.9%</td>
+<td>0.02 / 1.3%</td>
+<td>0.09 / 5.8%</td></tr><tr><td>reviewer</td><td><code>6448aef2-c6d4-4997-88f1-92b3c71fbc7a</code></td><td>1.60</td>
+<td>1.60 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>1a8cbe72-e840-4c24-a56e-274345d11f37</code></td><td>1.32</td>
+<td>1.32 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>6d9d06c4-e134-42dd-af3e-4cf1a4f2fc4a</code></td><td>1.28</td>
+<td>1.22 / 95.2%</td>
+<td>0.02 / 1.3%</td>
+<td>0.04 / 3.5%</td></tr><tr><td>reviewer</td><td><code>f83022da-36ee-4015-a722-d5fb1cb8d725</code></td><td>1.27</td>
+<td>1.27 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>3c66779a-7c59-4867-9dbf-ad472eb73028</code></td><td>1.25</td>
+<td>1.25 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>5565f38d-360b-48d7-b071-284a6d793945</code></td><td>1.21</td>
+<td>1.05 / 86.9%</td>
+<td>0.09 / 7.6%</td>
+<td>0.07 / 5.5%</td></tr><tr><td>worker</td><td><code>6b6720c3-c702-4828-82b6-db33ba05601a</code></td><td>1.20</td>
+<td>0.17 / 14.4%</td>
+<td>0.74 / 62.2%</td>
+<td>0.28 / 23.4%</td></tr><tr><td>scout</td><td><code>3a70c06c-234a-434b-9f7d-01ec52710a1f</code></td><td>1.19</td>
+<td>1.09 / 91.3%</td>
+<td>0.02 / 1.5%</td>
+<td>0.09 / 7.2%</td></tr><tr><td>reviewer</td><td><code>b5e6c127-5d69-45f2-b820-4dba8176c417</code></td><td>1.09</td>
+<td>1.09 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>researcher</td><td><code>87996fdf-fad3-48ce-ad51-bc893ae03d5c</code></td><td>0.83</td>
+<td>0.74 / 89.3%</td>
+<td>0.02 / 2.5%</td>
+<td>0.07 / 8.2%</td></tr><tr><td>delegate</td><td><code>3dc9f005-29a0-4ed9-be10-2e6a2f94460f</code></td><td>0.59</td>
+<td>0.59 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>5f09fe90-ec49-48e8-8f02-96df6bdccb8a</code></td><td>0.52</td>
+<td>0.52 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>0bd11a3c-f3be-4440-9e70-dfbf5eb86643</code></td><td>0.46</td>
+<td>0.46 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>4841a2f6-c3e5-4093-9bc3-144c877548a9</code></td><td>0.22</td>
+<td>0.22 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>reviewer</td><td><code>556e49d5-5252-4a7a-b38b-b881862ec07a</code></td><td>0.22</td>
+<td>0.22 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>cfbdd080-e528-480a-adda-952f0bd87327</code></td><td>0.22</td>
+<td>0.22 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>scout</td><td><code>073bf259-4f66-43af-84d2-585e5365844d</code></td><td>0.14</td>
+<td>0.12 / 82.8%</td>
+<td>0.00 / 0.2%</td>
+<td>0.02 / 17.0%</td></tr><tr><td>delegate</td><td><code>21897ecd-aa2a-4096-92d6-3820c9ba0916</code></td><td>0.13</td>
+<td>0.13 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>0bdf47a8-084b-41ef-bfa9-98bbc93d80b5</code></td><td>0.10</td>
+<td>0.10 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr><tr><td>delegate</td><td><code>1275cca4-bfff-4ae6-a65c-dca0c4834a8f</code></td><td>0.06</td>
+<td>0.06 / 100.0%</td>
+<td>read-only; no doing phase</td>
+<td>0.00 / 0.0%</td></tr></tbody></table></div>
+<h3>30 slowest operations</h3><p>Model stalls are event gaps over 60 seconds with no tool call in flight. Arguments show only commands, paths, and search patterns.</p>
+<div class="table-wrap"><table><thead><tr><th>Duration</th><th>Operation</th><th>Argument</th><th>Run</th><th>Agent</th><th>Model</th></tr></thead><tbody><tr><td>17.56m</td><td>model stall</td>
+<td><code>2026-09-08T22:12:44.812000+00:00 to 2026-09-08T22:30:18.371000+00:00</code></td><td><code>5a92b7a8-95a3-4478-9805-06ddb0f19d5d</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>16.03m</td><td>model stall</td>
+<td><code>2026-09-09T08:59:06.210000+00:00 to 2026-09-09T09:15:07.879000+00:00</code></td><td><code>a4461d9c-14dd-4d39-b399-f3964439620a</code></td>
+<td>reviewer</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>16.00m</td><td>model stall</td>
+<td><code>2026-09-09T17:50:52.608000+00:00 to 2026-09-09T18:06:52.929000+00:00</code></td><td><code>bb7320b0-0fb0-4966-8d89-2dc57969edf3</code></td>
+<td>reviewer</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>15.33m</td><td>bash</td>
+<td><code>set -o pipefail agent-browser open file:///Users/jakubszwajka/.agents/system.html; echo open_exit:$? agent-browser wait --load networkidle;…</code></td><td><code>93469c1e-ea43-4bbc-9ccd-f13a5a6c6865</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-5.6-luna:medium</code></td></tr><tr><td>15.17m</td><td>model stall</td>
+<td><code>2026-09-09T08:58:59.125000+00:00 to 2026-09-09T09:14:09.370000+00:00</code></td><td><code>7adcf8e0-33c9-4c21-9311-9faaa81a0171</code></td>
+<td>scout</td><td><code>openai-codex/gpt-5.6-luna:low</code></td></tr><tr><td>8.21m</td><td>bash</td>
+<td><code>set +e npm run verify &gt; /tmp/offerlink-final-qa/npm-run-verify.log 2&gt;&amp;1 status=$? printf &#x27;npm run verify exit: %s\n&#x27; &quot;$status&quot; printf &#x27;%s\n…</code></td><td><code>fe230626-c855-42c7-9ca2-e1a2a77e1f5f</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-5.6-luna</code></td></tr><tr><td>8.07m</td><td>bash</td>
+<td><code>npm run verify</code></td><td><code>d8e9b173-a59d-4cff-ac17-91c54d317613</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>6.39m</td><td>bash</td>
+<td><code>cd ~/.agents &amp;&amp; grep -rl &quot;workflowScript\|runs.all\|runs.lanes\|prompt-workflow&quot; . 2&gt;/dev/null | head -20; echo &quot;=== version ===&quot;; cat ~/.p…</code></td><td><code>b5ce5c91-26d4-40b4-99ad-379146d88cb1</code></td>
+<td>oracle</td><td><code>anthropic/claude-opus-5:high</code></td></tr><tr><td>6.39m</td><td>bash</td>
+<td><code>cd ~/.agents &amp;&amp; ls -la &amp;&amp; echo &quot;=== pi ===&quot; &amp;&amp; find pi -maxdepth 3 -type f | head -60 &amp;&amp; echo &quot;=== agents ===&quot; &amp;&amp; ls -la ~/.pi/agent/agents…</code></td><td><code>b5ce5c91-26d4-40b4-99ad-379146d88cb1</code></td>
+<td>oracle</td><td><code>anthropic/claude-opus-5:high</code></td></tr><tr><td>5.60m</td><td>model stall</td>
+<td><code>2026-09-09T17:16:51.679000+00:00 to 2026-09-09T17:22:27.732000+00:00</code></td><td><code>1301c122-e1e9-4d24-bb09-ebd89a8df836</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.25m</td><td>bash</td>
+<td><code>JITI=&quot;$HOME/.pi/agent/npm/node_modules/.bin/jiti&quot;; for test in pi/extensions/task-log/*.test.ts; do echo &quot;=== $test ===&quot;; &quot;$JITI&quot; &quot;$test&quot; &amp;…</code></td><td><code>7adcf8e0-33c9-4c21-9311-9faaa81a0171</code></td>
+<td>scout</td><td><code>openai-codex/gpt-5.6-luna:low</code></td></tr><tr><td>5.02m</td><td>find</td>
+<td><code>**/lucy-harness/src/commands/stop.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.02m</td><td>find</td>
+<td><code>**/lucy-harness/src/target.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.02m</td><td>find</td>
+<td><code>**/lucy-harness/src/main.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.01m</td><td>find</td>
+<td><code>**/lucy-harness/src/commands/start.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.01m</td><td>find</td>
+<td><code>**/lucy-harness/src/agent-control.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.01m</td><td>find</td>
+<td><code>**/lucy-harness/src/subagents.ts | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.01m</td><td>find</td>
+<td><code>**/docs/workflows.md | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.01m</td><td>find</td>
+<td><code>**/docs/observability.md | /Users/jakubszwajka</code></td><td><code>8b3affc7-bf5c-4f2b-a0f4-8cb2f6834591</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>5.00m</td><td>bash</td>
+<td><code>git status --short -- .scratch/show-me-task-tool.html &amp;&amp; git diff -- .scratch/show-me-task-tool.html</code></td><td><code>da470b33-07d9-47dd-a1f9-53ec4c35d5d2</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-5.6-luna</code></td></tr><tr><td>5.00m</td><td>find</td>
+<td><code>CONTEXT.md | /Users/jakubszwajka</code></td><td><code>da470b33-07d9-47dd-a1f9-53ec4c35d5d2</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-5.6-luna</code></td></tr><tr><td>5.00m</td><td>find</td>
+<td><code>*unslop* | /Users/jakubszwajka/.agents</code></td><td><code>da470b33-07d9-47dd-a1f9-53ec4c35d5d2</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-5.6-luna</code></td></tr><tr><td>4.67m</td><td>bash</td>
+<td><code>node &quot;$HOME/.nvm/versions/node/v24.16.0/lib/node_modules/hunkdiff/node_modules/typescript/bin/tsc&quot; --noEmit --strict --skipLibCheck --targe…</code></td><td><code>6f131bbd-a36f-4ad3-a5c0-f39d97bc0ee1</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.67m</td><td>bash</td>
+<td><code>set -e JITI=&quot;$HOME/.pi/agent/npm/node_modules/.bin/jiti&quot; for test in pi/extensions/task-log/{picker,extension.contract,repository-storage,c…</code></td><td><code>6f131bbd-a36f-4ad3-a5c0-f39d97bc0ee1</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.65m</td><td>model stall</td>
+<td><code>2026-09-09T08:49:48.446000+00:00 to 2026-09-09T08:54:27.483000+00:00</code></td><td><code>a4461d9c-14dd-4d39-b399-f3964439620a</code></td>
+<td>reviewer</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.64m</td><td>model stall</td>
+<td><code>2026-09-09T06:45:56.770000+00:00 to 2026-09-09T06:50:35.333000+00:00</code></td><td><code>089c3532-de31-48ba-8eef-d09b8b076c35</code></td>
+<td>reviewer</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.63m</td><td>model stall</td>
+<td><code>2026-09-09T16:02:43.130000+00:00 to 2026-09-09T16:07:20.775000+00:00</code></td><td><code>e848727e-be83-48f4-8481-d5c57f3d30d3</code></td>
+<td>worker</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.38m</td><td>model stall</td>
+<td><code>2026-09-09T08:50:04.631000+00:00 to 2026-09-09T08:54:27.481000+00:00</code></td><td><code>2e891925-3074-43e1-8b8f-e39411dca84d</code></td>
+<td>reviewer</td><td><code>openai-codex/gpt-5.6-sol:high</code></td></tr><tr><td>4.01m</td><td>bash</td>
+<td><code>export AGENT_BROWSER_SESSION=marketing-visual-a-recovery for spec in &#x27;home|/pl/&#x27; &#x27;prices|/pl/cennik-i-zapytania/&#x27; &#x27;place|/pl/twoje-miejsce/…</code></td><td><code>0b581084-24a3-4163-a589-d7d158737d93</code></td>
+<td>delegate</td><td><code>openai-codex/gpt-6-astra</code></td></tr><tr><td>3.74m</td><td>bash</td>
+<td><code>JITI=&quot;$HOME/.pi/agent/npm/node_modules/.bin/jiti&quot;; JITI=&quot;$JITI&quot; node - pi/extensions/task-log/*.test.ts &lt;&lt;&#x27;NODE&#x27; const {spawn}=require(&#x27;chi…</code></td><td><code>7adcf8e0-33c9-4c21-9311-9faaa81a0171</code></td>
+<td>scout</td><td><code>openai-codex/gpt-5.6-luna:low</code></td></tr></tbody></table></div>
+<h3>Model stalls</h3><div class="two-tables"><div class="table-wrap"><table><thead><tr><th>Agent</th><th>Events</th><th>Total min</th><th>Max min</th></tr></thead><tbody><tr><td>delegate</td><td>16</td><td>33.22</td><td>3.65</td></tr><tr><td>oracle</td><td>4</td><td>8.45</td><td>3.73</td></tr><tr><td>reviewer</td><td>38</td><td>98.58</td><td>16.03</td></tr><tr><td>scout</td><td>1</td><td>15.17</td><td>15.17</td></tr><tr><td>worker</td><td>52</td><td>99.17</td><td>17.56</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Model</th><th>Events</th><th>Total min</th><th>Max min</th></tr></thead><tbody><tr><td><code>anthropic/claude-opus-5:high</code></td><td>8</td><td>14.18</td><td>3.73</td></tr><tr><td><code>openai-codex/gpt-5.6-luna</code></td><td>5</td><td>11.89</td><td>2.88</td></tr><tr><td><code>openai-codex/gpt-5.6-luna:low</code></td><td>1</td><td>15.17</td><td>15.17</td></tr><tr><td><code>openai-codex/gpt-5.6-sol:high</code></td><td>84</td><td>189.70</td><td>17.56</td></tr><tr><td><code>openai-codex/gpt-5.6-sol:off</code></td><td>5</td><td>8.57</td><td>2.41</td></tr><tr><td><code>openai-codex/gpt-6-astra</code></td><td>3</td><td>7.68</td><td>3.65</td></tr><tr><td><code>openai-codex/gpt-6-astra:high</code></td><td>5</td><td>7.39</td><td>2.32</td></tr></tbody></table></div></div>
+<footer><ul><li>Levels 1–3 and 5 select children by _meta.json file mtime; level 4 selects parent sessions and children by in-range activity.</li><li>Child wall time is the first-to-last transcript timestamp; missing transcripts contribute zero wall time.</li><li>Failure taxonomy counts failed model attempts, while failure count counts child runs with non-zero or missing exitCode.</li><li>Parent cost, turns, and failure state are unavailable in parent session logs and are reported as zero.</li><li>Level 4 assigns each child to the latest-starting parent session in the same project whose activity window contains the child&#x27;s start; unmatched children are reported explicitly.</li><li>Level 4 clips session and child intervals to the requested UTC date range. Active time removes complete-inactivity gaps over 15 minutes.</li><li>Dead air is a parent event gap over five minutes with no parent tool in flight; human-wait and child-running intervals take priority in the elapsed-time split.</li><li>Phase boundaries use source-changing shell commands as doing; a run with only reads and read-only shell commands is reported as read-only with no doing phase.</li></ul></footer></main></body></html>

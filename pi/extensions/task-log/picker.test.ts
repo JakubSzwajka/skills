@@ -1,22 +1,28 @@
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import taskLog from "./index.ts";
-import { openTaskPicker, TASK_PICKER_WIDGET_KEY, TaskPicker } from "./picker.ts";
+import { temporaryRepository } from "./test-harness.ts";
+import { openTaskPicker, sanitizeTaskDisplay, TASK_PICKER_WIDGET_KEY, TaskPicker } from "./picker.ts";
 import { createTask, type Task } from "./store.ts";
 
 let registeredTaskCommand: any;
+const registeredCommands: string[] = [];
 const registeredTools: string[] = [];
+let activeTools: string[] = [];
 taskLog({
-	registerCommand(name: string, spec: any) { assert.equal(name, "task"); registeredTaskCommand = spec; },
-	registerTool(spec: any) { registeredTools.push(spec.name); },
+	registerCommand(name: string, spec: any) {
+		registeredCommands.push(name);
+		if (name === "task") registeredTaskCommand = spec;
+	},
+	registerTool(spec: any) { registeredTools.push(spec.name); activeTools.push(spec.name); },
 	on() {},
 	appendEntry() {},
-	sendMessage() {},
+	getActiveTools: () => [...activeTools],
+	setActiveTools(names: string[]) { activeTools = [...names]; },
 } as any);
 assert.ok(registeredTaskCommand, "task command registered");
-assert.deepEqual(registeredTools, ["task_log", "task_read"], "task domain tools remain registered");
+assert.deepEqual(registeredCommands, ["task", "task:continue", "task:attach", "task:status", "task:references", "task:new", "task:detach"]);
+assert.deepEqual(registeredTools, ["task_manage", "task_log", "task_read"], "task domain tools remain registered");
+assert.deepEqual(activeTools, registeredTools, "registration does not use runtime-only tool synchronization");
 
 const theme = {
 	fg: (_color: string, text: string) => text,
@@ -56,7 +62,7 @@ async function invoke(inputs: string[]) {
 			setEditorText(value: string) { editorWrites++; editor = value; },
 		},
 	} as any;
-	const pending = openTaskPicker(ctx, { tasks: [task], showDone: false });
+	const pending = openTaskPicker(ctx, { tasks: [task], showInactive: false });
 	assert.equal(placement, "aboveEditor");
 	assert.ok(component.render(60).length <= 17, "picker height stays bounded");
 	const consumed = inputs.map((input) => handler?.(input)?.consume === true);
@@ -72,10 +78,12 @@ async function invoke(inputs: string[]) {
 assert.equal((await invoke(["filter", "\u007f", "\u001b"])).kind, "close");
 assert.equal((await invoke(["\u000e"])).kind, "new");
 assert.equal((await invoke(["\u0004"])).kind, "done");
+assert.equal((await invoke(["\u0013"])).kind, "status");
+assert.equal((await invoke(["\u0012"])).kind, "references");
 assert.equal((await invoke(["\r"])).kind, "attach");
-assert.equal((await invoke(["\t"])).kind, "toggleDone");
+assert.equal((await invoke(["\t"])).kind, "toggleInactive");
 
-async function invokeWithOptions(inputs: string[], options: { tasks: Task[]; attachedPath?: string; showDone: boolean }) {
+async function invokeWithOptions(inputs: string[], options: { tasks: Task[]; attachedPath?: string; showInactive: boolean }) {
 	let handler: ((data: string) => { consume?: boolean }) | undefined;
 	const pending = openTaskPicker({
 		cwd: "/tmp",
@@ -88,20 +96,26 @@ async function invokeWithOptions(inputs: string[], options: { tasks: Task[]; att
 	return pending;
 }
 
-assert.equal((await invokeWithOptions(["\u0018"], { tasks: [task], attachedPath: task.path, showDone: false })).kind, "detach");
-assert.equal((await invokeWithOptions(["\u0003"], { tasks: [task], showDone: false })).kind, "close");
+assert.equal((await invokeWithOptions(["\u0018"], { tasks: [task], attachedPath: task.path, showInactive: false })).kind, "detach");
+assert.equal((await invokeWithOptions(["\u0003"], { tasks: [task], showInactive: false })).kind, "close");
 const other = { ...task, path: "/tmp/other.md", id: "other", title: "Zebra task" };
-const filtered = await invokeWithOptions(["\u001b[122u", "\r"], { tasks: [task, other], showDone: false });
+const filtered = await invokeWithOptions(["\u001b[122u", "\r"], { tasks: [task, other], showInactive: false });
 assert.equal(filtered.kind, "attach");
 assert.equal(filtered.kind === "attach" ? filtered.task.path : "", other.path, "Kitty printable filtering selects the matching task");
-const navigated = await invokeWithOptions(["\u001b[B", "\r"], { tasks: [task, other], showDone: false });
+const navigated = await invokeWithOptions(["\u001b[B", "\r"], { tasks: [task, other], showInactive: false });
 assert.equal(navigated.kind === "attach" ? navigated.task.path : "", other.path, "arrow navigation still delegates to the native select list");
+
+assert.equal(
+	sanitizeTaskDisplay("one\ttwo\r\nthree\n\u009b2Jfour\u001b]0;unsafe\u0007five"),
+	"one    two three fourfive",
+	"picker labels reuse output sanitizing and flatten tabs and newlines",
+);
 
 const hostile = { ...task, title: "Bad\u001b[31m\nTitle\u0007" };
 const hostilePicker = new TaskPicker(
 	{ requestRender() {} } as any,
 	theme as any,
-	{ tasks: [hostile], attachedPath: hostile.path, showDone: false },
+	{ tasks: [hostile], attachedPath: hostile.path, showInactive: false },
 	() => {},
 	"/tmp",
 );
@@ -112,7 +126,7 @@ assert.ok(hostileRender.includes("Bad Title"), "hostile task titles retain safe 
 const hostilePathPicker = new TaskPicker(
 	{ requestRender() {} } as any,
 	theme as any,
-	{ tasks: [], showDone: false },
+	{ tasks: [], showInactive: false },
 	() => {},
 	"/tmp/unsafe\u001b[2J\npath",
 );
@@ -130,7 +144,7 @@ await assert.rejects(openTaskPicker({
 		},
 		onTerminalInput() { throw new Error("must not subscribe"); },
 	},
-} as any, { tasks: [task], showDone: false }), /widget setup failed/);
+} as any, { tasks: [task], showInactive: false }), /widget setup failed/);
 assert.equal(setupCleared, true, "setup errors still clear the widget");
 
 async function runNestedDialogCase(cwd: string, firstKey: string, dialog: "input" | "confirm"): Promise<void> {
@@ -174,8 +188,8 @@ async function runNestedDialogCase(cwd: string, firstKey: string, dialog: "input
 	assert.equal(pickerCount, 2, "cancelled native dialog reopens a fresh picker");
 }
 
-await runNestedDialogCase(mkdtempSync(join(tmpdir(), "task-picker-input-")), "\u000e", "input");
-const confirmRoot = mkdtempSync(join(tmpdir(), "task-picker-confirm-"));
+await runNestedDialogCase(temporaryRepository(), "\u000e", "input");
+const confirmRoot = temporaryRepository();
 createTask(confirmRoot, "Confirm fixture", "");
 await runNestedDialogCase(confirmRoot, "\u0004", "confirm");
 

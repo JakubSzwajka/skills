@@ -26,24 +26,26 @@
 
 ## Delegation
 
-- Use the `pi-subagents` skill before building delegated workflows.
-- Delegate substantive execution by default. Keep the main agent focused on intent, decomposition, sequencing, decisions, integration, and communication.
-- Give each worker a bounded contribution and require a concise, evidence-backed return. Put large detail in local artifacts.
+- Read `~/.agents/ORCHESTRATION.md` at the start of any task that will change more than one file, and before starting a worker for any reason. Follow it.
+- A worker is a pi session in a herdr pane that you start with the `delegate` tool and own until you stop it. `delegate` is async: `start` returns at once and never blocks.
+- You orchestrate. You do not implement. Every brief names the paths a worker owns, and you do not open those paths afterwards. **This rule binds the orchestrator. A worker follows its brief and implements the work it was given.**
+- The handoff file is the result. `delegate({ action: "read", lane })` returns it. A terminal you scraped is not a result, and a lane that rang without writing its file has failed.
+- The tool writes the worker's return contract and the doorbell line. Never write those yourself.
+- A read-only lane is a profile with `readOnly`, which keeps `write` so the worker can still hand off. Removing `write` leaves it no return channel.
+- A read-only reviewer never applies its own findings, and neither do you. Start a writer that owns the files, then a fresh verifier that did not write the code.
+- Parallel lanes are read-only by default. Concurrent writers need explicit operator approval and one isolated checkout each.
+- A `blocked` lane is answered before anything else. Nothing else you are doing matters more.
+- Nothing wakes you unless the worker rings. It rings because the tool told it to. If you start a lane and never come back, the work sits unread.
+- You clean up what you start. Read the handoff, then `delegate({ action: "stop", lane })`. A lane is not finished until its pane is gone.
+- Depth is one. A worker has no `delegate` tool. If a lane needs sub-lanes, it is two lanes.
+- The tool assigns each lane's handoff path. Override it only when the artifact belongs in the repository, for example a research note or an atlas page, and then say so in the brief.
 
-| Task shape | Default route | Candidate models |
-| --- | --- | --- |
-| Lookup, extraction, commands, mechanical edits | Utility, low thinking | GPT-5.6 Luna, Claude Haiku 4.5 |
-| Scoped implementation, tests, routine review | Standard, medium thinking | GPT-5.6 Luna, Claude Sonnet 5 |
-| Hard bugs, migrations, security, architecture | Strong, high thinking | GPT-5.6 Sol, Claude Opus 5 |
-| Product intent, UX judgment, ambiguous planning, synthesis | Intent/strong, medium or high thinking | Claude Fable 5, GPT-5.6 Sol, Claude Opus 5 |
-| Independent challenge | Different-family strong model | latest stable Grok or Kimi K2.5 after real-work validation |
-
-- A family label means its latest available stable model at launch unless a task or validated profile pins another version. Resolve the exact current `provider/id` through the live model registry before passing an explicit model; do not silently substitute preview, `pro`, `fast`, or `batch` variants.
-- Treat the matrix as provisional and adjust it from real-work evidence. Choose the cheapest model that can reliably satisfy the lane contract. Consider ambiguity, risk, reversibility, and ease of verification. Escalate when acceptance or evidence fails.
-- For material decisions and hard reviews, prefer fresh independent opinions from different model families. Resolve disagreement through evidence, not majority vote.
-- Use one worker when one lane is enough. Parallel fan-out is read-only by default, and each lane must have a distinct contribution.
-- Plan writing lanes with an explicit goal, owned scope, and validation. In one checkout, run one writer at a time and check its result before starting the next.
-- Concurrent writers require explicit operator approval and one isolated worktree per writer.
+<pi-intercom>
+Coordinate with other local pi sessions on related codebases. Use `/skill:pi-intercom` for patterns.
+**When:** Same codebase (parallel work), reference codebase (consulting patterns), related repos (shared libraries).
+**Not when:** Unrelated codebases, trivial questions, or when you can proceed independently.
+**Principle:** Prefer `send` for notifications; `ask` only when blocked waiting for input.
+</pi-intercom>
 
 ## Implementation
 

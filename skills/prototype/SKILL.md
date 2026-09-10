@@ -7,6 +7,10 @@ description: Build a throwaway prototype to answer a design question. Use when t
 
 A prototype is **throwaway code that answers a question**. The question decides the shape.
 
+## Task continuity
+
+After preserving the prototype as directed below, if `task_log` is active, add its branch, path, or issue URL with the `task_manage` reference action. Then append a concise structured `handoff` with the question, verdict, next action, blockers, branch or worktree, latest commit, validation state, and references. Do not copy the artifact body into the task log. If `task_log` is inactive, skip these calls and continue the skill normally.
+
 ## Pick a branch
 
 Identify which question is being answered — from the user's prompt, the surrounding code, or by asking if the user is around:

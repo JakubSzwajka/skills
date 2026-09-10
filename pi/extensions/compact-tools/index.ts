@@ -50,6 +50,9 @@ const factories: Record<string, (cwd: string) => ToolDefinition<any, any, any>> 
 
 const definitions = new Map<string, ToolDefinition<any, any, any>>();
 
+/** Foreign tools whose live, multi-line display carries information the compact grid cannot preserve. */
+const RICH_ROW_TOOLS = new Set(["subagent"]);
+
 /** Built-in tools are cwd-bound at construction, so each working directory gets its own. */
 function definitionFor(name: string, cwd: string): ToolDefinition<any, any, any> {
   const key = `${name}:${cwd}`;
@@ -65,7 +68,11 @@ export default function (pi: ExtensionAPI): void {
   let theme: Theme | undefined;
 
   patchToolRows(
-    { theme: () => theme, owns: (name) => name in presenters, duration: durationLabel },
+    {
+      theme: () => theme,
+      owns: (name) => name in presenters || RICH_ROW_TOOLS.has(name),
+      duration: durationLabel,
+    },
     { onStart: trackStart, onEnd: trackEnd },
   );
   patchAssistantMessages();

@@ -3,246 +3,517 @@ import { Type } from "typebox";
 import { StringEnum } from "@earendil-works/pi-ai";
 import {
 	isToolCallEventType,
+	type ContextEvent,
 	type ExtensionAPI,
 	type ExtensionCommandContext,
 	type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { openTaskPicker } from "./picker.ts";
 import {
-	appendEntry,
-	createTask,
+	DEFAULT_READ_CHARS,
+	DEFAULT_READ_COUNT,
+	MAX_READ_CHARS,
+	MAX_READ_COUNT,
+	TASK_CONTEXT_CHARS,
+	readTaskPage,
+	renderCompactTaskContext,
+} from "./history.ts";
+import { TaskDurabilityUncertainError } from "./locking.ts";
+import { openTaskPicker, sanitizeTaskDisplay } from "./picker.ts";
+import { TaskService, type TaskAttachment, type TaskContinuation } from "./service.ts";
+import {
 	isTaskPath,
-	listTasks,
 	LOG_TYPES,
-	readTask,
-	renderEntry,
-	renderTask,
 	sessionTag,
-	setStatus,
+	TASK_STATUSES,
+	type Handoff,
 	type Task,
+	type TaskStatus,
 } from "./store.ts";
 
 const ATTACH_ENTRY = "task-log:attachment";
-const MESSAGE_TYPE = "task-log";
+const MESSAGE_TYPE = "task-log:context";
+const LEGACY_MESSAGE_TYPE = "task-log";
 const STATUS_KEY = "task-log";
-const MAX_INJECT_CHARS = 24_000;
-const MAX_READ_ENTRIES = 200;
-
-interface Attachment {
-	path: string;
-	id: string;
-	title: string;
-}
+const TASK_TOOLS = ["task_manage", "task_log", "task_read"] as const;
 
 export default function (pi: ExtensionAPI) {
-	let attached: Attachment | undefined;
-	let showDone = false;
+	let service: TaskService | undefined;
+	let serviceCwd: string | undefined;
+	let showInactive = false;
+	let lastManagementFingerprint: { path: string; fingerprint: string } | undefined;
+	const isSubagentChild = process.env.PI_SUBAGENT_CHILD === "1";
+	const taskManagementEnabled = !isSubagentChild;
+
+	const tasks = (cwd: string): TaskService => {
+		if (!service || serviceCwd !== cwd) {
+			const attachment = service?.getAttachment();
+			service = new TaskService(cwd);
+			serviceCwd = cwd;
+			if (attachment) service.restore(attachment);
+		}
+		return service;
+	};
+
+	const syncTaskTools = () => {
+		const attached = Boolean(service?.getAttachment());
+		const active = pi.getActiveTools().filter((name) => !TASK_TOOLS.includes(name as typeof TASK_TOOLS[number]));
+		if (taskManagementEnabled) {
+			active.push("task_manage");
+			if (attached) active.push("task_log", "task_read");
+		}
+		pi.setActiveTools([...new Set(active)]);
+	};
 
 	const showStatus = (ctx: ExtensionContext) => {
 		if (!ctx.hasUI) return;
-		ctx.ui.setStatus(STATUS_KEY, attached ? `task: ${attached.title}` : undefined);
+		const attached = tasks(ctx.cwd).getAttachment();
+		ctx.ui.setStatus(STATUS_KEY, attached ? `task: ${sanitizeTaskDisplay(attached.title)}` : undefined);
 	};
 
-	const requireTask = (): Task => {
-		if (!attached) {
-			throw new Error("No task is attached to this session. Ask the user to run /task to attach or create one.");
-		}
-		const task = readTask(attached.path);
-		if (!task) throw new Error(`Task file disappeared: ${attached.path}`);
-		return task;
-	};
-
-	const attach = (task: Task, ctx: ExtensionCommandContext) => {
-		const previous = attached && attached.path !== task.path ? attached.title : undefined;
-		attached = { path: task.path, id: task.id, title: task.title };
-		pi.appendEntry<Attachment | { path: null }>(ATTACH_ENTRY, attached);
+	const persistAttachment = (attachment: TaskAttachment, ctx: ExtensionContext) => {
+		pi.appendEntry<TaskAttachment>(ATTACH_ENTRY, attachment);
 		showStatus(ctx);
-
-		const tag = sessionTag(ctx.sessionManager.getSessionId());
-		const { text } = renderTask(task, MAX_INJECT_CHARS);
-		const content = [
-			previous ? `Switching away from "${previous}". Ignore it from now on.` : "",
-			`We are working on a saved task. Its log carries over between sessions, and this session writes entries tagged s:${tag}.`,
-			"",
-			text,
-			"",
-			"Keep the log useful for whoever picks this task up next:",
-			`- Call task_log when a decision is made, a commit lands, a constraint or gotcha turns up, something blocks progress, or the next step is agreed. Types: ${LOG_TYPES.join(", ")}.`,
-			"- Write entries that stand alone. Name files, commit hashes, and reasons, not \"as discussed above\".",
-			"- Do not log routine chatter or narration of what you are about to do.",
-			"- The task file is append only. Use task_log, never edit or write on it.",
-		]
-			.filter((line, index) => index > 0 || line !== "")
-			.join("\n");
-
-		pi.sendMessage({ customType: MESSAGE_TYPE, content, display: true }, { deliverAs: "nextTurn" });
-		ctx.ui.notify(`Attached task: ${task.title} (${task.entries.length} log entries)`, "info");
+		syncTaskTools();
 	};
 
-	const detach = (ctx: ExtensionCommandContext) => {
-		if (!attached) {
-			ctx.ui.notify("No task attached.", "warning");
-			return;
+	const attachTask = (task: Task, ctx: ExtensionContext) => {
+		const attachment = tasks(ctx.cwd).attach(task);
+		persistAttachment(attachment, ctx);
+		if (ctx.hasUI) ctx.ui.notify(`Attached task: ${sanitizeTaskDisplay(task.title)} (${task.entries.length} log entries)`, "info");
+		return attachment;
+	};
+
+	const detachTask = (ctx: ExtensionContext, notify = true) => {
+		const previous = tasks(ctx.cwd).detach();
+		lastManagementFingerprint = undefined;
+		if (!previous) {
+			if (notify && ctx.hasUI) ctx.ui.notify("No task attached.", "warning");
+			return undefined;
 		}
-		const title = attached.title;
-		attached = undefined;
-		pi.appendEntry<{ path: null }>(ATTACH_ENTRY, { path: null });
+		pi.appendEntry<{ taskId: null }>(ATTACH_ENTRY, { taskId: null });
 		showStatus(ctx);
-		pi.sendMessage(
-			{
-				customType: MESSAGE_TYPE,
-				content: `Task "${title}" was detached. Stop logging to it; task_log is unavailable until another task is attached.`,
-				display: true,
-			},
-			{ deliverAs: "nextTurn" },
-		);
-		ctx.ui.notify(`Detached task: ${title}`, "info");
+		syncTaskTools();
+		if (notify && ctx.hasUI) ctx.ui.notify(`Detached task: ${sanitizeTaskDisplay(previous.title)}`, "info");
+		return previous;
+	};
+
+	const persistContinuation = (continuation: TaskContinuation, ctx: ExtensionContext) => {
+		if (continuation.source !== "attached") persistAttachment(continuation.attachment, ctx);
+		else {
+			showStatus(ctx);
+			syncTaskTools();
+		}
+		return continuation;
+	};
+
+	const persistInvalidatedAttachment = (previous: TaskAttachment | undefined, domain: TaskService, ctx: ExtensionContext) => {
+		if (!previous || domain.getAttachment()) return;
+		pi.appendEntry<{ taskId: null }>(ATTACH_ENTRY, { taskId: null });
+		showStatus(ctx);
+		syncTaskTools();
 	};
 
 	const newTask = async (ctx: ExtensionCommandContext): Promise<Task | undefined> => {
 		const title = (await ctx.ui.input("Task title", "Rework auth to short-lived JWT"))?.trim();
 		if (!title) return undefined;
 		const description = (await ctx.ui.input("One line description (optional)", ""))?.trim() ?? "";
-		return createTask(ctx.cwd, title, description);
+		return tasks(ctx.cwd).create(title, description);
+	};
+
+	const mutationError = (action: string, error: unknown): string => error instanceof TaskDurabilityUncertainError
+		? error.message
+		: `Could not ${action}: ${error instanceof Error ? error.message : String(error)}`;
+
+	const changeStatus = async (task: Task, ctx: ExtensionCommandContext, requested?: string): Promise<void> => {
+		const choice = requested?.trim() || await ctx.ui.select("Task status", [...TASK_STATUSES]);
+		if (!choice) return;
+		if (!(TASK_STATUSES as readonly string[]).includes(choice)) {
+			ctx.ui.notify(`Unknown task status: ${choice}`, "error");
+			return;
+		}
+		const status = choice as TaskStatus;
+		if (status === "done" && !(await ctx.ui.confirm("Mark this task done?", task.title))) return;
+		try {
+			tasks(ctx.cwd).changeStatus(task.path, status);
+			ctx.ui.notify(`Marked ${status}: ${sanitizeTaskDisplay(task.title)}`, "info");
+			if (status === "done" && tasks(ctx.cwd).getAttachment()?.taskId === task.id) detachTask(ctx);
+		} catch (error) {
+			ctx.ui.notify(mutationError("change task status", error), "error");
+		}
+	};
+
+	const manageReferences = async (task: Task, ctx: ExtensionCommandContext): Promise<void> => {
+		const current = tasks(ctx.cwd).get(task.path);
+		const labels = current.refs.map((ref, index) => `${index + 1}. ${sanitizeTaskDisplay(ref)}`);
+		const choice = await ctx.ui.select("Task references", ["Add reference", ...labels]);
+		if (!choice) return;
+		try {
+			if (choice === "Add reference") {
+				const reference = await ctx.ui.input("Reference", "path, URL, ticket, or evidence");
+				if (!reference?.trim()) return;
+				tasks(ctx.cwd).addReference(task.path, reference);
+				ctx.ui.notify(`Added reference to: ${sanitizeTaskDisplay(task.title)}`, "info");
+				return;
+			}
+			const index = labels.indexOf(choice);
+			if (index === -1) throw new Error("Selected reference no longer exists.");
+			const action = await ctx.ui.select("Reference action", ["Edit", "Remove"]);
+			if (action === "Edit") {
+				const reference = await ctx.ui.input("Reference", current.refs[index]);
+				if (!reference?.trim()) return;
+				tasks(ctx.cwd).editReference(task.path, index, reference);
+				ctx.ui.notify(`Updated reference on: ${sanitizeTaskDisplay(task.title)}`, "info");
+			} else if (action === "Remove") {
+				if (!(await ctx.ui.confirm("Remove this reference?", current.refs[index]))) return;
+				tasks(ctx.cwd).removeReference(task.path, index);
+				ctx.ui.notify(`Removed reference from: ${sanitizeTaskDisplay(task.title)}`, "info");
+			}
+		} catch (error) {
+			ctx.ui.notify(mutationError("change task references", error), "error");
+		}
 	};
 
 	pi.registerCommand("task", {
-		description: "Task log: attach, create, finish (one screen, no arguments)",
+		description: "Task log: attach, create, lifecycle, and references",
 		handler: async (_args, ctx) => {
 			if (ctx.mode !== "tui") {
 				ctx.ui.notify("/task needs the interactive TUI.", "error");
 				return;
 			}
-
 			for (;;) {
-				const tasks = listTasks(ctx.cwd).filter((task) => showDone || task.status === "active");
-				const action = await openTaskPicker(ctx, { tasks, attachedPath: attached?.path, showDone });
-
+				const domain = tasks(ctx.cwd);
+				const action = await openTaskPicker(ctx, {
+					tasks: domain.list({ includeInactive: showInactive }),
+					attachedPath: domain.getAttachment()?.pathHint,
+					showInactive,
+				});
 				switch (action.kind) {
-					case "close":
-						return;
-					case "toggleDone":
-						showDone = !showDone;
-						continue;
-					case "attach":
-						attach(action.task, ctx);
-						return;
-					case "detach":
-						detach(ctx);
-						return;
+					case "close": return;
+					case "toggleInactive": showInactive = !showInactive; continue;
+					case "attach": attachTask(action.task, ctx); return;
+					case "detach": detachTask(ctx); return;
 					case "new": {
 						const task = await newTask(ctx);
 						if (!task) continue;
-						attach(task, ctx);
+						attachTask(task, ctx);
 						return;
 					}
 					case "done": {
-						const confirmed = await ctx.ui.confirm("Mark this task done?", action.task.title);
-						if (!confirmed) continue;
-						setStatus(action.task.path, "done");
-						ctx.ui.notify(`Marked done: ${action.task.title}`, "info");
-						if (attached?.path === action.task.path) {
-							detach(ctx);
-							return;
-						}
+						if (!(await ctx.ui.confirm("Mark this task done?", action.task.title))) continue;
+						domain.changeStatus(action.task.path, "done");
+						ctx.ui.notify(`Marked done: ${sanitizeTaskDisplay(action.task.title)}`, "info");
+						if (domain.getAttachment()?.taskId === action.task.id) { detachTask(ctx); return; }
 						continue;
+					}
+					case "status": await changeStatus(action.task, ctx); continue;
+					case "references": await manageReferences(action.task, ctx); continue;
+				}
+			}
+		},
+	});
+
+	pi.registerCommand("task:continue", {
+		description: "Continue the current or best active repository task",
+		handler: async (_args, ctx) => {
+			const domain = tasks(ctx.cwd);
+			const previous = domain.getAttachment();
+			const continuation = domain.continueTask();
+			if (!continuation) {
+				persistInvalidatedAttachment(previous, domain, ctx);
+				ctx.ui.notify("No active repository task is available.", "warning");
+				return;
+			}
+			persistContinuation(continuation, ctx);
+			ctx.ui.notify(`Continuing task: ${sanitizeTaskDisplay(continuation.task.title)}`, "info");
+		},
+	});
+
+	pi.registerCommand("task:attach", {
+		description: "Attach a task by ID",
+		handler: async (args, ctx) => {
+			const taskId = args.trim();
+			if (!taskId) { ctx.ui.notify("Usage: /task:attach <task-id>", "error"); return; }
+			try { attachTask(tasks(ctx.cwd).getById(taskId), ctx); }
+			catch (error) { ctx.ui.notify(error instanceof Error ? error.message : String(error), "error"); }
+		},
+	});
+
+	pi.registerCommand("task:status", {
+		description: "Set the attached task status: active, waiting, paused, or done",
+		handler: async (args, ctx) => {
+			if (ctx.mode !== "tui") { ctx.ui.notify("/task:status needs the interactive TUI.", "error"); return; }
+			try { await changeStatus(tasks(ctx.cwd).requireAttached(), ctx, args); }
+			catch (error) { ctx.ui.notify(error instanceof Error ? error.message : String(error), "error"); }
+		},
+	});
+
+	pi.registerCommand("task:references", {
+		description: "Add, edit, or remove references on the attached task",
+		handler: async (_args, ctx) => {
+			if (ctx.mode !== "tui") { ctx.ui.notify("/task:references needs the interactive TUI.", "error"); return; }
+			try { await manageReferences(tasks(ctx.cwd).requireAttached(), ctx); }
+			catch (error) { ctx.ui.notify(error instanceof Error ? error.message : String(error), "error"); }
+		},
+	});
+
+	pi.registerCommand("task:new", {
+		description: "Create and attach a task",
+		handler: async (_args, ctx) => {
+			if (ctx.mode !== "tui") { ctx.ui.notify("/task:new needs the interactive TUI.", "error"); return; }
+			const task = await newTask(ctx);
+			if (task) attachTask(task, ctx);
+		},
+	});
+
+	pi.registerCommand("task:detach", {
+		description: "Detach the current task",
+		handler: async (_args, ctx) => { detachTask(ctx); },
+	});
+
+	pi.registerTool({
+		name: "task_manage",
+		label: "Task Manage",
+		description: "List, continue, create, attach, detach, update status, or edit references for repository tasks.",
+		promptSnippet: "Reuse a task only when it covers the current request; otherwise create separate substantial work",
+		promptGuidelines: [
+			"Before substantial work, list active tasks. Attach one only when it covers the current request; otherwise create a task for separate work.",
+			"After producing a durable artifact, add it as a reference and append a concise structured handoff. Do not copy the artifact body into the task log.",
+		],
+		parameters: Type.Object({
+			action: StringEnum(["list", "continue", "create", "attach", "detach", "status", "reference"] as const),
+			taskId: Type.Optional(Type.String()),
+			title: Type.Optional(Type.String()),
+			description: Type.Optional(Type.String()),
+			request: Type.Optional(Type.String({ minLength: 1 })),
+			separate: Type.Optional(Type.Boolean()),
+			includeInactive: Type.Optional(Type.Boolean()),
+			status: Type.Optional(StringEnum(TASK_STATUSES)),
+			referenceAction: Type.Optional(StringEnum(["add", "edit", "remove"] as const)),
+			reference: Type.Optional(Type.String()),
+			referenceIndex: Type.Optional(Type.Integer({ minimum: 0 })),
+		}),
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			if (!taskManagementEnabled) throw new Error("Task management is disabled in subagent children.");
+			const domain = tasks(ctx.cwd);
+			if (params.action === "list") {
+				const listed = domain.list({ includeInactive: params.includeInactive ?? true }).map((task) => ({
+					id: sanitizeTaskDisplay(task.id), title: sanitizeTaskDisplay(task.title), status: task.status, entries: task.entries.length, attached: domain.getAttachment()?.taskId === task.id,
+				}));
+				return { content: [{ type: "text", text: JSON.stringify(listed, null, 2) }], details: { tasks: listed } };
+			}
+			if (params.action === "detach") {
+				const previous = detachTask(ctx, false);
+				return { content: [{ type: "text", text: previous ? `Detached ${sanitizeTaskDisplay(previous.title)}.` : "No task was attached." }], details: { detached: previous?.taskId } };
+			}
+
+			let task: Task;
+			let source: string = params.action;
+			if (params.action === "continue") {
+				const previous = domain.getAttachment();
+				if (!domain.getAttachment() && !params.separate && !params.request?.trim()) {
+					return { content: [{ type: "text", text: "List active tasks and attach one only if it covers the current request; otherwise create a separate task." }], details: { attached: false, needsRelevanceDecision: true } };
+				}
+				const continuation = domain.continueTask({ separate: params.separate, title: params.title, description: params.description, request: params.request });
+				if (!continuation) {
+					persistInvalidatedAttachment(previous, domain, ctx);
+					const attached = Boolean(domain.getAttachment());
+					return { content: [{ type: "text", text: attached
+						? "The attached active task does not cover this request. Create a separate task only if the request is substantial work."
+						: "No relevant active repository task is available. Create one only if this request is substantial separate work." }], details: { attached } };
+				}
+				persistContinuation(continuation, ctx);
+				task = continuation.task;
+				source = continuation.source;
+			} else if (params.action === "create") {
+				if (!params.title?.trim()) throw new Error("A title is required to create a task.");
+				task = domain.create(params.title, params.description ?? "");
+				attachTask(task, ctx);
+			} else {
+				const taskId = params.taskId ?? domain.getAttachment()?.taskId;
+				if (!taskId) throw new Error("A taskId is required when no task is attached.");
+				task = domain.getById(taskId);
+				if (params.action === "attach") attachTask(task, ctx);
+				else if (params.action === "status") {
+					if (!params.status) throw new Error("A status is required.");
+					task = domain.changeStatus(task.path, params.status);
+					if (params.status === "done" && domain.getAttachment()?.taskId === task.id) detachTask(ctx, false);
+				} else if (params.action === "reference") {
+					if (!params.referenceAction) throw new Error("A referenceAction is required.");
+					if (params.referenceAction === "add") {
+						if (!params.reference) throw new Error("A reference is required.");
+						task = domain.addReference(task.path, params.reference);
+					} else {
+						if (params.referenceIndex === undefined) throw new Error("A referenceIndex is required.");
+						task = params.referenceAction === "edit"
+							? domain.editReference(task.path, params.referenceIndex, params.reference ?? "")
+							: domain.removeReference(task.path, params.referenceIndex);
 					}
 				}
 			}
+			const compact = renderCompactTaskContext(domain.getById(task.id));
+			const unchanged = lastManagementFingerprint?.path === task.path && lastManagementFingerprint.fingerprint === compact.fingerprint;
+			lastManagementFingerprint = { path: task.path, fingerprint: compact.fingerprint };
+			return {
+				content: [{ type: "text", text: unchanged ? `${source}: ${sanitizeTaskDisplay(task.title)} (task state unchanged).` : `${source}: ${sanitizeTaskDisplay(task.title)}\n\n${compact.text}` }],
+				details: { taskId: task.id, path: task.path, source, fingerprint: compact.fingerprint, unchanged },
+			};
 		},
 	});
 
 	pi.registerTool({
 		name: "task_log",
 		label: "Task Log",
-		description:
-			"Append an entry to the attached task's shared log. The log is append only and is read by future sessions working on the same task, so each entry must make sense on its own.",
-		promptSnippet: "Append a decision, commit, constraint, blocker, or next step to the attached task log",
+		description: "Append an ordinary or structured handoff entry to the attached task's shared append-only log.",
+		promptSnippet: "Append a durable decision, commit, constraint, blocker, next step, or structured handoff",
 		promptGuidelines: [
-			"Use task_log right after a decision is made, a commit lands, a constraint turns up, work gets blocked, or the next step is agreed. Do not use task_log to narrate routine steps.",
-			"Task files under .pi/tasks are append only. Use task_log instead of edit or write on them.",
+			"Use task_log after a durable change or finding, not to narrate routine steps.",
+			"Files in the repository's canonical task store are append only. Use task_log instead of edit or write on them.",
 		],
 		parameters: Type.Object({
 			type: StringEnum(LOG_TYPES),
-			text: Type.String({
-				description: "The entry body. Self contained. Name files, commit hashes, and the reason behind a choice.",
-			}),
+			text: Type.Optional(Type.String({ description: "Self-contained entry body. Required except for structured handoffs." })),
+			handoff: Type.Optional(Type.Object({
+				currentState: Type.String(), nextAction: Type.String(), blockers: Type.Array(Type.String()),
+				branchOrWorktree: Type.String(), latestCommit: Type.String(), validationState: Type.String(), references: Type.Array(Type.String()),
+			})),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const task = requireTask();
-			const text = params.text.trim();
-			if (!text) throw new Error("Entry text is empty.");
-
-			appendEntry(task.path, {
-				type: params.type,
-				text,
-				session: sessionTag(ctx.sessionManager.getSessionId()),
-			});
-
-			return {
-				content: [{ type: "text", text: `Logged ${params.type} to ${task.title} (entry ${task.entries.length + 1}).` }],
-				details: { path: task.path, type: params.type },
-			};
+			const domain = tasks(ctx.cwd);
+			const text = params.text?.trim() ?? "";
+			let task: Task;
+			if (params.type === "handoff") {
+				if (!params.handoff) throw new Error("Structured handoff data is required for handoff entries.");
+				task = domain.appendAttached({ type: "handoff", text, handoff: params.handoff as Handoff, session: sessionTag(ctx.sessionManager.getSessionId()) });
+			} else {
+				if (!text) throw new Error("Entry text is empty.");
+				if (params.handoff) throw new Error("Handoff data is only valid for handoff entries.");
+				task = domain.appendAttached({ type: params.type, text, session: sessionTag(ctx.sessionManager.getSessionId()) });
+			}
+			return { content: [{ type: "text", text: `Logged ${params.type} to ${sanitizeTaskDisplay(task.title)}.` }], details: { path: task.path, type: params.type } };
 		},
 	});
 
 	pi.registerTool({
 		name: "task_read",
 		label: "Task Read",
-		description:
-			"Read the attached task: title, description, references, and log entries. Use it when the injected log was truncated or you need older entries.",
-		promptSnippet: "Read the attached task file and its full log",
+		description: `Read newest-first task history with an opaque backward cursor. count is 1-${MAX_READ_COUNT}; maxChars is 1-${MAX_READ_CHARS}.`,
+		promptSnippet: "Read a bounded page of attached task history, optionally filtered by type, session, or text",
 		parameters: Type.Object({
-			limit: Type.Optional(
-				Type.Number({ description: "Return only the newest N log entries. Omit for the whole log." }),
-			),
+			count: Type.Optional(Type.Integer({ minimum: 1, maximum: MAX_READ_COUNT })),
+			maxChars: Type.Optional(Type.Integer({ minimum: 1, maximum: MAX_READ_CHARS })),
+			cursor: Type.Optional(Type.String({ minLength: 1 })),
+			type: Type.Optional(Type.String({ minLength: 1 })),
+			session: Type.Optional(Type.String({ minLength: 1 })),
+			text: Type.Optional(Type.String({ minLength: 1 })),
 		}),
-		async execute(_toolCallId, params) {
-			const task = requireTask();
-			const limit = Math.min(params.limit ?? MAX_READ_ENTRIES, MAX_READ_ENTRIES);
-			const entries = task.entries.slice(-limit);
-			const header = `# ${task.title}\nid: ${task.id} · status: ${task.status} · file: ${task.path}\n${task.description}\n\n## Log (showing ${entries.length} of ${task.entries.length})\n`;
-
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			const task = tasks(ctx.cwd).requireAttached();
+			const page = readTaskPage(task, {
+				count: params.count ?? DEFAULT_READ_COUNT,
+				maxChars: params.maxChars ?? DEFAULT_READ_CHARS,
+				cursor: params.cursor,
+				type: params.type,
+				session: params.session,
+				text: params.text,
+			});
 			return {
-				content: [{ type: "text", text: `${header}\n${entries.map(renderEntry).join("\n\n") || "_Log is empty._"}` }],
-				details: { path: task.path, shown: entries.length, total: task.entries.length },
+				content: [{ type: "text", text: page.text }],
+				details: { path: task.path, shown: page.shown, total: page.total, totalMatches: page.totalMatches, nextCursor: page.nextCursor, characters: page.characters, truncated: page.truncated },
 			};
 		},
 	});
 
-	// Task files are append only. Keep the built-in mutation tools out of them.
-	pi.on("tool_call", (event, ctx) => {
-		const path = isToolCallEventType("write", event)
-			? event.input.path
-			: isToolCallEventType("edit", event)
-				? event.input.path
-				: undefined;
-		if (!path) return;
+	pi.on("context", (event, ctx) => {
+		let task: Task;
+		try { task = tasks(ctx.cwd).requireAttached(); }
+		catch {
+			tasks(ctx.cwd).detach();
+			syncTaskTools();
+			const messages = event.messages.filter((message) => !(message.role === "custom" && (message.customType === MESSAGE_TYPE || message.customType === LEGACY_MESSAGE_TYPE)));
+			return messages.length === event.messages.length ? undefined : { messages };
+		}
+		const markerChars = "[task-state:]\n".length + 16;
+		const compact = renderCompactTaskContext(task, TASK_CONTEXT_CHARS - markerChars);
+		const marker = `[task-state:${compact.fingerprint}]`;
+		const matching = event.messages.find((message) => message.role === "custom" && message.customType === MESSAGE_TYPE && typeof message.content === "string" && message.content.startsWith(marker));
+		const returnedByManagement = lastManagementFingerprint?.path === task.path && lastManagementFingerprint.fingerprint === compact.fingerprint;
+		const messages = event.messages.filter((message) => {
+			if (message.role !== "custom") return true;
+			if (message.customType === LEGACY_MESSAGE_TYPE) return false;
+			if (message.customType !== MESSAGE_TYPE) return true;
+			return !returnedByManagement && message === matching;
+		});
+		if (returnedByManagement || matching) {
+			return messages.length === event.messages.length ? undefined : { messages };
+		}
+		const message: ContextEvent["messages"][number] = {
+			role: "custom",
+			customType: MESSAGE_TYPE,
+			content: `${marker}\n${compact.text}`,
+			display: false,
+			timestamp: Date.now(),
+		};
+		let insertion = messages.length;
+		for (let index = messages.length - 1; index >= 0; index--) {
+			if (messages[index].role === "user") { insertion = index; break; }
+		}
+		messages.splice(insertion, 0, message);
+		return { messages };
+	});
 
+	pi.on("tool_call", (event, ctx) => {
+		const path = isToolCallEventType("write", event) ? event.input.path : isToolCallEventType("edit", event) ? event.input.path : undefined;
+		if (!path) return;
 		if (isTaskPath(ctx.cwd, resolve(ctx.cwd, path))) {
-			return {
-				block: true,
-				reason:
-					"Task files are append only. Use task_log to add an entry. Title, status, and description are changed by the user through /task.",
-			};
+			return { block: true, reason: "Task files are append only. Use task_log to add an entry; use /task for lifecycle and references." };
 		}
 	});
 
-	// Rebind the attachment after /resume, /fork, or a reload. No re-injection: the
-	// attach message is already part of the restored conversation.
-	pi.on("session_start", (_event, ctx) => {
-		attached = undefined;
+	const branchAttachment = (ctx: ExtensionContext) => {
+		let attachment: TaskAttachment | { path: string; id: string; title: string } | undefined;
 		for (const entry of ctx.sessionManager.getBranch()) {
 			if (entry.type !== "custom" || entry.customType !== ATTACH_ENTRY) continue;
-			const data = entry.data as Attachment | { path: null } | undefined;
-			attached = data && data.path ? (data as Attachment) : undefined;
+			const data = entry.data;
+			if (!data || typeof data !== "object" || Array.isArray(data)) {
+				attachment = undefined;
+				continue;
+			}
+			attachment = (("taskId" in data && data.taskId) || ("path" in data && data.path))
+				? data as TaskAttachment | { path: string; id: string; title: string }
+				: undefined;
 		}
-		if (attached && !readTask(attached.path)) attached = undefined;
-		showStatus(ctx);
-	});
+		return attachment;
+	};
 
-	pi.on("session_shutdown", (_event, ctx) => {
-		attached = undefined;
+	const finishRestore = (ctx: ExtensionContext) => {
 		showStatus(ctx);
+		syncTaskTools();
+	};
+
+	const restoreAttachment = (ctx: ExtensionContext) => {
+		const domain = tasks(ctx.cwd);
+		try { domain.restore(branchAttachment(ctx)); }
+		catch { domain.detach(); }
+		finishRestore(ctx);
+	};
+
+	const restoreSessionAttachment = (ctx: ExtensionContext) => {
+		if (!isSubagentChild) {
+			restoreAttachment(ctx);
+			return;
+		}
+		const domain = tasks(ctx.cwd);
+		const persisted = branchAttachment(ctx);
+		domain.detach();
+		if (persisted) pi.appendEntry<{ taskId: null }>(ATTACH_ENTRY, { taskId: null });
+		finishRestore(ctx);
+	};
+
+	pi.on("session_start", (_event, ctx) => { restoreSessionAttachment(ctx); });
+	pi.on("session_tree", (_event, ctx) => { restoreSessionAttachment(ctx); });
+	pi.on("session_shutdown", (_event, ctx) => {
+		tasks(ctx.cwd).detach();
+		showStatus(ctx);
+		syncTaskTools();
 	});
 }

@@ -1,18 +1,15 @@
 # Research and verification
 
-## Why fan out at all
+## Evidence ownership
 
-A subject worth a page is bigger than one context window, and reading it serially
-burns the budget you need for drawing. Subagents find **where things are and what
-they mean**. You keep their conclusions, write the page, and own every number.
+Research locates sources and explains what they mean. You write the page and own
+every number. Treat every reported claim as a lead, not a fact. Check anything
+load-bearing before it reaches the page.
 
-The rule that keeps this honest: **a subagent's claim is a lead, not a fact.**
-Anything load-bearing gets checked by you before it reaches the page.
+## Requesting evidence
 
-## Writing a brief
-
-Each subagent gets a narrow question, a place to look, a required output shape,
-and an evidence rule. Give it the shape you need, never a topic.
+For each question, name where to look, the required output shape, and the evidence
+rule. Ask for the shape you need, never a topic.
 
 > Bad: "look into the pricing"
 >
@@ -20,35 +17,16 @@ and an evidence rule. Give it the shape you need, never a topic.
 > Quote the exact line from the pricing page for each price and give the URL.
 > If a price is only visible after signup, say so instead of guessing."
 
-Launch them in **one message with several tool calls** so they run at once.
-
-## Fan-out patterns
-
-| Subject | Split it into |
-| --- | --- |
-| A codebase or system | inventory and counts · module boundaries and what each refuses · data ownership · the dominant lifecycle · build and deploy path · gates and CI |
-| A decision or trade-off | the case for each option (one agent each, told to argue it) · what it costs · what it breaks · what the people who chose the other way say |
-| An outside topic | primary sources and specs · how practitioners actually do it · the failure stories · the numbers, with their measurement method |
-| A dataset | shape and size, with the command · distributions and outliers · what is missing or null · what the field names actually mean |
-| An incident or process | the timeline with timestamps · who did what · every signal that fired and every one that did not · what changed afterwards |
-
-Cross-cutting agent worth adding to any of these: **the skeptic**. Give it the
-draft claims and one instruction — find the ones that are unsupported, overstated
-or contradicted by the sources. Its output is your fix list.
-
-## Rules for the fan-out
+## Evidence rules
 
 1. **Require evidence per claim.** A file path and line, a URL, or the command
    that produced the number. A claim with nothing behind it does not go on the page.
 2. **Re-derive every number yourself.** A hallucinated count reads exactly like a
    real one. Counts come from commands you ran, not from a report you received.
-3. **Never paste a subagent report into the page.** They research; you write.
-4. **Follow up with the same agent** (SendMessage) so it keeps its context, rather
-   than spawning a fresh one that starts from nothing.
-5. **Read the load-bearing parts yourself.** Whatever a section's central claim
+3. **Read the load-bearing parts yourself.** Whatever a section's central claim
    rests on, open it. Summaries are fine for inventory, never for the sentence a
    reader will act on.
-6. **Where sources disagree, say so on the page.** Two credible sources with
+4. **Where sources disagree, say so on the page.** Two credible sources with
    different numbers is a finding, not a problem to smooth over.
 
 ---

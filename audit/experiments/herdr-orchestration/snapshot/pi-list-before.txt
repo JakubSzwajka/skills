@@ -1,0 +1,13 @@
+User packages:
+  npm:pi-subagents
+    /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-subagents
+  npm:pi-mcp-adapter@2.24.0
+    /Users/jakubszwajka/.pi/agent/npm/node_modules/pi-mcp-adapter
+  npm:@juicesharp/rpiv-todo
+    /Users/jakubszwajka/.pi/agent/npm/node_modules/@juicesharp/rpiv-todo
+  /Users/jakubszwajka/.pi/agent/local/pi-claude-subscription-auth
+    /Users/jakubszwajka/.pi/agent/local/pi-claude-subscription-auth
+  npm:@juicesharp/rpiv-ask-user-question
+    /Users/jakubszwajka/.pi/agent/npm/node_modules/@juicesharp/rpiv-ask-user-question
+  npm:@tmustier/pi-usage-extension
+    /Users/jakubszwajka/.pi/agent/npm/node_modules/@tmustier/pi-usage-extension

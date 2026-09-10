@@ -6,18 +6,18 @@ description: >
   orange. Use when asked to visualize, chart, diagram, illustrate or "explain visually",
   when a decision or trade-off needs laying out side by side, when research or an
   investigation needs a readable write-up, or when a wall of prose would be better as a
-  page someone can scan. Gathers the facts with subagents first, then draws. Not for
-  mapping a repository's file structure — repo-atlas does that.
+  page someone can scan. Gathers the facts with one delegated scout lane first, then
+  draws. Not for mapping a repository's file structure — repo-atlas does that.
 ---
 
 # Visualize
 
 Produce one page — a single `index.html` — that explains a subject to somebody who
-has ten minutes and no patience for prose. Facts come from a subagent fan-out.
+has ten minutes and no patience for prose. Facts come from one delegated scout lane.
 Styling is already decided: inline `assets/base.css` and write only HTML, SVG and
 (when the reader has a choice to make) a little JavaScript.
 
-Invoking this skill authorises the subagent fan-out in step 3.
+Invoking this skill authorises one `delegate` scout lane in step 3.
 
 ## What makes this different from a summary
 
@@ -30,8 +30,8 @@ Four commitments. They are the whole point.
    bug.
 3. **Sections are earned.** Each carries one finding and one visual. Six real
    sections beat twenty thin ones.
-4. **Discovery fans out; conclusions come back.** The main context draws the page.
-   It does not read everything itself.
+4. **Discovery is delegated; conclusions come back.** The main context draws the
+   page. It does not read everything itself.
 
 ## Files in this skill
 
@@ -44,7 +44,8 @@ Four commitments. They are the whole point.
 - `reference/blocks.md` — every block, what it is for, copy-paste HTML. **Read this
   before writing any markup.**
 - `reference/charts.md` — SVG chart recipes with the coordinate maths.
-- `reference/research.md` — the fan-out playbook and the three passes before publishing.
+- `reference/research.md` — evidence rules, output shapes, and the three passes before
+  publishing. Step 3 below owns the delegation mechanism.
 
 **Do not load `artifact-design`.** This skill is the design pass; its tokens and
 classes replace it. Load `dataviz` when a chart choice is genuinely open, and
@@ -68,18 +69,28 @@ it. Use the picker table at the top of `reference/blocks.md`.
 A section with no finding is a heading. Delete it. A section with two visuals is
 two sections, or one of them is decoration.
 
-### 3. Fan out with subagents
+### 3. Delegate one scout lane
 
-Follow `reference/research.md`. Launch them in one message so they run at once.
-Each gets a narrow question, a required output shape, and the evidence rule.
+Use `reference/research.md` for its evidence rules and output shapes. Start one
+read-only worker with the `delegate` tool and the `scout` profile:
 
-Never paste a subagent report into the page. They research, you write.
+```
+delegate({ action: "start", profile: "scout", brief: "<outcome, owned sources, inputs, non-goals, stop conditions, acceptance>", cwd: "<working directory>" })
+```
+
+Give the lane all planned investigations in one brief. This is one large read-only
+lane, not one worker per question. Only split it when the sources are disjoint and
+one lane cannot cover them. State the non-overlapping source set and why the lanes
+cannot collide in each brief, and use the fewest lanes that can finish the work.
+
+Never paste the worker's handoff into the page. It researches; you write. When it
+rings, call `delegate({ action: "read", lane: "<lane>" })`, verify its evidence,
+then call `delegate({ action: "stop", lane: "<lane>" })`.
 
 ### 4. Verify what the page rests on
 
-Read the load-bearing parts yourself. Re-derive every number with your own
-command. Subagent summaries are fine for inventory, never for the sentence a
-reader will act on.
+Read the load-bearing parts yourself. Re-derive every number with your own command.
+The scout handoff is fine for inventory, never for the sentence a reader will act on.
 
 Where sources disagree, that disagreement goes on the page.
 

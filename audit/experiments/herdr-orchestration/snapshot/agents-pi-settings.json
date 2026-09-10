@@ -1,0 +1,88 @@
+{
+  "lastChangelogVersion": "0.85.1",
+  "theme": "dark",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "high",
+  "packages": [
+    "npm:pi-subagents",
+    "npm:pi-mcp-adapter@2.24.0",
+    "npm:@juicesharp/rpiv-todo",
+    "/Users/jakubszwajka/.pi/agent/local/pi-claude-subscription-auth",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@tmustier/pi-usage-extension"
+  ],
+  "extensions": [
+    "~/.agents/pi/extensions"
+  ],
+  "prompts": [
+    "~/.agents/pi/prompts"
+  ],
+  "themes": [
+    "~/.agents/pi/themes"
+  ],
+  "hideThinkingBlock": true,
+  "shellCommandPrefix": "c() { open -a \"Cursor\" \"$@\"; }",
+  "subagents": {
+    "agentOverrides": {
+      "scout": {
+        "model": "openai-codex/gpt-5.6-luna",
+        "fallbackModels": [
+          "anthropic/claude-haiku-4.5"
+        ]
+      },
+      "delegate": {
+        "model": "openai-codex/gpt-5.6-luna",
+        "fallbackModels": [
+          "anthropic/claude-sonnet-5"
+        ]
+      },
+      "worker": {
+        "model": "openai-codex/gpt-5.6-sol",
+        "fallbackModels": [
+          "anthropic/claude-opus-5"
+        ]
+      },
+      "researcher": {
+        "model": "openai-codex/gpt-5.6-sol",
+        "fallbackModels": [
+          "anthropic/claude-opus-5"
+        ]
+      },
+      "reviewer": {
+        "model": "anthropic/claude-opus-5",
+        "fallbackModels": [
+          "openai-codex/gpt-5.6-sol"
+        ]
+      },
+      "oracle": {
+        "model": "anthropic/claude-opus-5",
+        "fallbackModels": [
+          "openai-codex/gpt-5.6-sol"
+        ]
+      },
+      "codex-exec": {
+        "disabled": true
+      },
+      "codex-exec-writer": {
+        "disabled": true
+      },
+      "claude-code": {
+        "disabled": true
+      },
+      "claude-code-writer": {
+        "disabled": true
+      },
+      "cursor-agent": {
+        "disabled": true
+      },
+      "cursor-agent-writer": {
+        "disabled": true
+      }
+    }
+  },
+  "tuiMode": "regular",
+  "terminal": {
+    "showImages": false
+  }
+}

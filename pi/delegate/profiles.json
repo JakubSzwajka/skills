@@ -1,0 +1,24 @@
+{
+  "worker": {
+    "model": "openai-codex/gpt-5.6-sol:high",
+    "excludeTools": ["ask_user_question"]
+  },
+
+  "scout": {
+    "model": "openai-codex/gpt-5.6-luna",
+    "readOnly": true,
+    "excludeTools": ["ask_user_question"]
+  },
+
+  "reviewer": {
+    "model": "amazon-bedrock/global.anthropic.claude-opus-5",
+    "readOnly": true,
+    "excludeTools": ["ask_user_question"]
+  },
+
+  "oracle": {
+    "model": "amazon-bedrock/global.anthropic.claude-opus-5",
+    "readOnly": true,
+    "excludeTools": ["ask_user_question"]
+  }
+}
