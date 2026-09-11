@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { appendFileSync, chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, renameSync, statSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DelegateService, intercomRings, resolveTransport, returnContract, statusRank, toolPolicy, waitArguments } from "./delegate.ts";
+import { DelegateService, intercomRings, resolveTransport, returnContract, statusRank, toolPolicy } from "./delegate.ts";
 import { HerdrLaneRunner } from "./runners/herdr.ts";
 import { SubprocessLaneRunner, childEnvironment, launchArguments, psTable, sameProcessStart, uuidV7 } from "./runners/subprocess.ts";
 import type { LaunchRequest } from "./runners/subprocess.ts";
@@ -23,8 +23,6 @@ class FakeRunner {
 	readonly calls: Call[] = [];
 	readonly panes: Array<Record<string, unknown>> = [];
 	readonly agents: Array<Record<string, unknown>> = [];
-	waitResponse: unknown = { result: { agent: { agent: "pi", pane_id: "w0:p1", name: "lane-a", agent_status: "done" } } };
-	waitExitCode = 0;
 	startBusyTimes = 0;
 	promptTransitionConfirmed = true;
 	onCall?: (operation: string) => void;
@@ -61,7 +59,6 @@ class FakeRunner {
 			case "agent prompt": return this.promptTransitionConfirmed
 				? ok({ result: { type: "agent_prompted", agent: { agent: "pi", pane_id: "w0:p1" } } })
 				: { stdout: JSON.stringify({ error: { code: "timeout", message: "transition was not observed" } }), stderr: "", code: 1 };
-			case "agent wait": return { stdout: JSON.stringify(this.waitResponse), stderr: "", code: this.waitExitCode };
 			case "pane process-info": return ok({ result: { process_info: { pane_id: args[args.indexOf("--pane") + 1], shell_pid: 100, foreground_process_group_id: 100 } } });
 			case "pane close": {
 				const pane = args[2];
@@ -237,32 +234,6 @@ function headlessProfiles(root: string): void {
 	}
 }
 
-// 8. wait asks for all three terminal states and parses both response shapes.
-{
-	assert.deepEqual(waitArguments("lane-a", 1234), ["agent", "wait", "lane-a", "--until", "idle", "--until", "done", "--until", "blocked", "--timeout", "1234"]);
-
-	const root = home();
-	const runner = new FakeRunner();
-	const service = new DelegateService(runner, root);
-	await service.execute({ action: "start", brief: "x", name: "lane-a" }, context(root));
-
-	for (const status of ["idle", "done", "blocked"]) {
-		runner.waitResponse = { result: { agent: { agent: "pi", pane_id: "w0:p1", name: "lane-a", agent_status: status } } };
-		const settled = await service.execute({ action: "wait", lanes: ["lane-a"], timeoutMs: 500 }, context(root));
-		assert.equal(settled.timedOut, false);
-		assert.equal(settled.status, status, `wait accepts ${status} as terminal`);
-		assert.equal(settled.lane, "lane-a");
-	}
-
-	runner.waitResponse = { error: { code: "timeout", message: "timed out" } };
-	runner.waitExitCode = 1;
-	const timedOut = await service.execute({ action: "wait", timeoutMs: 500 }, context(root));
-	assert.deepEqual(timedOut.timedOut, true, "the timeout JSON shape parses instead of throwing");
-	assert.deepEqual(timedOut.lanes, ["lane-a"]);
-	await assert.rejects(service.execute({ action: "wait", lanes: ["ghost"] }, context(root)), /Unknown live delegate lane/);
-	await assert.rejects(service.execute({ action: "wait", timeoutMs: 0 }, context(root)), /positive integer/);
-}
-
 // 9. A doorbell ring marks its lane; a stranger's message is left alone.
 {
 	// The real inbound entry shape, copied from a live orchestrator session log.
@@ -358,7 +329,7 @@ function headlessProfiles(root: string): void {
 	assert.deepEqual(registered("child"), [], "a worker cannot delegate");
 
 	let shutdown: ((event: unknown, ctx: unknown) => Promise<void>) | undefined;
-	let tool: { description: string; promptGuidelines?: string[]; execute: (...args: unknown[]) => Promise<{ details: Record<string, unknown> }> } | undefined;
+	let tool: { description: string; promptGuidelines?: string[]; parameters: { properties?: Record<string, unknown> }; execute: (...args: unknown[]) => Promise<{ details: Record<string, unknown> }> } | undefined;
 	const previousRole = process.env.PI_DELEGATE_ROLE;
 	delete process.env.PI_DELEGATE_ROLE;
 	try {
@@ -390,6 +361,11 @@ function headlessProfiles(root: string): void {
 	try {
 		assert.ok(tool);
 		assert.match(tool.description, /asks the orchestrator through intercom/, "the tool description prepares the orchestrator for worker questions");
+		assert.match(tool.description, /Intercom rings are the only completion wake/, "the tool description names the completion wake");
+		assert.doesNotMatch(tool.description, /\bwait \(lanes|action.?=.?wait/i, "the public description does not advertise a wait action");
+		assert.doesNotMatch(JSON.stringify(tool.parameters), /"const":"wait"/, "the action schema excludes wait");
+		assert.equal(tool.parameters.properties?.lanes, undefined, "the wait-only lanes parameter is gone");
+		assert.equal(tool.parameters.properties?.timeoutMs, undefined, "the wait-only timeout parameter is gone");
 		assert.ok(tool.promptGuidelines?.some((line) => line.includes("answer it directly")), "the calling model is told to answer worker questions directly");
 		const result = await tool.execute("call", { action: "start", brief: "" }, undefined, undefined, {
 			hasUI: false, cwd: home(), sessionManager: { getSessionId: () => "parent" },
@@ -836,7 +812,7 @@ function subprocessService(root: string, options: SubprocessOptions = {}) {
 	assert.equal(exited[0]?.status, "done", "a pid that is gone reads as done, not as unknown");
 }
 
-// 26. A headless lane never shells out; stop signals the process group; settle waits for the exit.
+// 26. A headless lane never shells out; stop signals the process group.
 {
 	const root = home();
 	const signalled: Array<{ target: number; signal: string }> = [];
@@ -844,12 +820,6 @@ function subprocessService(root: string, options: SubprocessOptions = {}) {
 	const { runner, service } = subprocessService(root, { table, kill: (target, signal) => { signalled.push({ target, signal }); table.table.delete(4242); } });
 	const started = await service.execute({ action: "start", brief: "x", name: "lane-stop" }, context(root));
 	await service.execute({ action: "list" }, context(root));
-
-	table.table.delete(4242);
-	const settled = await service.execute({ action: "wait", lanes: ["lane-stop"], timeoutMs: 1_000 }, context(root));
-	assert.equal(settled.timedOut, false, "a wait settles when the worker process exits");
-	assert.equal(settled.status, "done");
-	assert.equal(settled.lane, "lane-stop");
 
 	table.table.set(4242, "Wed Sep 10 09:00:00 2026");
 	const stopped = await service.execute({ action: "stop", lane: "lane-stop" }, context(root));
@@ -862,7 +832,7 @@ function subprocessService(root: string, options: SubprocessOptions = {}) {
 	const again = await service.execute({ action: "stop", lane: "lane-stop" }, context(root));
 	assert.equal(again.alreadyGone, true, "stop is idempotent for a process that is already gone");
 
-	assert.deepEqual(runner.calls, [], "a headless lane starts, lists, waits and stops without ever running herdr");
+	assert.deepEqual(runner.calls, [], "a headless lane starts, lists and stops without ever running herdr");
 	assert.ok(started.logFile, "the operator is handed the one place a paneless worker can be watched");
 }
 
@@ -992,9 +962,6 @@ function subprocessService(root: string, options: SubprocessOptions = {}) {
 	const listed = (await service.execute({ action: "list" }, context(root))).lanes as Array<Record<string, unknown>>;
 	assert.equal(listed[0]?.status, "unknown", "a ps that failed is not proof the worker exited");
 	assert.equal((await readRegistry(registryPath(root))).lanes[0]?.closed, false, "a lane whose liveness cannot be established stays open");
-
-	const waited = await service.execute({ action: "wait", lanes: ["lane-dark"], timeoutMs: 600 }, context(root));
-	assert.equal(waited.timedOut, true, "a wait on an unreadable ps times out instead of reporting done");
 
 	await assert.rejects(service.execute({ action: "stop", lane: "lane-dark" }, context(root)), /will not signal process group/, "stop says it could not act instead of returning alreadyGone");
 	assert.deepEqual(signalled, [], "nothing is signalled while the pid is unproven");

@@ -727,6 +727,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
       <button id="tab-rule" role="tab" aria-controls="panel-rule" data-tab="rule" class="on" aria-selected="true" tabindex="0">The one rule</button>
       <button id="tab-record" role="tab" aria-controls="panel-record" data-tab="record" aria-selected="false" tabindex="-1">The record</button>
       <button id="tab-run" role="tab" aria-controls="panel-run" data-tab="run" aria-selected="false" tabindex="-1">Running a lane</button>
+      <button id="tab-commit" role="tab" aria-controls="panel-commit" data-tab="commit" aria-selected="false" tabindex="-1">Commit command</button>
       <button id="tab-transports" role="tab" aria-controls="panel-transports" data-tab="transports" aria-selected="false" tabindex="-1">Two transports</button>
       <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false" tabindex="-1">Missing · 5 gaps</button>
     </div>
@@ -883,9 +884,9 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
         <span class="sec-tag">execution</span>
         <h2>Delegate runs depth-one sessions and returns a file</h2>
       </div>
-      <p>Five actions, no polling. <code>start</code> writes the lane record before anything is running, so a spawn that half fails still leaves a lane you can address. The worker writes its assigned handoff and rings through intercom, which fires your next turn. You read, verify, and stop. The tool owns the return contract, the handoff path, and the doorbell line; a brief that writes them by hand gets them wrong.</p>
+      <p>Four actions, no polling. <code>start</code> writes the lane record before anything is running, so a spawn that half fails still leaves a lane you can address. The worker writes its assigned handoff and rings through intercom, which fires your next turn. Intercom is the only completion wake. You read, verify, and stop. The tool owns the return contract, the handoff path, and the doorbell line; a brief that writes them by hand gets them wrong.</p>
       <figure class="system-figure compact">
-        <svg viewBox="0 0 980 720" role="img" aria-label="Delegate has five actions: start, list, read, wait and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.">
+        <svg viewBox="0 0 980 720" role="img" aria-label="Delegate has four actions: start, list, read and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom, which wakes the parent. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.">
           <defs>
             <marker id="run-agent-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
             <marker id="run-neutral-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
@@ -963,9 +964,9 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <text class="sub-warn" x="670" y="611">no worktree is created for you</text>
 
           <rect class="node-agent" x="40" y="664" width="895" height="44" rx="8"/>
-          <text class="lbl-sm" x="487" y="692" text-anchor="middle">actions · start · list · read · wait · stop · no steer</text>
+          <text class="lbl-sm" x="487" y="692" text-anchor="middle">actions · start · list · read · stop · no steer</text>
         </svg>
-        <figcaption>Delegate has five actions: start, list, read, wait and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.</figcaption>
+        <figcaption>Delegate has four actions: start, list, read and stop. Start returns at once, writes a lane record under the parent registry, and runs a separate pi session in a Herdr pane or as a headless process. The worker writes its assigned handoff file and rings through intercom, which wakes the parent. The parent reads, verifies and stops the lane. A child session has no delegate tool. Owned paths are a rule in the brief, not something the tool enforces, parallel lanes are read-only by default, and concurrent writers need approval and one checkout each.</figcaption>
       </figure>
       <div class="ledger">
         <div class="row">
@@ -987,12 +988,52 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
       </div>
     </section>
 
+    <section id="panel-commit" role="tabpanel" aria-labelledby="tab-commit" data-panel="commit" hidden>
+      <div class="sec-head">
+        <span class="sec-tag">one narrow mutation path</span>
+        <h2><code>/commit [instruction]</code> gives commit work to an isolated model</h2>
+      </div>
+      <p>Running <code>/commit</code> is approval for one commit. Its optional text is the first scope hint; the active parent thread is always the fallback. The worker inspects the repository and refuses when it cannot separate the requested paths from unrelated work.</p>
+      <figure>
+        <div class="flow" aria-label="Commit command architecture">
+          <span class="on">/commit [instruction]</span>
+          <span class="arw">→</span>
+          <span>claim active index + capture thread</span>
+          <span class="arw">→</span>
+          <span>isolated in-memory session</span>
+          <span class="arw">→</span>
+          <span>read + narrow Git tools</span>
+          <span class="arw">→</span>
+          <span class="on">one parent result</span>
+        </div>
+        <figcaption>The parent receives only <code>Committed &lt;hash&gt;: &lt;subject&gt;</code> or one failure line. Failures stay bounded except when preserving a full lock path and exact cleanup command. The worker transcript never enters the parent thread, and the result does not start another model turn.</figcaption>
+      </figure>
+      <div class="ledger">
+        <div class="row">
+          <div class="who">first model</div>
+          <div class="what"><code>openai-codex/gpt-5.6-luna</code>. It gets an in-memory session with project resources disabled.</div>
+        </div>
+        <div class="row">
+          <div class="who">fallback</div>
+          <div class="what"><code>openrouter/anthropic/claude-haiku-4.5</code>, after a Luna setup or provider failure before any Git mutation, or after Luna submits an invalid commit message before mutation. Once staging starts, fallback is forbidden.</div>
+        </div>
+        <div class="row">
+          <div class="who">tool boundary</div>
+          <div class="what"><code>read</code>, <code>git_snapshot</code>, <code>git_stage</code>, and <code>git_commit</code>. No shell, edit, write, delegate, amend, push, hook bypass, reset, or restore.</div>
+        </div>
+        <div class="row flat">
+          <div class="who">Git guard</div>
+          <div class="what">An exclusive lockfile beside the resolved active Git index binds <code>/commit</code> runs through preflight, snapshot, staging, and commit. Final symlink chains, including dangling chains, resolve with loop detection before a missing target falls back to its canonical parent plus target filename. The complete holder file appears through an atomic hard link. <code>process.pid</code> appears in the temporary filename and holder JSON only as a diagnostic; it is never used for liveness or reclamation. An existing lock is never inspected or reclaimed: the run refuses at once with its absolute path and the exact <code>rm</code> command, even when the Git directory is not writable. A crash leaves lock cleanup to the operator and may leave a unique temporary file that the operator may delete. Ownership is guaranteed against other <code>/commit</code> runs. Removing a live lock by hand voids that guarantee. The guard does not exclude plain <code>git add</code> or other Git commands run elsewhere. Mutating tools run in sequence, hooks run, and a moved <code>HEAD</code> stops the commit.</div>
+        </div>
+      </div>
+    </section>
+
     <section id="panel-transports" role="tabpanel" aria-labelledby="tab-transports" data-panel="transports" hidden>
       <div class="sec-head">
         <span class="sec-tag">one seam, two runners</span>
         <h2>A pane you can watch, or a process that outlives you</h2>
       </div>
-      <p>Both paths share the registry, the assigned handoff, the intercom ring, the return contract, and the depth-one guard. <code>transport</code> is a field on a profile and an argument to <code>start</code>, and it defaults to <code>herdr</code>. No profile sets it today, so every lane is a pane until someone asks for the other one.</p>
+      <p>Both paths share the registry, the assigned handoff, the intercom ring, the return contract, and the depth-one guard. <code>transport</code> is a field on a profile, and it defaults to <code>herdr</code>. It is not a <code>start</code> argument. No profile sets it today, so every lane is a pane until the operator changes a profile.</p>
       <figure class="system-figure">
         <div class="key" aria-label="Transport color key">
           <span><i class="s4"></i>Lane</span><span><i class="flat"></i>What you get</span><span><i class="warn"></i>What it costs</span>
@@ -1048,13 +1089,13 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <rect class="node-gap" x="690" y="548" width="280" height="80" rx="8"/>
           <text class="lbl-gap" x="830" y="572" text-anchor="middle">unknown</text>
           <text class="sub-warn" x="830" y="592" text-anchor="middle">nothing proved either way</text>
-          <text class="sub-warn" x="830" y="612" text-anchor="middle">stop refuses, wait times out</text>
+          <text class="sub-warn" x="830" y="612" text-anchor="middle">stop refuses; record stays open</text>
         </svg>
         <figcaption>One start call runs a lane two ways. A Herdr pane is interactive and visible, and it stays the default. A headless lane is a detached pi print process with no terminal: idle and done collapse, nothing watches it, blocked comes only from an intercom ask, and project-local skills are skipped. Liveness has three answers, and a lane that cannot be proven either way is never closed and never signalled.</figcaption>
       </figure>
       <div class="callout">
         <span class="h">when a lane reads unknown</span>
-        <p>Nothing nags about this state, so it is on you to look. A headless lane reads <code>unknown</code> when <code>ps</code> could not be read or the record carries no process start time. A pane lane reads it when the pane is there but Herdr lists no agent in it. The record stays open, <code>wait</code> times out instead of reporting done, and <code>stop</code> on a headless lane refuses to signal and hands you the pid, the log and the kill command to run yourself. Signalling a pid that may have been recycled would kill a stranger's process group. Until you know which it is, do not start a replacement lane on the same paths.</p>
+        <p>Nothing nags about this state, so it is on you to look. A headless lane reads <code>unknown</code> when <code>ps</code> could not be read or the record carries no process start time. A pane lane reads it when the pane is there but Herdr lists no agent in it. The record stays open, and <code>stop</code> on a headless lane refuses to signal and hands you the pid, the log and the kill command to run yourself. Signalling a pid that may have been recycled would kill a stranger's process group. Until you know which it is, do not start a replacement lane on the same paths.</p>
       </div>
       <div class="compare">
         <div class="side on">
@@ -1070,7 +1111,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <ul>
             <li>The work has to outlive this session, and a fresh parent will adopt it.</li>
             <li>Panes would crowd the screen.</li>
-            <li>There is no Herdr to run in. Only the pane transport refuses; headless lanes still start, list, read, wait and stop.</li>
+            <li>There is no Herdr to run in. Only the pane transport refuses; headless lanes still start, list, read and stop.</li>
           </ul>
         </div>
       </div>
@@ -1093,7 +1134,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 
           <rect class="node-gap" x="40" y="152" width="306" height="180" rx="10"/>
           <text class="lbl-gap" x="193" y="188" text-anchor="middle">Steer a running engine</text>
-          <text class="sub-warn" x="193" y="216" text-anchor="middle">five actions, and none of</text>
+          <text class="sub-warn" x="193" y="216" text-anchor="middle">four actions, and none of</text>
           <text class="sub-warn" x="193" y="238" text-anchor="middle">them corrects a worker</text>
           <text class="sub-warn" x="193" y="266" text-anchor="middle">a wrong lane is stopped,</text>
           <text class="sub-warn" x="193" y="288" text-anchor="middle">then briefed again from</text>
@@ -1141,7 +1182,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
   </div>
 
   <footer class="colophon">
-    <div><strong>Built from:</strong> <code>VISION.md</code>, <code>ORCHESTRATION.md</code>, <code>pi/extensions/delegate/</code>, <code>pi/extensions/spec-link/</code>, <code>pi/delegate/profiles.json</code>, and <code>pi/extensions-disabled/task-log</code>.</div>
+    <div><strong>Built from:</strong> <code>VISION.md</code>, <code>ORCHESTRATION.md</code>, <code>pi/extensions/commit/</code>, <code>pi/extensions/delegate/</code>, <code>pi/extensions/spec-link/</code>, and <code>pi/delegate/profiles.json</code>.</div>
     <div><strong>Next discussion:</strong> <a href="https://mega.dev/autonomous-product-development#drop-gate-inline">Autonomous product development</a> · <a href="https://mega.dev/ai-changed-programming">AI changed programming</a> · <a href="https://mega.dev/wrong-about-mcps">Wrong about MCPs</a>.</div>
   </footer>
 </main>

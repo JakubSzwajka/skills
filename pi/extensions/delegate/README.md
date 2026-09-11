@@ -18,21 +18,21 @@ delegate({ action: "list" })
                 model, handoff, ownership, owner }],
       staleTransports?: ["herdr: …"] }
 delegate({ action: "read", lane })   → { status, handoffPresent, handoff, body }
-delegate({ action: "wait", lanes?, timeoutMs? })  → blocks until one lane settles
 delegate({ action: "stop", lane })   → kills the process group, closes the pane, deregisters
 ```
 
 The tool owns three things the caller must never write: the appended worker return
 contract, the assigned handoff path, and the doorbell line naming the parent session.
-If a worker needs a decision, the contract tells it to ask the orchestrator through
-intercom and wait for the reply. The orchestrator answers the question directly instead
-of forwarding it blindly.
+Intercom rings are the only completion wake. After a ring, the caller reads the handoff
+and stops the lane. If a worker needs a decision, the contract tells it to ask the
+orchestrator through intercom and wait for the reply. The orchestrator answers the
+question directly instead of forwarding it blindly.
 
 ## Files
 
 - `index.ts` — registration, timer, turn-end nudge, doorbell correlation, load guards
 - `widget.ts` — widget layout, theme painting, the incremental transcript reader
-- `delegate.ts` — the five actions, profiles, handoff reads, the registry refresh
+- `delegate.ts` — the four actions, profiles, handoff reads, the registry refresh
 - `runners/herdr.ts` — the pane transport; every herdr call in the extension lives here
 - `runners/subprocess.ts` — the headless transport: detached spawn, ps witness, group kill
 - `runners/support.ts` — the few primitives both runners and the service share
@@ -42,7 +42,7 @@ of forwarding it blindly.
 
 ## Transports
 
-A lane runs through one `LaneRunner`: `liveNames`, `spawn`, `probe`, `settle`, `kill`.
+A lane runs through one `LaneRunner`: `liveNames`, `spawn`, `probe`, `kill`.
 `probe` takes the whole lane list and answers with a map, because a pane probe is one
 `agent list` plus one `pane list` for every lane at once and a headless probe is one `ps`
 for every pid at once. A per-lane signature would push the pane model onto both.
@@ -75,9 +75,9 @@ A probe has three answers, not two, and the third one is why a wedged worker can
 - **Gone.** `ps` answered and the pid is free, or it is held by a process that started at another
   time. Status `done`, and the record stays open so the handoff can still be read.
 - **Unproven.** `ps` could not be read, or the record carries no start time. Status `unknown`:
-  `stop` refuses to signal and says so, `wait` times out rather than reporting `done`, and nothing
-  closes the record. A group signal to a pid that may have been recycled would kill a stranger's
-  process group, so the operator is handed the pid, the log and the `kill -TERM -<pid>` instead.
+  `stop` refuses to signal and says so, and nothing closes the record. A group signal to a pid
+  that may have been recycled would kill a stranger's process group, so the operator is handed
+  the pid, the log and the `kill -TERM -<pid>` instead.
 
 `ps` is asked with `LC_ALL=C`, because `lstart` is locale-formatted and the same process reads as
 `Thu Sep 10 19:43:39 2026` or `Do. 10 Sep. 19:43:39 2026` depending on the parent's `LANG`. A
@@ -179,7 +179,7 @@ automatic provider-failure retry.
 - A worker runs with `PI_DELEGATE_ROLE=child`, and the extension registers nothing when
   that variable is set. Depth is 1 by construction, on both transports.
 - Without `HERDR_ENV=1` or the `herdr` binary, only the pane transport refuses, and it says
-  so in its own words. Headless lanes still start, list, read, wait and stop, even when a pane
+  so in its own words. Headless lanes still start, list, read and stop, even when a pane
   lane sits in the same registry: a transport that cannot be reached costs its own lanes their
   fresh status, which `list` reports as `staleTransports`, and nothing else. Such a lane is never
   closed by the refresh either, because an unreachable transport says nothing about its lanes.
@@ -191,4 +191,4 @@ automatic provider-failure retry.
   the empty file and its directory when no handoff files remain.
 - Each lane records its parent process. A new session adopts it only after that process is
   confirmed gone. Lanes with a live or unknown parent stay visible in `list` with
-  `ownership: "other-parent"`, but cannot be read, waited on, or stopped by that session.
+  `ownership: "other-parent"`, but cannot be read or stopped by that session.

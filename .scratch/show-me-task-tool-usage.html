@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task tool usage — 9–10 Sep 2026</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#151b23; --panel2:#1c242e; --line:#2a333f;
+    --ink:#e6edf3; --dim:#8b98a5; --faint:#5c6b7a;
+    --green:#3fb950; --amber:#d29922; --orange:#f0883e; --red:#f85149;
+    --blue:#58a6ff; --violet:#bc8cff;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 20px 80px}
+  h1{font-size:30px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:19px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:14px;margin:0}
+  .mono{font-family:var(--mono)}
+  section{margin-top:34px}
+  .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px;
+    border-bottom:1px solid var(--line);padding-bottom:10px}
+  .head .note{color:var(--faint);font-size:12.5px;font-family:var(--mono);margin-left:auto}
+
+  .verdict{background:linear-gradient(180deg,#1a1410,#141a18);
+    border:1px solid #4a3520;border-left:4px solid var(--orange);
+    border-radius:10px;padding:22px 24px;margin-top:22px}
+  .verdict p{margin:0 0 10px;font-size:16px}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict b{color:var(--orange)}
+
+  .grid{display:grid;gap:12px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:16px}
+  .tile .n{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1;letter-spacing:-.02em}
+  .tile .l{color:var(--dim);font-size:12.5px;margin-top:7px}
+  .tile .s{color:var(--faint);font-size:11.5px;margin-top:3px;font-family:var(--mono)}
+  .good .n{color:var(--green)} .warn .n{color:var(--amber)}
+  .bad .n{color:var(--red)} .neu .n{color:var(--blue)}
+
+  /* funnel */
+  .funnel{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:18px}
+  .frow{display:grid;grid-template-columns:210px 1fr 92px;gap:12px;align-items:center;margin-bottom:9px}
+  .frow:last-child{margin-bottom:0}
+  .frow .lab{font-size:13px;color:var(--dim)}
+  .frow .lab b{color:var(--ink);font-weight:500}
+  .bar{height:26px;border-radius:4px;position:relative;background:#20293384}
+  .bar i{position:absolute;inset:0;border-radius:4px;display:block}
+  .frow .val{font-family:var(--mono);font-size:13px;text-align:right;color:var(--dim)}
+  .drop{font-family:var(--mono);font-size:11px;color:var(--red);padding-left:8px}
+
+  /* call mix */
+  .mix{display:grid;grid-template-columns:118px 1fr 58px;gap:10px;align-items:center;margin-bottom:7px}
+  .mix .k{font-family:var(--mono);font-size:12.5px;color:var(--dim);text-align:right}
+  .mix .v{font-family:var(--mono);font-size:12.5px;color:var(--faint)}
+  .mbar{height:20px;border-radius:3px;background:#20293384;position:relative}
+  .mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+
+  /* timeline */
+  .tl{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:18px;overflow-x:auto}
+  .tlgrid{min-width:760px;position:relative}
+  .trow{display:grid;grid-template-columns:230px 1fr;gap:10px;align-items:center;height:26px}
+  .tname{font-size:12.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tname .rp{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-right:6px}
+  .track{position:relative;height:20px;border-left:1px solid var(--line)}
+  .seg{position:absolute;height:9px;top:5px;border-radius:5px;opacity:.85}
+  .dot{position:absolute;width:5px;height:5px;border-radius:50%;top:7px;background:var(--ink);opacity:.75}
+  .axis{display:grid;grid-template-columns:230px 1fr;gap:10px;margin-bottom:8px}
+  .ticks{position:relative;height:16px;border-bottom:1px solid var(--line)}
+  .tick{position:absolute;font-family:var(--mono);font-size:10px;color:var(--faint);transform:translateX(-50%)}
+  .vline{position:absolute;top:0;bottom:0;width:1px;background:#ffffff10}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-weight:500;color:var(--faint);font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.05em;padding:0 10px 8px;border-bottom:1px solid var(--line)}
+  td{padding:11px 10px;border-bottom:1px solid #1e262f;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.m{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  .pill{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 7px;
+    border-radius:20px;border:1px solid;line-height:1.5}
+  .p-bad{color:var(--red);border-color:#f8514944;background:#f8514912}
+  .p-warn{color:var(--amber);border-color:#d2992244;background:#d2992212}
+  .p-good{color:var(--green);border-color:#3fb95044;background:#3fb95012}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:18px}
+  .card.cost{border-left:3px solid var(--red)}
+  .card.gain{border-left:3px solid var(--green)}
+  .card h3{margin:0 0 12px;font-size:14px;letter-spacing:.02em;text-transform:uppercase;color:var(--dim)}
+  .li{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;font-size:13.5px}
+  .li .b{font-family:var(--mono);font-size:12px;min-width:66px;color:var(--faint);text-align:right;padding-top:1px}
+  .li:last-child{margin-bottom:0}
+
+  .rec{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:0;overflow:hidden}
+  .recrow{display:grid;grid-template-columns:32px 1fr;gap:0;border-bottom:1px solid #1e262f}
+  .recrow:last-child{border-bottom:none}
+  .recn{background:var(--panel2);color:var(--faint);font-family:var(--mono);font-size:12px;
+    display:flex;align-items:center;justify-content:center}
+  .recb{padding:15px 18px}
+  .recb b{display:block;margin-bottom:4px;font-weight:600;font-size:14.5px}
+  .recb span{color:var(--dim);font-size:13.5px}
+  .keep{color:var(--green)} .cut{color:var(--red)} .fix{color:var(--amber)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--faint)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--faint);font-size:12px;font-family:var(--mono)}
+  @media(max-width:820px){
+    .g4,.g3,.g2,.split{grid-template-columns:1fr 1fr}
+    .frow{grid-template-columns:120px 1fr 64px}
+    .frow .lab{font-size:11.5px}
+    h1{font-size:23px}
+  }
+  @media(max-width:520px){
+    .g4,.g3,.g2,.split{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Is the task tool earning its keep?</h1>
+  <p class="sub">All pi sessions across 5 repos, 9–10 September 2026. Source: session JSONL logs and <span class="mono">.git/pi/task-log/tasks</span>.</p>
+
+  <div class="verdict">
+    <p><b>Short answer: it is a write-only diary right now.</b> 19 tasks were created in two days. Two of them were ever opened by a second session. The other 17 were written, closed, and never read again.</p>
+    <p>The tool cost about <b>45,000 tokens</b> of context across 21 sessions. The payoff was <b>2 real resumes</b> plus 31 file references that a <span class="mono">git log</span> would also have given you.</p>
+    <p>It is not useless. It is mistuned. The write path is heavy, the read path barely runs.</p>
+  </div>
+
+  <section>
+    <div class="head"><h2>The two days in numbers</h2><span class="note">09 Sep 00:00 → 10 Sep 15:10 UTC</span></div>
+    <div class="grid g4">
+      <div class="tile neu"><div class="n">60</div><div class="l">sessions started</div><div class="s">36 did real work (≥20 tools)</div></div>
+      <div class="tile warn"><div class="n">21</div><div class="l">sessions touched the task tool</div><div class="s">58% of the real ones</div></div>
+      <div class="tile warn"><div class="n">127</div><div class="l">task_manage calls</div><div class="s">~45k tokens of args + results</div></div>
+      <div class="tile bad"><div class="n">2</div><div class="l">tasks read by a later session</div><div class="s">out of 19 created</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Where the value leaks</h2><span class="note">funnel, sessions → durable reuse</span></div>
+    <div class="funnel">
+      <div class="frow"><div class="lab"><b>Sessions started</b></div>
+        <div class="bar"><i style="width:100%;background:linear-gradient(90deg,#1f6feb,#58a6ff)"></i></div><div class="val">60</div></div>
+      <div class="frow"><div class="lab">did substantial work <span class="drop">−24</span></div>
+        <div class="bar"><i style="width:60%;background:linear-gradient(90deg,#1f6feb,#58a6ff)"></i></div><div class="val">36</div></div>
+      <div class="frow"><div class="lab">called the task tool <span class="drop">−15</span></div>
+        <div class="bar"><i style="width:35%;background:linear-gradient(90deg,#9e6a03,#d29922)"></i></div><div class="val">21</div></div>
+      <div class="frow"><div class="lab">did more than <span class="mono">list</span> <span class="drop">−5</span></div>
+        <div class="bar"><i style="width:26.7%;background:linear-gradient(90deg,#9e6a03,#d29922)"></i></div><div class="val">16</div></div>
+      <div class="frow"><div class="lab">wrote a task record</div>
+        <div class="bar"><i style="width:25%;background:linear-gradient(90deg,#9e6a03,#f0883e)"></i></div><div class="val">15</div></div>
+      <div class="frow"><div class="lab"><b>a later session read it back</b> <span class="drop">−13</span></div>
+        <div class="bar"><i style="width:3.3%;background:linear-gradient(90deg,#da3633,#f85149)"></i></div><div class="val">2</div></div>
+    </div>
+    <div class="legend">
+      <span>Every step above the last one is cost. Only the last step is the thing the task log exists for.</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>What the 127 calls actually did</h2><span class="note">writes 97 · reads 30</span></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Call mix</h3>
+        <div class="mix"><div class="k">reference</div><div class="mbar"><i style="width:100%;background:#d29922"></i></div><div class="v">36</div></div>
+        <div class="mix"><div class="k">status</div><div class="mbar"><i style="width:92%;background:#d29922"></i></div><div class="v">33</div></div>
+        <div class="mix"><div class="k">list</div><div class="mbar"><i style="width:72%;background:#58a6ff"></i></div><div class="v">26</div></div>
+        <div class="mix"><div class="k">create</div><div class="mbar"><i style="width:53%;background:#d29922"></i></div><div class="v">19</div></div>
+        <div class="mix"><div class="k">attach</div><div class="mbar"><i style="width:19%;background:#bc8cff"></i></div><div class="v">7</div></div>
+        <div class="mix"><div class="k">continue</div><div class="mbar"><i style="width:11%;background:#3fb950"></i></div><div class="v">4</div></div>
+        <div class="mix"><div class="k">detach</div><div class="mbar"><i style="width:6%;background:#8b98a5"></i></div><div class="v">2</div></div>
+        <div class="legend">
+          <span><i style="background:#d29922"></i>bookkeeping</span>
+          <span><i style="background:#58a6ff"></i>scanning</span>
+          <span><i style="background:#3fb950"></i>actual resume</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>The <span class="mono">continue</span> calls, one by one</h3>
+        <div class="li"><div class="b good">real</div><div><b>order-buddy</b> · New ICP UI direction<br><span style="color:var(--dim)">Created 30 Aug, resumed 9 Sep. A 10-day gap closed. This is the tool working as designed.</span></div></div>
+        <div class="li"><div class="b good">real</div><div><b>.agents</b> · Visualize agent system<br><span style="color:var(--dim)">Written 9 Sep evening, picked up 10 Sep 14:24 by a fresh session. Handoff was read and used.</span></div></div>
+        <div class="li"><div class="b" style="color:var(--red)">self</div><div><b>board</b> · Revise Pekao cost estimate<br><span style="color:var(--dim)">Same session that created it 23 min earlier. It re-read its own notes.</span></div></div>
+        <div class="li"><div class="b" style="color:var(--red)">self</div><div><b>board</b> · Find Nick email<br><span style="color:var(--dim)">Created and continued inside one session. No continuity gained.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>Task lifespans</h2><span class="note">each bar = one task · dot = one log entry</span></div>
+    <div class="tl">
+      <div class="tlgrid" id="tl"></div>
+      <div class="legend">
+        <span><i style="background:#58a6ff"></i>.agents</span>
+        <span><i style="background:#3fb950"></i>board</span>
+        <span><i style="background:#bc8cff"></i>lucy-harness</span>
+        <span><i style="background:#f0883e"></i>order-buddy</span>
+        <span style="color:var(--amber)">⧉ = touched by 2 sessions</span>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:12px">Almost every bar is short and belongs to one session. The task is born, logged, and buried inside a single sitting. Two bars cross a session boundary. Those two are the whole return on the system.</p>
+  </section>
+
+  <section>
+    <div class="head"><h2>Cost against payoff</h2></div>
+    <div class="split">
+      <div class="card cost">
+        <h3 style="color:var(--red)">What it cost</h3>
+        <div class="li"><div class="b">~45k tok</div><div>task tool args and results pushed into context over 21 sessions</div></div>
+        <div class="li"><div class="b">~16k tok</div><div>one board session (<span class="mono">01a0865e</span>) burned on 32 task calls alone</div></div>
+        <div class="li"><div class="b">5 sessions</div><div>called <span class="mono">list</span>, read the answer, and never touched a task again. Pure tax from the "list active tasks first" rule.</div></div>
+        <div class="li"><div class="b">60 entries</div><div>decisions, blockers and handoffs written. 3 of them were ever read by another session.</div></div>
+        <div class="li"><div class="b">2 zombies</div><div><span class="mono">Pi blocks connector base</span> (25 Aug) and <span class="mono">Board CLI</span> (4 Sep) still sit <span class="pill p-bad">active</span> with zero entries, and show up in every <span class="mono">list</span> forever</div></div>
+      </div>
+      <div class="card gain">
+        <h3 style="color:var(--green)">What it bought</h3>
+        <div class="li"><div class="b">2 resumes</div><div>a 10-day gap and an overnight gap closed without you re-explaining anything</div></div>
+        <div class="li"><div class="b">31 refs</div><div>durable pointers to artifacts. Genuinely useful, but mostly recoverable from git and the scratch dir.</div></div>
+        <div class="li"><div class="b">7 blockers</div><div>failures recorded instead of lost, including two workflow timeouts in the audit task</div></div>
+        <div class="li"><div class="b">1 ledger</div><div>the orchestration audit task grew to 29 KB across two days and is the one record doing real work</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>The overlap nobody planned</h2><span class="note">todo tool vs task tool</span></div>
+    <div class="grid g3">
+      <div class="tile bad"><div class="n">431</div><div class="l">todo calls in the window</div><div class="s">30 sessions</div></div>
+      <div class="tile warn"><div class="n">127</div><div class="l">task_manage calls</div><div class="s">21 sessions</div></div>
+      <div class="tile warn"><div class="n">17</div><div class="l">sessions ran both</div><div class="s">two progress ledgers, same work</div></div>
+    </div>
+    <p class="sub" style="margin-top:12px">17 sessions kept an in-memory todo list <em>and</em> a durable task log at the same time. The todo list got 3.4× more traffic and vanished at session end. That is the clearest sign the split is wrong: the agent prefers the cheap ledger and treats the durable one as paperwork.</p>
+  </section>
+
+  <section>
+    <div class="head"><h2>Verdict per behaviour</h2></div>
+    <div class="card" style="padding:18px 8px">
+    <table>
+      <thead><tr><th>Behaviour</th><th>Volume</th><th>Read back?</th><th>Call</th></tr></thead>
+      <tbody>
+        <tr><td><b>Handoff on session end</b><br><span class="sub">structured state + next action</span></td><td class="m">31 entries</td><td class="m">2 of 31</td><td><span class="pill p-warn">keep, but only on pause</span></td></tr>
+        <tr><td><b>Decision entries</b><br><span class="sub">why a direction was chosen</span></td><td class="m">17 entries</td><td class="m">0 outside session</td><td><span class="pill p-bad">noise as written</span></td></tr>
+        <tr><td><b>References</b><br><span class="sub">artifact paths</span></td><td class="m">36 calls</td><td class="m">indirect</td><td><span class="pill p-good">cheap, keep</span></td></tr>
+        <tr><td><b><span class="mono">list</span> at session start</b><br><span class="sub">mandated by AGENTS.md</span></td><td class="m">26 calls</td><td class="m">led to 4 continues</td><td><span class="pill p-warn">gate it on intent</span></td></tr>
+        <tr><td><b>Status churn</b><br><span class="sub">active/waiting/done flips</span></td><td class="m">33 calls</td><td class="m">never queried</td><td><span class="pill p-bad">drop most of it</span></td></tr>
+        <tr><td><b>Create per unit of work</b><br><span class="sub">one task per sitting</span></td><td class="m">19 tasks</td><td class="m">2 resumed</td><td><span class="pill p-bad">over-created</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><h2>What I would change</h2><span class="note">ordered by payoff per unit of effort</span></div>
+    <div class="rec">
+      <div class="recrow"><div class="recn">1</div><div class="recb">
+        <b class="fix">Create a task only when work will cross a session boundary</b>
+        <span>17 of 19 tasks were born and buried in one sitting. Trigger on: the work is paused, blocked, waiting on you, or spans a day. Otherwise the todo tool already covers it. That alone kills roughly 70% of the cost.</span></div></div>
+      <div class="recrow"><div class="recn">2</div><div class="recb">
+        <b class="fix">Make <span class="mono">list</span> cheap and conditional</b>
+        <span>Change the AGENTS.md rule from "before substantial work, list active tasks" to "list only when resuming, or when the user references earlier work". Have <span class="mono">list</span> return active and waiting tasks by default, never done ones. This session's list returned 12 tasks; 9 were closed.</span></div></div>
+      <div class="recrow"><div class="recn">3</div><div class="recb">
+        <b class="cut">Auto-expire zombies</b>
+        <span>Two tasks have sat <span class="mono">active</span> with zero entries since August. Any task with no entry for 7 days should go <span class="mono">stale</span> and drop out of <span class="mono">list</span>.</span></div></div>
+      <div class="recrow"><div class="recn">4</div><div class="recb">
+        <b class="cut">Stop writing decision entries mid-session</b>
+        <span>17 were written, none were read by another session. Fold the one that still matters into the final handoff. Decisions that shape the repo belong in an ADR, not a task log.</span></div></div>
+      <div class="recrow"><div class="recn">5</div><div class="recb">
+        <b class="keep">Keep handoff, but make it the only write</b>
+        <span>One structured handoff at pause time, with references. That is what the two successful resumes actually read. Everything else in the log was decoration.</span></div></div>
+      <div class="recrow"><div class="recn">6</div><div class="recb">
+        <b class="fix">Merge the two ledgers, or make the boundary explicit</b>
+        <span>17 sessions ran todo and task_manage side by side. Either the task log absorbs the todo list, or AGENTS.md states plainly: todo is for the current sitting, task is for crossing a session boundary, never both for the same work.</span></div></div>
+    </div>
+  </section>
+
+  <footer>
+    scanned: 60 session JSONL files · 22 task records across 5 repos · window 2026-09-09T00:00Z → 2026-09-10T15:10Z<br>
+    token figures are (args + tool-result characters) / 4, so treat them as order-of-magnitude, not exact billing
+  </footer>
+</div>
+
+<script>
+const TASKS = [
+ {t:"Audit orchestration slowness",r:".agents",c:"2026-09-09T18:50Z",f:"2026-09-09T18:51Z",l:"2026-09-10T14:15Z",e:9,s:1,d:["2026-09-09T18:51Z","2026-09-09T19:10Z","2026-09-09T19:40Z","2026-09-10T09:30Z","2026-09-10T11:00Z","2026-09-10T12:30Z","2026-09-10T13:20Z","2026-09-10T13:50Z","2026-09-10T14:15Z"]},
+ {t:"Visualize agent system",r:".agents",c:"2026-09-09T16:45Z",f:"2026-09-09T18:28Z",l:"2026-09-10T14:33Z",e:4,s:2,d:["2026-09-09T18:28Z","2026-09-09T18:40Z","2026-09-10T14:26Z","2026-09-10T14:33Z"]},
+ {t:"New ICP ui direction",r:"order-buddy",c:"2026-08-30T15:32Z",f:"2026-09-09T18:10Z",l:"2026-09-09T19:25Z",e:2,s:1,old:1,d:["2026-09-09T18:10Z","2026-09-09T19:25Z"]},
+ {t:"Revise Pekao cost estimate",r:"board",c:"2026-09-09T14:15Z",f:"2026-09-09T14:37Z",l:"2026-09-09T17:44Z",e:8,s:1,d:["2026-09-09T14:37Z","2026-09-09T15:10Z","2026-09-09T15:40Z","2026-09-09T16:10Z","2026-09-09T16:40Z","2026-09-09T17:05Z","2026-09-09T17:30Z","2026-09-09T17:44Z"]},
+ {t:"Lucy subagent visibility",r:".agents",c:"2026-09-09T14:25Z",f:"2026-09-09T14:25Z",l:"2026-09-09T16:14Z",e:5,s:2,d:["2026-09-09T14:25Z","2026-09-09T14:50Z","2026-09-09T15:20Z","2026-09-09T15:50Z","2026-09-09T16:14Z"]},
+ {t:"Visualize task tool",r:".agents",c:"2026-09-09T14:54Z",f:"2026-09-09T15:06Z",l:"2026-09-09T16:20Z",e:7,s:1,d:["2026-09-09T15:06Z","2026-09-09T15:15Z","2026-09-09T15:25Z","2026-09-09T15:48Z","2026-09-09T15:51Z","2026-09-09T15:58Z","2026-09-09T16:20Z"]},
+ {t:"Keep task log on orchestrator",r:".agents",c:"2026-09-09T14:05Z",f:"2026-09-09T14:05Z",l:"2026-09-09T14:31Z",e:2,s:1,d:["2026-09-09T14:05Z","2026-09-09T14:31Z"]},
+ {t:"Preserve subagent renderer",r:".agents",c:"2026-09-09T14:34Z",f:"2026-09-09T15:16Z",l:"2026-09-09T15:29Z",e:2,s:1,d:["2026-09-09T15:16Z","2026-09-09T15:29Z"]},
+ {t:"Assess workflow visibility",r:".agents",c:"2026-09-09T13:14Z",f:"2026-09-09T13:27Z",l:"2026-09-09T13:27Z",e:1,s:1,d:["2026-09-09T13:27Z"]},
+ {t:"Compare subagent systems",r:".agents",c:"2026-09-09T13:34Z",f:"2026-09-09T13:43Z",l:"2026-09-09T13:43Z",e:1,s:1,d:["2026-09-09T13:43Z"]},
+ {t:"Triage inbox",r:"board",c:"2026-09-09T13:32Z",f:"2026-09-09T13:44Z",l:"2026-09-09T13:46Z",e:2,s:1,d:["2026-09-09T13:44Z","2026-09-09T13:46Z"]},
+ {t:"Popraw drafty RIL / Sławek",r:"board",c:"2026-09-09T13:20Z",f:"2026-09-09T13:28Z",l:"2026-09-09T13:28Z",e:1,s:1,d:["2026-09-09T13:28Z"]},
+ {t:"Find Nick email",r:"board",c:"2026-09-10T07:52Z",f:"2026-09-10T07:52Z",l:"2026-09-10T08:05Z",e:3,s:1,d:["2026-09-10T07:52Z","2026-09-10T08:00Z","2026-09-10T08:05Z"]},
+ {t:"Triage inbox",r:"board",c:"2026-09-10T08:07Z",f:"2026-09-10T08:12Z",l:"2026-09-10T08:19Z",e:3,s:1,d:["2026-09-10T08:12Z","2026-09-10T08:16Z","2026-09-10T08:19Z"]},
+ {t:"Fix lucy start prompt",r:"lucy-harness",c:"2026-09-10T10:34Z",f:"2026-09-10T10:37Z",l:"2026-09-10T10:42Z",e:3,s:1,d:["2026-09-10T10:37Z","2026-09-10T10:40Z","2026-09-10T10:42Z"]},
+ {t:"Split start panes / clean stop",r:"lucy-harness",c:"2026-09-10T10:50Z",f:"2026-09-10T10:53Z",l:"2026-09-10T11:06Z",e:2,s:1,d:["2026-09-10T10:53Z","2026-09-10T11:06Z"]},
+ {t:"Implement lucy delegate cmd",r:"lucy-harness",c:"2026-09-10T11:18Z",f:"2026-09-10T11:36Z",l:"2026-09-10T11:36Z",e:1,s:1,d:["2026-09-10T11:36Z"]},
+ {t:"Fix delegate verification",r:".agents",c:"2026-09-10T13:15Z",f:"2026-09-10T13:32Z",l:"2026-09-10T13:32Z",e:1,s:1,d:["2026-09-10T13:32Z"]},
+ {t:"Reconcile skill doctrine",r:".agents",c:"2026-09-10T13:41Z",f:"2026-09-10T13:50Z",l:"2026-09-10T13:50Z",e:1,s:1,d:["2026-09-10T13:50Z"]},
+ {t:"Fix delegate decision handoff",r:".agents",c:"2026-09-10T13:52Z",f:"2026-09-10T13:58Z",l:"2026-09-10T14:02Z",e:2,s:1,d:["2026-09-10T13:58Z","2026-09-10T14:02Z"]},
+ {t:"Pi blocks connector base",r:".agents",c:"2026-08-25T10:38Z",f:null,l:null,e:0,s:0,old:1,d:[]},
+ {t:"Board CLI for decisions",r:"board",c:"2026-09-04T07:04Z",f:null,l:null,e:0,s:0,old:1,d:[]}
+];
+const COLOR={".agents":"#58a6ff","board":"#3fb950","lucy-harness":"#bc8cff","order-buddy":"#f0883e"};
+const T0=Date.parse("2026-09-09T06:00Z"), T1=Date.parse("2026-09-10T16:00Z");
+const pct=ts=>((Date.parse(ts)-T0)/(T1-T0))*100;
+
+const el=document.getElementById('tl');
+let html='<div class="axis"><div></div><div class="ticks">';
+for(let h=6;h<=40;h+=4){
+  const ts=T0+ (h-6)*3600e3;
+  const p=((ts-T0)/(T1-T0))*100;
+  if(p>100) break;
+  const dt=new Date(ts);
+  const lab=(h===6||h===30)?(h<24?"9 Sep":"10 Sep"):String(dt.getUTCHours()).padStart(2,'0')+":00";
+  html+=`<span class="tick" style="left:${p}%">${lab}</span>`;
+}
+html+='</div></div>';
+
+for(const t of TASKS){
+  const col=COLOR[t.r]||"#8b98a5";
+  let track='';
+  for(let h=6;h<=40;h+=4){
+    const ts=T0+(h-6)*3600e3; const p=((ts-T0)/(T1-T0))*100;
+    if(p<=100) track+=`<span class="vline" style="left:${p}%"></span>`;
+  }
+  if(t.e===0){
+    track+=`<span class="seg" style="left:0;width:100%;background:repeating-linear-gradient(45deg,#30363d,#30363d 4px,transparent 4px,transparent 8px);opacity:.6"></span>`;
+  }else{
+    let a=Math.max(0,pct(t.f)), b=Math.min(100,pct(t.l));
+    const w=Math.max(1.2,b-a);
+    track+=`<span class="seg" style="left:${a}%;width:${w}%;background:${col}"></span>`;
+    for(const d of t.d){
+      const p=pct(d); if(p<0||p>100) continue;
+      track+=`<span class="dot" style="left:calc(${p}% - 2px)"></span>`;
+    }
+  }
+  const mark = t.s>=2 ? ' <span style="color:#d29922">⧉</span>' : (t.e===0?' <span style="color:#f85149">zombie</span>':'');
+  html+=`<div class="trow"><div class="tname"><span class="rp">${t.r.replace('.agents','agents')}</span>${t.t}${mark}</div><div class="track">${track}</div></div>`;
+}
+el.innerHTML=html;
+</script>
+</body>
+</html>

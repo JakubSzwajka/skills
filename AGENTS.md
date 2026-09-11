@@ -14,7 +14,7 @@
 
 ## Hard Rules
 
-- Never commit without explicit approval. `commit`, `commit now`, or invoking the commit skill counts as approval.
+- Never commit without explicit approval. `commit`, `commit now`, or invoking `/commit [instruction]` counts as approval for that commit.
 - Never push, publish, release, amend, switch branches, or create worktrees unless the user asks or approves.
 - **Never post to a PR, issue, or tracker without explicit approval.** This covers PR and issue comments, inline review comments, submitting or dismissing reviews, and editing a PR/issue body, title, labels, or reviewers. Approval to `commit` or `push` is NOT approval to write anything to the forge — those are separate acts on a surface teammates read. Draft the text, show it in chat, and wait. "Reply to X", "post that", or "update the PR body" counts as approval for that one write only.
 - Never message a person or channel on the user's behalf (Slack, email, chat) without explicit approval. Same rule, same reason.
@@ -68,7 +68,7 @@ Coordinate with other local pi sessions on related codebases. Use `/skill:pi-int
 
 ## Where specs live
 
-A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-tickets` already writes to `.scratch/<feature-slug>/issues/NN-slug.md`. A module that owns its own spec keeps it at `<module>/.pi/SPEC.md`, which is what `pi/extensions-disabled/task-log/.pi/SPEC.md` already does. Both are existing shapes, so nothing new is invented and one feature's record stays in one folder.
+A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-tickets` already writes to `.scratch/<feature-slug>/issues/NN-slug.md`. A module that owns its own spec keeps it at `<module>/.pi/SPEC.md`. Both are existing shapes, so nothing new is invented and one feature's record stays in one folder.
 
 - Write the spec first, then the tickets next to it in the same feature folder.
 - A feature is one folder of record: it holds a `SPEC.md`, an `issues/` directory of `NN-slug.md` tickets, or both. A module keeps the same pair inside its `.pi` container, and the row still reads as the module, because that is what a human calls it.

@@ -49,7 +49,7 @@ you verify       →  tests, git status, your own eyes
 delegate stop    →  process group killed, pane closed if there is one, lane deregistered
 ```
 
-Five calls, no polling, no guessing how long work takes.
+Four tool actions, no polling, no guessing how long work takes.
 
 ## Two transports
 
@@ -97,7 +97,7 @@ What a headless lane costs you, on purpose:
 What it buys: the worker survives the session that started it, and a fresh session
 adopts it once the old parent's process is confirmed gone (`delegate.ts:73`). It also
 runs where there is no herdr at all. Without `HERDR_ENV=1` or the binary, only the
-pane transport refuses; headless lanes still start, list, read, wait and stop, and
+pane transport refuses; headless lanes still start, list, read and stop, and
 `list` names the transport it could not reach as `staleTransports`.
 
 Give a lane a pane when you may want to look at it, when it uses project-local skills
@@ -256,9 +256,8 @@ whether it rang, whether its handoff is unread.
 - **`blocked` is the most expensive state on the board.** It means the worker hit
   an approval or a question. Eight lanes in the older window were lost to an
   unanswered pause. Answer it before anything else.
-- **`wait` is available and optional.** Use it when you genuinely have nothing
-  else to do. It accepts idle, done and blocked together, because a pane you
-  never focused finishes in `done`, not `idle`.
+- **Intercom is the only completion wake.** A worker rings after writing its
+  handoff. Use `read`, verify the result, then use `stop`. Do not poll with `list`.
 - **There is no deadline.** Nothing kills a runaway worker, which is the point:
   on 9 Sep, 11 runs were killed mid-edit and returned nothing, about 250
   minutes. The cost is that a stuck lane is yours to notice. Watch the widget.
@@ -284,8 +283,8 @@ time (`runners/subprocess.ts:194`). A pane lane reads `unknown` when the pane is
 but herdr lists no agent in it (`runners/herdr.ts:77`).
 
 The tool then does nothing on your behalf, which is deliberate. The record stays open,
-`wait` times out instead of reporting `done`, and `stop` on a headless lane refuses to
-signal and hands you the pid, the log path and the `kill -TERM -<pid>` to run yourself.
+and `stop` on a headless lane refuses to signal and hands you the pid, the log path and
+the `kill -TERM -<pid>` to run yourself.
 Signalling a pid that may have been recycled would kill a stranger's process group.
 
 Nothing nags about this state, so it is on you to check the widget. Open the log or the
@@ -309,7 +308,6 @@ delegate({ action: "list" })
                 handoffPresent, unread, pane, pid, logFile }], staleTransports? }
 
 delegate({ action: "read", lane })          → { status, handoffPresent, handoff, body }
-delegate({ action: "wait", lanes?, timeoutMs? })
 delegate({ action: "stop", lane })          → kills the process group, closes the pane, deregisters
 ```
 

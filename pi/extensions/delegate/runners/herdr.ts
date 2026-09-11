@@ -1,6 +1,6 @@
 import { basename } from "node:path";
 import type {
-	CommandRunner, LaneHandle, LaneKill, LaneObservation, LaneProgress, LaneRecord, LaneRunner, LaneSettled, LaneSpec, LaneStatus,
+	CommandRunner, LaneHandle, LaneKill, LaneObservation, LaneProgress, LaneRecord, LaneRunner, LaneSpec, LaneStatus,
 } from "../types.ts";
 import { errorMessage, isObject, isPresent, numberValue, processGroupAlive, sleep, splitModelSpec, text } from "./support.ts";
 
@@ -77,25 +77,6 @@ export class HerdrLaneRunner implements LaneRunner {
 			} else observations.set(lane.lane, panes.has(lane.pane) ? { kind: "status", status: "unknown" } : { kind: "gone" });
 		}
 		return observations;
-	}
-
-	async settle(lane: LaneRecord, timeoutMs: number, signal?: AbortSignal): Promise<LaneSettled> {
-		const blocked = await this.available();
-		if (blocked) throw new Error(blocked);
-		let result;
-		try {
-			result = await this.runner.exec("herdr", waitArguments(lane.lane, timeoutMs), { ...(signal ? { signal } : {}), timeout: timeoutMs + 1_000 });
-		} catch (error) {
-			const raw = parsePossibleJson((error as { stdout?: unknown } | null)?.stdout);
-			if (errorCode(raw) === "timeout") return { timedOut: true };
-			throw error;
-		}
-		const raw = parsePossibleJson(result.stdout);
-		if (errorCode(raw) === "timeout") return { timedOut: true };
-		if (result.code !== 0) throw new Error(herdrFailure("wait for agent", raw, result.stderr));
-		const agent = toAgent(findObject(raw, (value) => isObject(value) && typeof (value.agent_status ?? value.status) === "string" ? value : undefined));
-		if (!agent) throw new Error("Herdr wait returned no agent state");
-		return { timedOut: false, status: agent.status };
 	}
 
 	async kill(lane: LaneRecord, signal?: AbortSignal): Promise<LaneKill> {
@@ -185,10 +166,6 @@ export class HerdrLaneRunner implements LaneRunner {
 		if (!raw) throw new Error(`Herdr could not ${action}: response was not JSON`);
 		return raw;
 	}
-}
-
-export function waitArguments(lane: string, timeoutMs: number): string[] {
-	return ["agent", "wait", lane, "--until", "idle", "--until", "done", "--until", "blocked", "--timeout", String(timeoutMs)];
 }
 
 export function toAgent(value: unknown): AgentInfo | undefined {

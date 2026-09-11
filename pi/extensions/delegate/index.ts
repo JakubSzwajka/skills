@@ -11,7 +11,7 @@ import { SessionStatsWatcher, ClosedLaneMemory, laneSignature, laneWidgetFactory
 import type { CommandResult } from "./types.ts";
 
 const WIDGET_KEY = "delegate";
-const ACTIONS = ["start", "list", "read", "wait", "stop"] as const;
+const ACTIONS = ["start", "list", "read", "stop"] as const;
 // A cheap tick reads only the bytes appended to each worker transcript. Every fourth tick also asks
 // herdr for lane statuses, which is the only part that spawns a subprocess.
 const TICK_MS = 1_500;
@@ -56,7 +56,7 @@ function install(pi: ExtensionAPI): void {
 	// Unavailability now belongs to the transport that is unavailable. A session outside Herdr can
 	// still run, list, read and stop headless lanes; only the pane transport refuses.
 	const herdrUnavailable = async (): Promise<string | undefined> => {
-		if (process.env.HERDR_ENV !== "1") return "delegate cannot use the herdr transport: HERDR_ENV is not 1, so no pane lane can be started, waited on, or stopped. A headless lane needs a profile whose transport is subprocess, which only the operator can change.";
+		if (process.env.HERDR_ENV !== "1") return "delegate cannot use the herdr transport: HERDR_ENV is not 1, so no pane lane can be started or stopped. A headless lane needs a profile whose transport is subprocess, which only the operator can change.";
 		if (!herdrFound) {
 			if (!(await onPath("herdr"))) return "delegate cannot use the herdr transport: the herdr binary is missing from PATH. A headless lane needs a profile whose transport is subprocess, which only the operator can change.";
 			herdrFound = true;
@@ -206,7 +206,7 @@ function install(pi: ExtensionAPI): void {
 		description: [
 			"Run work in another pi session, either as a Herdr pane or as a detached headless process. start returns immediately; the worker reports back through a handoff file and an intercom ring.",
 			"If a worker needs a decision, it asks the orchestrator through intercom and waits. Answer that inbound question directly rather than forwarding it blindly.",
-			"Actions: start (profile, brief, optional name/cwd/model/handoff), list, read (lane), wait (lanes, timeoutMs), stop (lane).",
+			"Actions: start (profile, brief, optional name/cwd/model/handoff), list, read (lane), stop (lane). Intercom rings are the only completion wake; after a ring, read the handoff and stop the lane.",
 			"A lane's transport comes from its profile and nowhere else, because it decides whether the operator can watch the work; there is no transport argument and naming one is refused. model stays yours to choose per lane, because matching a model to a lane's difficulty is your job.",
 			"A subprocess lane has no pane to watch or steer, and only reports working, blocked on an intercom ask, done, or unknown.",
 			"A subprocess lane reads unknown when its liveness cannot be established; stop then refuses to signal and tells you how to finish by hand, and the lane stays open. Outside Herdr, list, read and stop still work on subprocess lanes, and list reports any transport it could not reach as staleTransports.",
@@ -227,8 +227,6 @@ function install(pi: ExtensionAPI): void {
 			model: Type.Optional(Type.String({ description: "Override the profile model, provider/id[:thinking]. The one per-call override there is: match the model to the lane's difficulty" })),
 			handoff: Type.Optional(Type.String({ description: "Override the assigned handoff path" })),
 			lane: Type.Optional(Type.String({ description: "Lane name for read and stop" })),
-			lanes: Type.Optional(Type.Array(Type.String(), { description: "Lanes for wait, default every live lane" })),
-			timeoutMs: Type.Optional(Type.Integer({ minimum: 1, description: "Wait timeout in milliseconds" })),
 		}),
 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 			try {

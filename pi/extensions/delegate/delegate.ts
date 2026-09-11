@@ -2,7 +2,7 @@ import { access, readFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import type {
-	CommandRunner, DelegateInput, DelegateProfile, LaneObservation, LaneRecord, LaneRunner, LaneStatus, Transport,
+	CommandRunner, DelegateInput, DelegateProfile, LaneObservation, LaneRecord, LaneRunner, Transport,
 } from "./types.ts";
 import { DEFAULT_TRANSPORT, TRANSPORTS, statusRank } from "./types.ts";
 import { mutateRegistry, readRegistry, registryFiles } from "./registry.ts";
@@ -11,7 +11,6 @@ import { SubprocessLaneRunner } from "./runners/subprocess.ts";
 import { errorMessage, isObject, numberValue, processAlive, text } from "./runners/support.ts";
 
 const CLOSED_RETENTION_MS = 24 * 60 * 60 * 1_000;
-const DEFAULT_WAIT_MS = 300_000;
 const DEFAULT_PROFILES: Record<string, DelegateProfile> = {
 	worker: { model: "openai-codex/gpt-5.6-sol:high", excludeTools: ["ask_user_question"] },
 	scout: { model: "openai-codex/gpt-5.6-luna", readOnly: true, excludeTools: ["ask_user_question"] },
@@ -54,7 +53,6 @@ export class DelegateService {
 				break;
 			}
 			case "read": result = await this.read(input.lane, context); break;
-			case "wait": result = await this.wait(input.lanes, input.timeoutMs, context); break;
 			case "stop": result = await this.stop(input.lane, context); break;
 		}
 		return profileState.warning ? { ...result, warning: profileState.warning } : result;
@@ -260,42 +258,6 @@ export class DelegateService {
 		return { status: current.closed ? "closed" : current.status ?? "pending", handoffPresent: body !== null, handoff: current.handoff, body };
 	}
 
-	private async wait(laneNames: string[] | undefined, timeoutMs: number | undefined, context: ActionContext): Promise<Record<string, unknown>> {
-		await this.ensureRegistries(context);
-		const timeout = timeoutMs ?? DEFAULT_WAIT_MS;
-		if (!Number.isSafeInteger(timeout) || timeout <= 0) throw new Error("timeoutMs must be a positive integer");
-		const all = (await this.allRecords()).filter(({ lane }) => !lane.closed && spawned(lane));
-		const names = laneNames?.length ? [...new Set(laneNames)] : all.map(({ lane }) => lane.lane);
-		if (!names.length) throw new Error("No live delegate lanes to wait for");
-		const selected = names.map((name) => {
-			const matches = all.filter(({ lane }) => lane.lane === name);
-			if (matches.length !== 1) throw new Error(matches.length ? `Delegate lane ${JSON.stringify(name)} is ambiguous` : `Unknown live delegate lane ${JSON.stringify(name)}`);
-			return matches[0]!;
-		});
-		const controllers = selected.map(() => new AbortController());
-		const abortFromParent = () => controllers.forEach((controller) => controller.abort());
-		context.signal?.addEventListener("abort", abortFromParent, { once: true });
-		try {
-			const settled = await Promise.race(selected.map(async (entry, index) => ({
-				entry,
-				outcome: await this.runnerFor(transportOf(entry.lane)).settle(entry.lane, timeout, controllers[index]!.signal),
-			})));
-			controllers.forEach((controller) => controller.abort());
-			if (settled.outcome.timedOut) return { timedOut: true, lanes: names };
-			const matched = settled.entry;
-			await this.updateLane(matched.path, matched.lane.lane, (record) => { record.status = (settled.outcome as { status: LaneStatus }).status; });
-			return {
-				timedOut: false,
-				lane: matched.lane.lane,
-				status: settled.outcome.status,
-				handoffPresent: await fileExists(matched.lane.handoff),
-			};
-		} finally {
-			context.signal?.removeEventListener("abort", abortFromParent);
-			controllers.forEach((controller) => controller.abort());
-		}
-	}
-
 	private async stop(laneName: string | undefined, context: ActionContext): Promise<Record<string, unknown>> {
 		const found = await this.requireLane(laneName, context);
 		const lane = found.lane;
@@ -432,7 +394,6 @@ export class DelegateService {
 }
 
 export { statusRank } from "./types.ts";
-export { waitArguments } from "./runners/herdr.ts";
 
 export function returnContract(brief: string, handoff: string, parent: string): string {
 	return `${brief.trim()}\n\nYou are a worker. Implement the work yourself. Do not delegate.\nIf you need a decision before you can continue, use the intercom tool to ask\nsession ${parent} and wait for the reply. Never try to open a question dialog;\nnobody may be watching your pane, and a pane waiting on a dialog looks identical\nto a pane doing work. Say what you need in one line, offer the options you see,\nand name your own recommendation. If you are still stuck after the reply, write\nthe handoff describing the block rather than waiting again.\nWrite your handoff to ${handoff}. That file is your result; a terminal\nnobody reads is not.\nWhen the handoff is written, use the intercom tool to message session ${parent}\nwith the handoff path and a one-line outcome. Do this even if you failed or only\npartly finished.`;

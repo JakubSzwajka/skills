@@ -108,8 +108,6 @@ export interface LaneKill {
 	detail?: string;
 }
 
-export type LaneSettled = { timedOut: true } | { timedOut: false; status: LaneStatus };
-
 /** Persists partial progress while a lane is being created, so a half-built lane stays addressable. */
 export type LaneProgress = (patch: Partial<LaneRecord>) => Promise<void>;
 
@@ -126,7 +124,6 @@ export interface LaneRunner {
 	liveNames(signal?: AbortSignal): Promise<Set<string>>;
 	spawn(spec: LaneSpec, progress: LaneProgress, signal?: AbortSignal): Promise<LaneHandle>;
 	probe(lanes: readonly LaneRecord[], signal?: AbortSignal): Promise<Map<string, LaneObservation>>;
-	settle(lane: LaneRecord, timeoutMs: number, signal?: AbortSignal): Promise<LaneSettled>;
 	kill(lane: LaneRecord, signal?: AbortSignal): Promise<LaneKill>;
 }
 
@@ -148,5 +145,4 @@ export interface StartInput {
 export interface ListInput { action: "list" }
 export interface ReadInput { action: "read"; lane?: string }
 export interface StopInput { action: "stop"; lane?: string }
-export interface WaitInput { action: "wait"; lanes?: string[]; timeoutMs?: number }
-export type DelegateInput = StartInput | ListInput | ReadInput | StopInput | WaitInput;
+export type DelegateInput = StartInput | ListInput | ReadInput | StopInput;

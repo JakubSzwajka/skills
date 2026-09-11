@@ -3,7 +3,7 @@ import { mkdir, open, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import type {
-	LaneHandle, LaneKill, LaneObservation, LaneProgress, LaneRecord, LaneRunner, LaneSettled, LaneSpec,
+	LaneHandle, LaneKill, LaneObservation, LaneProgress, LaneRecord, LaneRunner, LaneSpec,
 } from "../types.ts";
 import { errorMessage, isPid, processAlive, sleep, splitModelSpec } from "./support.ts";
 
@@ -11,7 +11,6 @@ const execFileAsync = promisify(execFile);
 
 /** How long after an intercom ask a growing transcript is read as "the worker resumed". */
 const BLOCKED_GRACE_MS = 3_000;
-const SETTLE_POLL_MS = 250;
 const KILL_GRACE_MS = 2_000;
 
 export interface LaunchRequest {
@@ -143,17 +142,6 @@ export class SubprocessLaneRunner implements LaneRunner {
 			observations.set(lane.lane, { kind: "status", status: blocked ? "blocked" : "working", ...carried });
 		}
 		return observations;
-	}
-
-	async settle(lane: LaneRecord, timeoutMs: number, signal?: AbortSignal): Promise<LaneSettled> {
-		if (!lane.pid) return { timedOut: false, status: "done" };
-		const deadline = this.now() + timeoutMs;
-		for (;;) {
-			// Only a proven exit ends the wait. An unreadable `ps` times out instead of claiming done.
-			if (this.liveness(lane, await this.processTable([lane.pid])) === "gone") return { timedOut: false, status: "done" };
-			if (signal?.aborted || this.now() >= deadline) return { timedOut: true };
-			await sleep(SETTLE_POLL_MS);
-		}
 	}
 
 	async kill(lane: LaneRecord): Promise<LaneKill> {

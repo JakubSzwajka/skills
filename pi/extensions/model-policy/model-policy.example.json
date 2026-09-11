@@ -1,0 +1,22 @@
+{
+  "default": { "allow": ["*"] },
+  "rules": [
+    {
+      "when": "~/work/acme",
+      "allow": ["anthropic/*"],
+      "prefer": ["anthropic/claude-opus-5", "anthropic/claude-sonnet-5"],
+      "enforce": "agents",
+      "note": "client NDA"
+    },
+    {
+      "when": "~/work/acme/sandbox",
+      "allow": ["*"]
+    },
+    {
+      "when": "~/personal",
+      "deny": ["amazon-bedrock/*", "openrouter/*"],
+      "prefer": ["anthropic/claude-opus-5"],
+      "enforce": "all"
+    }
+  ]
+}
