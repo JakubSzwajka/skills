@@ -22,6 +22,7 @@ import {
 	acquireGitTransactionLock,
 	captureGitPreflight,
 	createGitTools,
+	parsePorcelainPaths,
 	ProcessGitExecutor,
 	validateCommitMessage,
 	validateStagePaths,
@@ -150,6 +151,8 @@ test("temp repository commit preserves staged work and adds tracked and untracke
 	assert.equal(created.state.mutated, true);
 	assert.match(created.state.committed?.hash ?? "", /^[0-9a-f]{12}$/);
 	assert.equal(created.state.committed?.subject, "test: preserve selected index");
+	assert.equal(created.state.committed?.message, "test: preserve selected index");
+	assert.deepEqual(created.state.committed?.paths.slice().sort(), ["staged.txt", "tracked.txt", "untracked.txt"]);
 
 	const names = git(cwd, ["show", "--pretty=", "--name-only", "HEAD"]).trim().split("\n").sort();
 	assert.deepEqual(names, ["staged.txt", "tracked.txt", "untracked.txt"]);
@@ -547,6 +550,7 @@ test("path and message validation blocks pathspec and control injection", async 
 			}
 			if (args[0] === "rev-parse" && String(args[1]).startsWith("--short")) return { stdout: "abcdef123456\n", stderr: "", code: 0 };
 			if (args[0] === "log") return { stdout: "test: safe; $(touch nope)\n", stderr: "", code: 0 };
+			if (args[0] === "diff-tree") return { stdout: "name;touch-pwn\0", stderr: "", code: 0 };
 			return { stdout: "", stderr: "", code: 0 };
 		}
 	}
@@ -569,6 +573,13 @@ class EmptyExecutor implements GitExecutor {
 		return { stdout: "", stderr: "", code: 0 };
 	}
 }
+
+test("porcelain paths preserve spaces and both sides of a rename", () => {
+	assert.deepEqual(
+		parsePorcelainPaths(" M plain file.ts\0R  new name.ts\0old name.ts\0?? untracked.ts\0"),
+		["plain file.ts", "new name.ts", "old name.ts", "untracked.ts"],
+	);
+});
 
 test("an invalid commit message preserves the index but freezes staging", async () => {
 	const executor = new EmptyExecutor();

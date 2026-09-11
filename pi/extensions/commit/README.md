@@ -13,7 +13,7 @@ The worker uses an in-memory session with project extensions, skills, prompts, t
 - `git_stage`
 - `git_commit`
 
-It never receives `bash`, `edit`, `write`, delegate, or parent custom tools. Git tools call `git` with argument arrays, validate paths and messages, keep hooks enabled, preserve the existing index, and refuse if `HEAD` moves.
+It never receives `bash`, `edit`, `write`, delegate, or parent custom tools. Git tools call `git` with argument arrays, validate paths and messages, keep hooks enabled, preserve the existing index, and refuse if `HEAD` moves. A successful receipt reads the short hash, full commit message, and committed path list back from Git. Assistant prose cannot supply any of those fields.
 
 The command resolves Git's active index path before reading status. When the index exists, it realpaths the index file itself so symlink aliases use one identity. It follows final symlink chains, including dangling chains, with loop detection before using the missing-index fallback. For a missing target, it realpaths the parent directory and keeps the target filename. It creates an exclusive lockfile beside that canonical index and holds it through preflight, snapshot, staging, and commit. This binds `/commit` runs that target the same resolved index. It does not exclude a plain `git add` or another Git command run elsewhere.
 
@@ -30,21 +30,47 @@ Models run in this exact order:
 
 Haiku is tried only when Luna has a setup or provider failure before any Git mutation, or when Luna passes an invalid commit message before any mutation. There is no fallback after staging starts.
 
+## Live progress
+
+While the command runs, a widget above the editor shows the command, the model used by the current attempt, elapsed time, and the current Git phase. Staged paths appear as soon as staging starts. For example:
+
+```text
+/commit  luna  4.2s
+staging  3 files
+  README.md
+  pi/extensions/commit/command.ts
+  pi/extensions/commit/widget.ts
+```
+
+The phase moves through `inspecting`, `staging`, and `committing` from direct tool callbacks. The 100 ms timer only repaints elapsed time; it never polls the model. A Luna-to-Haiku fallback changes the model label when the Haiku attempt starts. Success, failure, timeout abort, and session shutdown all tear down the timer and clear the widget. The widget clears before the parent result is injected, so it does not remain in the thread.
+
 ## Parent result
 
-The parent gets one non-triggering custom message:
+The parent gets one non-triggering custom message. Success includes the receipt's short hash, full commit message body, and committed file list:
 
 ```text
-Committed <hash>: <subject>
+Committed abcdef123456
+
+Commit message:
+feat: make commits observable
+
+Explain the operator-visible receipt.
+
+Committed files:
+- "pi/extensions/commit/command.ts"
+- "pi/extensions/commit/widget.ts"
 ```
 
-or one failure line:
+A worker failure or refusal includes its reason and the candidate changed paths seen in the preflight and snapshots:
 
 ```text
-Commit failed: <reason>
+Commit failed: the commit worker did not create a commit
+Candidate changed paths seen:
+- "pi/extensions/commit/command.ts"
+- "unrelated.txt"
 ```
 
-Failures are bounded except lock-path failures. Those preserve the full absolute lock path and, for contention, the exact `rm` command even when the result exceeds the normal limit. The worker transcript and assistant prose are never copied into the parent.
+Normal failures stay within 2,000 characters, with the reason itself limited to 180 characters. Lock-path failures are the exception. They preserve the full absolute lock path and, for contention, the exact `rm` command even when the result exceeds the normal limit. Failures before repository inspection have no candidate path section. The worker transcript and assistant prose are never copied into the parent.
 
 ## Tests
 
@@ -52,4 +78,4 @@ Failures are bounded except lock-path failures. Those preserve the full absolute
 node --experimental-strip-types --test pi/extensions/commit/*.test.ts
 ```
 
-The suite includes a real in-memory `AgentSession` with a local stream stub and cross-process temporary-repository lock tests.
+The suite includes a real in-memory `AgentSession` with a local stream stub, widget lifecycle and teardown tests, receipt and failure-detail tests, and cross-process temporary-repository lock tests.

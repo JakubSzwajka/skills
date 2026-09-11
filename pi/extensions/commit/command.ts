@@ -21,6 +21,7 @@ import {
 	type GitExecutor,
 	type GitTransactionLock,
 } from "./git-tools.ts";
+import { CommitStatusWidget, type CommitProgress } from "./widget.ts";
 
 export const COMMIT_MODELS = [
 	{ provider: "openai-codex", id: "gpt-5.6-luna" },
@@ -78,6 +79,55 @@ interface AttemptResult {
 	mutated: boolean;
 	receipt?: CommitReceipt;
 	reason?: string;
+	seenPaths: string[];
+}
+
+export type CommitProgressReporter = (progress: CommitProgress) => void;
+
+const MAX_FAILURE_RESULT_LENGTH = 2_000;
+const MAX_FAILURE_REASON_LENGTH = 180;
+
+function reportProgress(reporter: CommitProgressReporter | undefined, progress: CommitProgress): void {
+	try { reporter?.(progress); }
+	catch { /* Progress cannot change commit behavior. */ }
+}
+
+export function formatCommitSuccess(receipt: CommitReceipt): string {
+	return [
+		`Committed ${receipt.hash}`,
+		"",
+		"Commit message:",
+		receipt.message,
+		"",
+		"Committed files:",
+		...receipt.paths.map((path) => `- ${JSON.stringify(path)}`),
+	].join("\n");
+}
+
+export function formatCommitFailure(reason: unknown, changedPaths: readonly string[] = []): string {
+	if (reason instanceof GitTransactionLockError) return `Commit failed: ${reason.message}`;
+	const clean = errorText(reason)
+		.replace(/^Commit failed:\s*/i, "")
+		.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ")
+		.replace(/\s+/g, " ")
+		.trim();
+	const boundedReason = (clean || "no safe commit was created").slice(0, MAX_FAILURE_REASON_LENGTH).trimEnd();
+	let result = `Commit failed: ${boundedReason}`;
+	const paths = [...new Set(changedPaths)];
+	if (paths.length === 0) return result;
+	result += "\nCandidate changed paths seen:";
+	for (let index = 0; index < paths.length; index += 1) {
+		const path = paths[index].length > 240 ? `${paths[index].slice(0, 239)}…` : paths[index];
+		const line = `\n- ${JSON.stringify(path)}`;
+		const omitted = paths.length - index;
+		const marker = `\n- … ${omitted} more path${omitted === 1 ? "" : "s"}`;
+		if (result.length + line.length > MAX_FAILURE_RESULT_LENGTH) {
+			if (result.length + marker.length <= MAX_FAILURE_RESULT_LENGTH) result += marker;
+			break;
+		}
+		result += line;
+	}
+	return result;
 }
 
 function errorText(error: unknown): string {
@@ -86,14 +136,7 @@ function errorText(error: unknown): string {
 }
 
 export function sanitizeFailure(reason: unknown): string {
-	if (reason instanceof GitTransactionLockError) return `Commit failed: ${reason.message}`;
-	const clean = errorText(reason)
-		.replace(/^Commit failed:\s*/i, "")
-		.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ")
-		.replace(/\s+/g, " ")
-		.trim();
-	const bounded = (clean || "no safe commit was created").slice(0, 180).trimEnd();
-	return `Commit failed: ${bounded}`;
+	return formatCommitFailure(reason);
 }
 
 export function commitTask(instruction: string): string {
@@ -141,10 +184,19 @@ async function runAttempt(options: {
 	instruction: string;
 	preflight: Awaited<ReturnType<typeof captureGitPreflight>>;
 	deps: CommitDependencies;
+	onProgress?: CommitProgressReporter;
 }): Promise<AttemptResult> {
-	const { cwd, model, messages, instruction, preflight, deps } = options;
+	const { cwd, model, messages, instruction, preflight, deps, onProgress } = options;
 	const controller = new AbortController();
-	const git = createGitTools({ cwd, executor: deps.git, preflight, operationSignal: controller.signal });
+	const modelName = `${model.provider}/${model.id}`;
+	reportProgress(onProgress, { phase: "inspecting", model: modelName, stagedPaths: [] });
+	const git = createGitTools({
+		cwd,
+		executor: deps.git,
+		preflight,
+		operationSignal: controller.signal,
+		onProgress: (progress) => reportProgress(onProgress, { ...progress, model: modelName }),
+	});
 	let session: CommitWorkerSession | undefined;
 	let timedOut = false;
 
@@ -183,24 +235,27 @@ async function runAttempt(options: {
 			throw error;
 		}
 
-		if (git.state.committed) return { kind: "success", mutated: true, receipt: git.state.committed };
+		if (git.state.committed) return { kind: "success", mutated: true, receipt: git.state.committed, seenPaths: git.state.seenPaths };
 		if (session.agent.state.errorMessage) {
 			return {
 				kind: git.state.retryableWithoutMutation || !git.state.mutated ? "retryable" : "failure",
 				mutated: git.state.mutated,
 				reason: git.state.lastFailure ?? session.agent.state.errorMessage,
+				seenPaths: git.state.seenPaths,
 			};
 		}
 		return {
 			kind: git.state.retryableWithoutMutation ? "retryable" : "failure",
 			mutated: git.state.mutated,
 			reason: git.state.lastFailure ?? "the commit worker did not create a commit",
+			seenPaths: git.state.seenPaths,
 		};
 	} catch (error) {
 		return {
 			kind: timedOut || git.state.mutated ? "failure" : "retryable",
 			mutated: git.state.mutated,
 			reason: timedOut ? "the commit worker timed out" : git.state.lastFailure ?? errorText(error),
+			seenPaths: git.state.seenPaths,
 		};
 	} finally {
 		if (controller.signal.aborted && session) {
@@ -227,6 +282,7 @@ export async function executeCommit(
 	args: string,
 	ctx: ExtensionCommandContext,
 	deps: CommitDependencies = defaultCommitDependencies,
+	onProgress?: CommitProgressReporter,
 ): Promise<string> {
 	if (!ctx.isIdle()) return "Commit failed: the parent agent is still working";
 
@@ -239,6 +295,7 @@ export async function executeCommit(
 		try {
 			const preflight = await captureGitPreflight(ctx.cwd, deps.git);
 			let lastReason = "no commit model completed the task";
+			let seenPaths = [...new Set(preflight.changedPaths ?? [])];
 			for (let index = 0; index < models.length; index += 1) {
 				const result = await runAttempt({
 					cwd: ctx.cwd,
@@ -247,14 +304,16 @@ export async function executeCommit(
 					instruction: args.trim(),
 					preflight,
 					deps,
+					onProgress,
 				});
+				seenPaths = [...new Set([...seenPaths, ...result.seenPaths])];
 				if (result.kind === "success" && result.receipt) {
-					return `Committed ${result.receipt.hash}: ${result.receipt.subject}`;
+					return formatCommitSuccess(result.receipt);
 				}
 				lastReason = result.reason ?? lastReason;
 				if (result.kind !== "retryable" || result.mutated) break;
 			}
-			return sanitizeFailure(lastReason);
+			return formatCommitFailure(lastReason, seenPaths);
 		} finally {
 			try {
 				await releaseTransactionLock(transactionLock);
@@ -269,6 +328,11 @@ export async function executeCommit(
 
 export function registerCommitCommand(pi: ExtensionAPI, deps: CommitDependencies = defaultCommitDependencies): void {
 	let running = false;
+	let activeWidget: CommitStatusWidget | undefined;
+	pi.on("session_shutdown", () => {
+		activeWidget?.stop();
+		activeWidget = undefined;
+	});
 	pi.registerCommand("commit", {
 		description: "Select, stage, and commit only the changes attributable to this request",
 		handler: async (args, ctx) => {
@@ -277,11 +341,16 @@ export function registerCommitCommand(pi: ExtensionAPI, deps: CommitDependencies
 				result = "Commit failed: another /commit command is already running";
 			} else {
 				running = true;
+				const widget = ctx.hasUI ? new CommitStatusWidget(ctx.ui) : undefined;
+				activeWidget = widget;
+				widget?.start();
 				try {
-					result = await executeCommit(args, ctx, deps);
+					result = await executeCommit(args, ctx, deps, (progress) => widget?.update(progress));
 				} catch (error) {
 					result = sanitizeFailure(error);
 				} finally {
+					widget?.stop();
+					if (activeWidget === widget) activeWidget = undefined;
 					running = false;
 				}
 			}

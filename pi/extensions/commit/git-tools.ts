@@ -31,11 +31,15 @@ export interface GitExecutor {
 export interface CommitReceipt {
 	hash: string;
 	subject: string;
+	message: string;
+	paths: string[];
 }
 
 export interface GitMutationState {
 	mutated: boolean;
 	commitAttempts: number;
+	stagedPaths: string[];
+	seenPaths: string[];
 	committed?: CommitReceipt;
 	lastFailure?: string;
 	retryableWithoutMutation?: boolean;
@@ -45,6 +49,12 @@ export interface GitPreflight {
 	head: string;
 	status: string;
 	cachedNames: string;
+	changedPaths?: string[];
+}
+
+export interface GitToolProgress {
+	phase: "inspecting" | "staging" | "committing";
+	stagedPaths: readonly string[];
 }
 
 export interface GitTransactionLock {
@@ -107,8 +117,29 @@ export async function captureGitPreflight(
 ): Promise<GitPreflight> {
 	const head = await readHead(cwd, executor, signal);
 	const status = await checked(executor, cwd, ["status", "--short", "--untracked-files=all"], signal);
+	const porcelain = await checked(executor, cwd, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], signal);
 	const cached = await checked(executor, cwd, ["diff", "--cached", "--name-status", "--"], signal);
-	return { head, status: status.stdout, cachedNames: cached.stdout };
+	return { head, status: status.stdout, cachedNames: cached.stdout, changedPaths: parsePorcelainPaths(porcelain.stdout) };
+}
+
+export function parsePorcelainPaths(output: string): string[] {
+	const records = output.split("\0");
+	if (records.at(-1) === "") records.pop();
+	const paths: string[] = [];
+	for (let index = 0; index < records.length; index += 1) {
+		const record = records[index] ?? "";
+		if (record.length < 4 || record[2] !== " ") continue;
+		paths.push(record.slice(3));
+		if (/[RC]/.test(record.slice(0, 2)) && index + 1 < records.length) {
+			paths.push(records[index + 1] ?? "");
+			index += 1;
+		}
+	}
+	return [...new Set(paths.filter(Boolean))];
+}
+
+function parseNulPaths(output: string): string[] {
+	return [...new Set(output.split("\0").filter(Boolean))];
 }
 
 async function canonicalIndexPath(indexPath: string): Promise<string> {
@@ -332,9 +363,22 @@ export function createGitTools(options: {
 	executor: GitExecutor;
 	preflight: GitPreflight;
 	operationSignal: AbortSignal;
+	onProgress?: (progress: GitToolProgress) => void;
 }): { tools: ToolDefinition[]; state: GitMutationState } {
-	const { cwd, executor, preflight, operationSignal } = options;
-	const state: GitMutationState = { mutated: false, commitAttempts: 0 };
+	const { cwd, executor, preflight, operationSignal, onProgress } = options;
+	const state: GitMutationState = {
+		mutated: false,
+		commitAttempts: 0,
+		stagedPaths: [],
+		seenPaths: [...new Set(preflight.changedPaths ?? [])],
+	};
+	const remember = (target: string[], paths: readonly string[]): void => {
+		for (const path of paths) if (!target.includes(path)) target.push(path);
+	};
+	const report = (phase: GitToolProgress["phase"]): void => {
+		try { onProgress?.({ phase, stagedPaths: [...state.stagedPaths] }); }
+		catch { /* A progress listener cannot change Git behavior. */ }
+	};
 	const signalFor = (toolSignal?: AbortSignal) => toolSignal
 		? AbortSignal.any([operationSignal, toolSignal])
 		: operationSignal;
@@ -350,6 +394,7 @@ export function createGitTools(options: {
 		parameters: Type.Object({}),
 		async execute(_id, _params, toolSignal) {
 			try {
+				report("inspecting");
 				const signal = signalFor(toolSignal);
 				const commands: Array<[keyof typeof SNAPSHOT_SECTION_BUDGETS, string[]]> = [
 					["status", ["status", "--short", "--untracked-files=all"]],
@@ -362,6 +407,8 @@ export function createGitTools(options: {
 					const result = await checked(executor, cwd, args, signal);
 					parts.push([label, result.stdout]);
 				}
+				const porcelain = await checked(executor, cwd, ["status", "--porcelain=v1", "-z", "--untracked-files=all"], signal);
+				remember(state.seenPaths, parsePorcelainPaths(porcelain.stdout));
 				return { content: [{ type: "text", text: formatSnapshot(parts) }], details: {} };
 			} catch (error) {
 				return recordFailure(error);
@@ -382,7 +429,10 @@ export function createGitTools(options: {
 				if (state.commitAttempts > 0) throw new Error("staging is closed after git_commit starts");
 				const signal = signalFor(toolSignal);
 				const paths = validateStagePaths(params.paths, cwd);
+				remember(state.seenPaths, paths);
 				await assertHeadUnchanged(cwd, executor, preflight.head, signal);
+				remember(state.stagedPaths, paths);
+				report("staging");
 				state.mutated = true;
 				await checked(executor, cwd, ["add", "--", ...paths], signal);
 				return {
@@ -413,6 +463,7 @@ export function createGitTools(options: {
 					if (!state.mutated) state.retryableWithoutMutation = true;
 					throw error;
 				}
+				report("committing");
 				await assertHeadUnchanged(cwd, executor, preflight.head, signal);
 
 				const index = await executor.run(cwd, ["diff", "--cached", "--quiet", "--exit-code", "--"], signal);
@@ -422,11 +473,16 @@ export function createGitTools(options: {
 				state.mutated = true;
 				await checked(executor, cwd, ["commit", "-m", message], signal);
 				const hashResult = await checked(executor, cwd, ["rev-parse", "--short=12", "HEAD"], signal);
-				const subjectResult = await checked(executor, cwd, ["log", "-1", "--format=%s"], signal);
+				const messageResult = await checked(executor, cwd, ["log", "-1", "--format=%B"], signal);
+				const pathsResult = await checked(executor, cwd, ["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-z", "HEAD"], signal);
 				const hash = hashResult.stdout.trim();
-				const subject = oneLine(subjectResult.stdout).slice(0, MAX_COMMIT_MESSAGE_LENGTH);
-				if (!/^[0-9a-f]{7,64}$/i.test(hash) || !subject) throw new Error("commit succeeded but its receipt was invalid");
-				state.committed = { hash, subject };
+				const fullMessage = messageResult.stdout.replaceAll("\r\n", "\n").replace(/[\u0000\u2028\u2029]/g, " ").trimEnd();
+				const subject = oneLine(fullMessage.split("\n", 1)[0] ?? "").slice(0, MAX_COMMIT_MESSAGE_LENGTH);
+				const paths = parseNulPaths(pathsResult.stdout);
+				if (!/^[0-9a-f]{7,64}$/i.test(hash) || !subject || !fullMessage || paths.length === 0) {
+					throw new Error("commit succeeded but its receipt was invalid");
+				}
+				state.committed = { hash, subject, message: fullMessage, paths };
 				return {
 					content: [{ type: "text", text: `Commit created: ${hash}` }],
 					details: state.committed,

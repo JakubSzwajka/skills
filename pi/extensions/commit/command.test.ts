@@ -13,6 +13,7 @@ import {
 	commitTask,
 	defaultCommitDependencies,
 	executeCommit,
+	formatCommitFailure,
 	registerCommitCommand,
 	sanitizeFailure,
 	type CommitDependencies,
@@ -23,11 +24,14 @@ import { acquireGitTransactionLock, ProcessGitExecutor, type GitExecutor, type G
 class FakeGit implements GitExecutor {
 	readonly calls: string[][] = [];
 	head = "1111111111111111111111111111111111111111";
+	message = "test: selected change";
+	paths = ["file.ts"];
 
 	async run(_cwd: string, args: readonly string[]): Promise<GitResult> {
 		this.calls.push([...args]);
 		if (args[0] === "rev-parse" && args[1] === "--verify") return ok(this.head);
 		if (args[0] === "rev-parse" && String(args[1]).startsWith("--short")) return ok(this.head.slice(0, 12));
+		if (args[0] === "status" && args.includes("-z")) return ok(" M file.ts\0");
 		if (args[0] === "status") return ok(" M file.ts\n");
 		if (args[0] === "diff" && args.includes("--quiet")) return { stdout: "", stderr: "", code: 1 };
 		if (args[0] === "diff") return ok("");
@@ -36,13 +40,26 @@ class FakeGit implements GitExecutor {
 			this.head = "abcdef1234567890abcdef1234567890abcdef12";
 			return ok("committed");
 		}
-		if (args[0] === "log") return ok("test: selected change\n");
+		if (args[0] === "log") return ok(`${this.message}\n`);
+		if (args[0] === "diff-tree") return ok(`${this.paths.join("\0")}\0`);
 		throw new Error(`unexpected git call: ${args.join(" ")}`);
 	}
 }
 
 function ok(stdout: string): GitResult {
 	return { stdout, stderr: "", code: 0 };
+}
+
+function success(hash = "abcdef123456", message = "test: selected change", paths = ["file.ts"]): string {
+	return [
+		`Committed ${hash}`,
+		"",
+		"Commit message:",
+		message,
+		"",
+		"Committed files:",
+		...paths.map((path) => `- ${JSON.stringify(path)}`),
+	].join("\n");
 }
 
 function model(provider: string, id: string): any {
@@ -60,11 +77,19 @@ function model(provider: string, id: string): any {
 	};
 }
 
-function context(options: { cwd?: string; idle?: boolean; models?: any[]; messages?: AgentMessage[] } = {}): any {
+function context(options: {
+	cwd?: string;
+	idle?: boolean;
+	models?: any[];
+	messages?: AgentMessage[];
+	setWidget?: (key: string, lines: string[] | undefined) => void;
+} = {}): any {
 	const models = options.models ?? COMMIT_MODELS.map((entry) => model(entry.provider, entry.id));
 	return {
 		cwd: options.cwd ?? "/repo",
 		isIdle: () => options.idle ?? true,
+		hasUI: Boolean(options.setWidget),
+		ui: { setWidget: options.setWidget ?? (() => {}) },
 		sessionManager: { buildSessionContext: () => ({ messages: options.messages ?? [] }) },
 		modelRegistry: {
 			find: (provider: string, id: string) => models.find((entry) => entry.provider === provider && entry.id === id),
@@ -177,26 +202,117 @@ function committingSession(options: any, onPrompt?: (task: string, session: Comm
 	return session;
 }
 
-test("registers /commit and injects one non-triggering result from the Git receipt", async () => {
+test("success widget shows live phases and clears before one non-triggering result", async () => {
 	const sent: any[] = [];
+	const timeline: string[] = [];
+	const widgetUpdates: Array<string[] | undefined> = [];
 	let command: any;
-	const { deps, locks } = fakeDependencies();
+	const { deps, git, locks } = fakeDependencies();
+	git.message = "test: selected change\n\nExplain why this commit exists.";
+	git.paths = ["file.ts", "README.md"];
 	registerCommitCommand({
+		on() {},
 		registerCommand(name: string, spec: any) {
 			assert.equal(name, "commit");
 			command = spec;
 		},
-		sendMessage(message: any, options: any) { sent.push({ message, options }); },
+		sendMessage(message: any, options: any) { timeline.push("result"); sent.push({ message, options }); },
 	} as any, deps);
 
 	assert.ok(command);
-	await command.handler("file.ts", context());
+	await command.handler("file.ts", context({
+		setWidget(_key, lines) {
+			timeline.push(lines ? "widget" : "clear");
+			widgetUpdates.push(lines);
+		},
+	}));
 	assert.deepEqual(sent, [{
-		message: { customType: "commit-result", content: "Committed abcdef123456: test: selected change", display: true },
+		message: { customType: "commit-result", content: success("abcdef123456", git.message, git.paths), display: true },
 		options: { triggerTurn: false },
 	}]);
 	assert.equal(locks.length, 1);
 	assert.equal(locks[0].released, true);
+	assert.ok(widgetUpdates.some((lines) => lines?.[0]?.includes("/commit  luna")));
+	assert.ok(widgetUpdates.some((lines) => lines?.[1] === "staging  1 file" && lines.includes("  file.ts")));
+	assert.ok(widgetUpdates.some((lines) => lines?.[1] === "committing  1 file"));
+	assert.deepEqual(timeline.slice(-2), ["clear", "result"]);
+});
+
+test("failure widget clears before the missing-auth result", async () => {
+	const timeline: string[] = [];
+	let command: any;
+	const { deps } = fakeDependencies();
+	registerCommitCommand({
+		on() {},
+		registerCommand(_name: string, spec: any) { command = spec; },
+		sendMessage() { timeline.push("result"); },
+	} as any, deps);
+
+	await command.handler("file.ts", context({
+		models: [],
+		setWidget(_key, lines) { timeline.push(lines ? "widget" : "clear"); },
+	}));
+	assert.equal(timeline[0], "widget");
+	assert.deepEqual(timeline.slice(-2), ["clear", "result"]);
+});
+
+test("timeout abort clears the widget before its failure result", async () => {
+	const timeline: string[] = [];
+	let command: any;
+	let aborted = 0;
+	const { deps } = fakeDependencies({
+		timeoutMs: 5,
+		onCreate() {
+			return {
+				agent: { state: { messages: [] } },
+				prompt: async () => new Promise<void>(() => {}),
+				async abort() { aborted += 1; },
+				dispose() {},
+			};
+		},
+	});
+	registerCommitCommand({
+		on() {},
+		registerCommand(_name: string, spec: any) { command = spec; },
+		sendMessage() { timeline.push("result"); },
+	} as any, deps);
+
+	await command.handler("file.ts", context({
+		setWidget(_key, lines) { timeline.push(lines ? "widget" : "clear"); },
+	}));
+	assert.equal(aborted, 1);
+	assert.ok(timeline.includes("widget"));
+	assert.deepEqual(timeline.slice(-2), ["clear", "result"]);
+});
+
+test("session shutdown tears down a live widget and prevents later repaint", async () => {
+	const widgetUpdates: Array<string[] | undefined> = [];
+	let command: any;
+	let shutdown: any;
+	let release!: () => void;
+	const blocked = new Promise<void>((resolve) => { release = resolve; });
+	const { deps } = fakeDependencies({
+		onCreate(options) {
+			const session = committingSession(options);
+			session.prompt = async () => { await blocked; };
+			return session;
+		},
+	});
+	registerCommitCommand({
+		on(name: string, handler: any) { if (name === "session_shutdown") shutdown = handler; },
+		registerCommand(_name: string, spec: any) { command = spec; },
+		sendMessage() {},
+	} as any, deps);
+	const ctx = context({ setWidget(_key, lines) { widgetUpdates.push(lines); } });
+
+	const pending = command.handler("file.ts", ctx);
+	await new Promise((resolve) => setImmediate(resolve));
+	await shutdown({}, ctx);
+	const updatesAfterShutdown = widgetUpdates.length;
+	assert.equal(widgetUpdates.at(-1), undefined);
+	release();
+	await pending;
+	assert.equal(widgetUpdates.length, updatesAfterShutdown);
 });
 
 test("copies active context, treats instruction as primary, and disables project resources", async () => {
@@ -238,6 +354,7 @@ test("a real AgentSession preserves copied tool history, allowlists tools, seria
 		git.calls.push([...args]);
 		if (args[0] === "rev-parse" && args[1] === "--verify") return ok(git.head);
 		if (args[0] === "rev-parse" && String(args[1]).startsWith("--short")) return ok(git.head.slice(0, 12));
+		if (args[0] === "status" && args.includes("-z")) return ok(" M file.ts\0");
 		if (args[0] === "status") return ok(" M file.ts\n");
 		if (args[0] === "diff" && args.includes("--quiet")) {
 			scheduling.push("index-check");
@@ -256,7 +373,8 @@ test("a real AgentSession preserves copied tool history, allowlists tools, seria
 			git.head = "abcdef1234567890abcdef1234567890abcdef12";
 			return ok("committed");
 		}
-		if (args[0] === "log") return ok("test: real agent session\n");
+		if (args[0] === "log") return ok("test: real agent session\n\nBody from the commit hook.\n");
+		if (args[0] === "diff-tree") return ok("file.ts\0");
 		throw new Error(`unexpected git call: ${args.join(" ")}`);
 	};
 
@@ -305,7 +423,7 @@ test("a real AgentSession preserves copied tool history, allowlists tools, seria
 	};
 
 	const result = await executeCommit("file.ts", context({ cwd, messages: copiedMessages }), deps);
-	assert.equal(result, "Committed abcdef123456: test: real agent session");
+	assert.equal(result, success("abcdef123456", "test: real agent session\n\nBody from the commit hook."));
 	assert.equal(providerCalls, 1, "successful git_commit must stop before a second provider turn");
 	assert.deepEqual(scheduling, ["stage-start", "stage-end", "index-check", "commit"]);
 	assert.deepEqual(seenContext?.tools?.map((entry) => entry.name), [...COMMIT_TOOL_ALLOWLIST]);
@@ -335,19 +453,24 @@ test("a rejected pre-mutation commit message falls back to Haiku", async () => {
 	assert.equal(git.calls.filter((args) => args[0] === "commit").length, 1);
 });
 
-test("tries Luna first and Haiku only after a pre-mutation provider failure", async () => {
+test("tries Luna first, reports the model in use, and falls back only before mutation", async () => {
+	const progressModels: string[] = [];
 	const { deps, created } = fakeDependencies({
 		onCreate(options, index) {
 			if (index === 0) throw new Error("Luna provider unavailable");
 			return committingSession(options);
 		},
 	});
-	const result = await executeCommit("file.ts", context(), deps);
+	const result = await executeCommit("file.ts", context(), deps, (progress) => {
+		if (progress.model) progressModels.push(progress.model);
+	});
 	assert.match(result, /^Committed /);
 	assert.deepEqual(created.map((entry) => `${entry.model.provider}/${entry.model.id}`), [
 		"openai-codex/gpt-5.6-luna",
 		"openrouter/anthropic/claude-haiku-4.5",
 	]);
+	assert.ok(progressModels.includes("openai-codex/gpt-5.6-luna"));
+	assert.ok(progressModels.includes("openrouter/anthropic/claude-haiku-4.5"));
 });
 
 test("falls back after a pre-mutation provider response error", async () => {
@@ -422,10 +545,10 @@ test("never falls back after staging starts", async () => {
 	});
 	const result = await executeCommit("file.ts", context(), deps);
 	assert.equal(created.length, 1);
-	assert.equal(result, "Commit failed: provider failed after staging");
+	assert.equal(result, formatCommitFailure("provider failed after staging", ["file.ts"]));
 });
 
-test("worker refusal does not fall back and assistant prose cannot report success", async () => {
+test("worker refusal lists candidate changed paths, does not fall back, and ignores assistant prose", async () => {
 	const { deps, created } = fakeDependencies({
 		onCreate() {
 			return {
@@ -440,7 +563,8 @@ test("worker refusal does not fall back and assistant prose cannot report succes
 	});
 	const result = await executeCommit("unclear", context(), deps);
 	assert.equal(created.length, 1);
-	assert.equal(result, "Commit failed: the commit worker did not create a commit");
+	assert.equal(result, formatCommitFailure("the commit worker did not create a commit", ["file.ts"]));
+	assert.match(result, /Candidate changed paths seen:\n- "file\.ts"/);
 });
 
 test("timeout aborts and disposes one worker without fallback", async () => {
@@ -458,7 +582,7 @@ test("timeout aborts and disposes one worker without fallback", async () => {
 		},
 	});
 	const result = await executeCommit("file.ts", context(), deps);
-	assert.equal(result, "Commit failed: the commit worker timed out");
+	assert.equal(result, formatCommitFailure("the commit worker timed out", ["file.ts"]));
 	assert.equal(created.length, 1);
 	assert.equal(aborted, 1);
 	assert.equal(disposed, 1);
@@ -478,6 +602,7 @@ test("non-idle parent and concurrent invocation each get one short failure", asy
 		},
 	});
 	registerCommitCommand({
+		on() {},
 		registerCommand(_name: string, spec: any) { command = spec; },
 		sendMessage(message: any, options: any) { sent.push({ message, options }); },
 	} as any, deps);
@@ -491,9 +616,8 @@ test("non-idle parent and concurrent invocation each get one short failure", asy
 	assert.equal(sent.length, 3);
 	assert.equal(sent[0].message.content, "Commit failed: the parent agent is still working");
 	assert.equal(sent[1].message.content, "Commit failed: another /commit command is already running");
-	assert.equal(sent[2].message.content, "Commit failed: the commit worker did not create a commit");
+	assert.equal(sent[2].message.content, formatCommitFailure("the commit worker did not create a commit", ["file.ts"]));
 	assert.ok(sent.every((entry) => entry.options.triggerTurn === false));
-	assert.ok(sent.every((entry) => !entry.message.content.includes("\n")));
 });
 
 test("release failure cannot change a successful commit result", async () => {
@@ -505,7 +629,7 @@ test("release failure cannot change a successful commit result", async () => {
 	});
 
 	const result = await executeCommit("file.ts", context(), deps);
-	assert.equal(result, "Committed abcdef123456: test: selected change");
+	assert.equal(result, success());
 });
 
 test("a release that never settles cannot hang a successful command", async () => {
@@ -518,7 +642,7 @@ test("a release that never settles cannot hang a successful command", async () =
 
 	const started = Date.now();
 	const result = await executeCommit("file.ts", context(), deps);
-	assert.equal(result, "Committed abcdef123456: test: selected change");
+	assert.equal(result, success());
 	assert.ok(Date.now() - started < 1_000, "lock release must have a bounded wait");
 });
 
@@ -527,4 +651,9 @@ test("bounds and sanitizes failures", () => {
 	assert.match(result, /^Commit failed: bad x+/);
 	assert.ok(result.length <= "Commit failed: ".length + 180);
 	assert.ok(!result.includes("\n"));
+
+	const withPaths = formatCommitFailure("bad", Array.from({ length: 100 }, (_, index) => `${index}-${"p".repeat(500)}`));
+	assert.ok(withPaths.length <= 2_000);
+	assert.match(withPaths, /Candidate changed paths seen:/);
+	assert.match(withPaths, /0-ppp/);
 });

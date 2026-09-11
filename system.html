@@ -1002,11 +1002,11 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <span class="arw">→</span>
           <span>isolated in-memory session</span>
           <span class="arw">→</span>
-          <span>read + narrow Git tools</span>
+          <span>read + narrow Git tools + live widget</span>
           <span class="arw">→</span>
-          <span class="on">one parent result</span>
+          <span class="on">one auditable parent result</span>
         </div>
-        <figcaption>The parent receives only <code>Committed &lt;hash&gt;: &lt;subject&gt;</code> or one failure line. Failures stay bounded except when preserving a full lock path and exact cleanup command. The worker transcript never enters the parent thread, and the result does not start another model turn.</figcaption>
+        <figcaption>While the command runs, a widget shows <code>/commit</code>, the model in use, elapsed time, the current phase, and paths as staging starts. It clears before the result arrives. Success reports the short hash, full commit message body, and committed file list. Failure reports the reason and candidate changed paths the worker saw. Normal failures stay bounded; lock errors preserve the full path and exact cleanup command. The worker transcript never enters the parent thread, and the result does not start another model turn.</figcaption>
       </figure>
       <div class="ledger">
         <div class="row">
@@ -1016,6 +1016,10 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
         <div class="row">
           <div class="who">fallback</div>
           <div class="what"><code>openrouter/anthropic/claude-haiku-4.5</code>, after a Luna setup or provider failure before any Git mutation, or after Luna submits an invalid commit message before mutation. Once staging starts, fallback is forbidden.</div>
+        </div>
+        <div class="row">
+          <div class="who">live status</div>
+          <div class="what"><code>/commit&nbsp;&nbsp;luna&nbsp;&nbsp;4.2s</code>, then <code>staging&nbsp;&nbsp;3 files</code> with indented paths. Direct Git-tool callbacks move the phase through inspecting, staging, and committing. A 100 ms timer repaints elapsed time only; it does not poll the model. Success, failure, abort, and session shutdown clear the widget.</div>
         </div>
         <div class="row">
           <div class="who">tool boundary</div>
