@@ -82,6 +82,9 @@ A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-
 ## Git
 
 - If cwd is inside a repo, work there. Do not jump to sibling checkouts unless asked.
+- Once approved, make the commit with `/commit [instruction]`. Do not run `git add` and `git commit` by hand, and do not write the commit message yourself. The command hands the job to a cheap fast model, so an expensive model never spends a turn on it.
+- Pass the scope in the instruction, for example `/commit the delegate extension only`. The command treats that text as the primary hint and falls back to the thread. It refuses when it cannot attribute the changes.
+- The command does its own staging inside a lock. Do not stage files first, and do not run a second `/commit` while one is running.
 - Safe by default: `git status`, `git diff`, `git log`, read-only inspection.
 - End in the checkout and branch the user expects.
 - No repo-wide search/replace scripts unless the scope is explicit and reviewable.
