@@ -1,6 +1,8 @@
-# Issue tracker: GitHub
+# Incoming-request tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Incoming requests for this repo live as GitHub issues. Use the `gh` CLI for those operations.
+
+Specs always live at `~/.pi/specs/<YYYY-MM-DD>_<feature-slug>/`, with schema-v1 `spec.json` and required `SPEC.md`. `/to-tickets` writes canonical implementation tickets only under that spec's local `tickets/` directory. GitHub issues may supply request context, but they are not mirrors, do not sync with central tickets, and never set the spec's `pending` or `done` status.
 
 ## Conventions
 
@@ -27,7 +29,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a GitHub issue only for an incoming-request or wayfinding flow that explicitly uses this tracker. `/to-spec` and `/to-tickets` never publish here.
 
 ## When a skill says "fetch the relevant ticket"
 
@@ -35,7 +37,7 @@ Run `gh issue view <number> --comments`.
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
+Used by `/wayfinder`. The **map** is a single issue with **child** decision issues. These may later inform `/to-spec`, but their state never changes central spec status.
 
 - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
 - **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.

@@ -1,14 +1,15 @@
 ---
 name: setup-matt-pocock-skills
-description: Configure this repo for the engineering skills — set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills.
+description: Configure central spec guidance, the incoming-request tracker, triage labels, and domain docs for a repository.
 disable-model-invocation: true
 ---
 
 # Setup Matt Pocock's Skills
 
-Scaffold the per-repo configuration that the engineering skills assume:
+Scaffold the configuration that the engineering skills assume:
 
-- **Issue tracker** — where issues live (GitHub by default; local markdown is also supported out of the box)
+- **Central specs** — every spec and generated implementation ticket lives under `~/.pi/specs/`
+- **Incoming-request tracker** — where raw issues arrive before synthesis
 - **Triage labels** — the strings used for the five canonical triage roles
 - **Domain docs** — where `CONTEXT.md` and ADRs live, and the consumer rules for reading them
 
@@ -25,7 +26,7 @@ Look at the current repo to understand its starting state. Read whatever exists;
 - `CONTEXT.md` and `CONTEXT-MAP.md` at the repo root
 - `docs/adr/` and any `src/*/docs/adr/` directories
 - `docs/agents/` — does this skill's prior output already exist?
-- `.scratch/` — sign that a local-markdown issue tracker convention is already in use
+- `.scratch/` — legacy local records that must not be migrated, edited, deleted, or reused for new specs
 - Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
 - Monorepo signals — a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. Present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
 
@@ -35,18 +36,18 @@ Summarise what's present and what's missing. Then take the sections in order —
 
 Lead each section with the recommended answer so the user can accept it in a word. Give a one-line explainer only when the choice genuinely branches; skip the section entirely when exploration already settled it (Section B when `triage` isn't installed, Section C when there's no monorepo).
 
-**Section A — Issue tracker.**
+**Section A — Incoming-request tracker.**
 
-> Explainer: The "issue tracker" is where issues live for this repo. Skills like `to-tickets`, `triage`, and `to-spec` read from and write to it — they need to know whether to call `gh issue create`, write a markdown file under `.scratch/`, or follow some other workflow you describe. Pick the place you actually track work for this repo.
+> Explainer: This choice says where raw bug reports and feature requests arrive. It does not choose the spec store. `/to-spec` always writes a central spec, and `/to-tickets` always writes local central tickets.
 
-Default posture: these skills were designed for GitHub. If a `git remote` points at GitHub, propose that. If a `git remote` points at GitLab (`gitlab.com` or a self-hosted host), propose GitLab. Otherwise (or if the user prefers), offer:
+If a remote points at GitHub, recommend GitHub. If it points at GitLab, recommend GitLab. Otherwise offer:
 
-- **GitHub** — issues live in the repo's GitHub Issues (uses the `gh` CLI)
-- **GitLab** — issues live in the repo's GitLab Issues (uses the [`glab`](https://gitlab.com/gitlab-org/cli) CLI)
-- **Local markdown** — issues live as files under `.scratch/<feature>/` in this repo (good for solo projects or repos without a remote)
-- **Other** (Jira, Linear, etc.) — ask the user to describe the workflow in one paragraph; the skill will record it as freeform prose
+- **GitHub** — incoming requests use GitHub Issues and the `gh` CLI
+- **GitLab** — incoming requests use GitLab Issues and the `glab` CLI
+- **Local markdown** — local work requests become central specs and tickets; new files never use `.scratch`
+- **Other** — ask for the incoming-request workflow in one paragraph
 
-Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off** — leave it off and don't raise it; a user who wants external PRs in the triage queue can flip the flag in the file later.
+Record the choice in `docs/agents/issue-tracker.md`. Remote issues are sources, not mirrors. They do not sync with central tickets and never set spec status. The GitHub and GitLab templates carry a request-surface flag for PRs or MRs, defaulted off. Leave it off unless the user asks to change it.
 
 **Section B — Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't installed (exploration told you) — an uninstalled skill needs no labels.
 
@@ -64,8 +65,8 @@ Offer **multi-context** — a root `CONTEXT-MAP.md` pointing to per-context `CON
 
 Show the user a draft of:
 
-- The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- The `## Agent skills` block to add to whichever of `CLAUDE.md` or `AGENTS.md` is being edited
+- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md`, with the last file only when `triage` is installed
 
 Let them edit before writing.
 
@@ -86,9 +87,13 @@ The block:
 ```markdown
 ## Agent skills
 
-### Issue tracker
+### Central specs
 
-[one-line summary of where issues are tracked]. See `docs/agents/issue-tracker.md`.
+Specs live at `~/.pi/specs/<YYYY-MM-DD>_<feature-slug>/`. Each requires `SPEC.md` and schema-v1 `spec.json` with `title` and `status`. Status is `pending` or `done`; `completedAt` exists only while done. Write `USER_STORIES.md` when needed and create `tickets/`, `research/`, `prototypes/`, and `log/` only when used. `/to-tickets` writes local implementation tickets under `tickets/`. `/spec` is a master-only mount. Ticket progress never sets spec status.
+
+### Incoming-request tracker
+
+[one-line summary of where incoming requests are tracked]. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -96,16 +101,18 @@ The block:
 
 ### Domain docs
 
-[one-line summary of layout — "single-context" or "multi-context"]. See `docs/agents/domain.md`.
+[one-line summary of layout, "single-context" or "multi-context"]. See `docs/agents/domain.md`.
 ```
+
+The central-spec block must also state that `/spec` lists all pending specs and done specs completed within 72 hours, and keeps a mounted spec mounted regardless of age. `/spec:clear` unmounts; `/spec:status pending|done` changes lifecycle state. `/spec:log:append` is the operator command and `spec_log_append` is the master-only tool. Each append creates one immutable timestamped Markdown file. Log approvals or amendments, rejected alternatives, material discoveries or scope changes, verifier outcomes, and completion or reopening. Do not log prompts, ordinary tool calls, every test, generated files, ticket boxes, or routine handoffs. Delegate children do not inherit or discover the mount and receive self-contained briefs.
 
 Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
 
 Then write the docs files using the seed templates in this skill folder as a starting point:
 
-- [issue-tracker-github.md](./issue-tracker-github.md) — GitHub issue tracker
-- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md) — GitLab issue tracker
-- [issue-tracker-local.md](./issue-tracker-local.md) — local-markdown issue tracker
+- [issue-tracker-github.md](./issue-tracker-github.md) — GitHub incoming-request tracker
+- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md) — GitLab incoming-request tracker
+- [issue-tracker-local.md](./issue-tracker-local.md) — central local Markdown specs and tickets
 - [triage-labels.md](./triage-labels.md) — label mapping (only if `triage` is installed)
 - [domain.md](./domain.md) — domain doc consumer rules + layout
 
@@ -113,4 +120,4 @@ For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch us
 
 ### 5. Done
 
-Tell the user the setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later — re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.
+Tell the user the setup is complete and which engineering skills will read these files. Remind them that the central spec store does not move when the incoming-request tracker changes. They can edit `docs/agents/*.md` later; rerun setup only to switch the incoming-request tracker or restart its configuration.

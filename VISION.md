@@ -37,15 +37,23 @@ That boundary is the product. Everything below serves it.
 pushes back, offers options, and names risk. You approve. Nothing is built from
 a guess.
 
-**Record.** The approved shape lives in a spec, split into tickets when it is
-large. `/to-spec` and `/to-tickets` produce these today. The record also has to
-carry what happened during the work: decisions taken, surprises found, things
-rejected and why. That part does not exist yet.
+**Record.** The approved shape lives under
+`~/.pi/specs/<YYYY-MM-DD>_<feature-slug>/`. `spec.json` holds schema version 1,
+the title, and the `pending` or `done` lifecycle state. `SPEC.md` holds the
+human intent. `USER_STORIES.md` and the `tickets/`, `research/`, `prototypes/`,
+and `log/` directories appear only when used. `/to-spec` and `/to-tickets`
+create this record. The append-only log keeps durable approvals, amendments,
+rejected alternatives, material discoveries, verifier outcomes, and lifecycle
+changes.
 
 **Execution.** The orchestrator delegates to engines: separate sessions, each
 with a brief, each owning named paths. They run in parallel where the work
 allows it. They return a handoff file and ring back. The orchestrator verifies,
-integrates, and reports.
+integrates, and reports. The master alone mounts the spec. Every child receives
+a self-contained brief and never has to discover the central record.
+
+Ticket boxes and blockers can guide this execution, but they do not control the
+spec lifecycle. Only `/spec:status pending|done` changes that state.
 
 ## Engines, not subagents
 
@@ -87,11 +95,11 @@ Honest state, so the gap stays visible.
 | Ask the orchestrator mid-flight | works: intercom, contract-enforced |
 | Cost and state on screen while work runs | works for panes: the widget, on a 1.5 s timer. A headless lane shows the same numbers but nothing watches it |
 | Steer a running engine | not in the tool. Stop the lane and start a better-briefed one |
-| Spec and tickets | works: `/to-spec`, `/to-tickets`, and `/spec` links one to the session |
-| Log of what happened during the work | missing; the task log was disabled on purpose |
-| Decision records | missing |
+| Central specs and tickets | works: `/to-spec` creates the central record, `/to-tickets` writes local tickets, and `/spec` mounts one whole spec to the master session |
+| Spec lifecycle | works: `pending` and `done`; `/spec` lists all pending specs plus done specs from the last 72 hours, while a mounted spec stays mounted regardless of age |
+| Durable work log and decision record | works: `/spec:log:append` for the operator and `spec_log_append` for the master each create one immutable Markdown entry |
 | Automatic triggers | missing |
-| Evidence linking a lane back to its spec | manual; a worker never inherits the session's link, so the brief has to carry the path |
+| Evidence linking a lane back to intent | works through self-contained briefs and handoffs; delegate children never inherit or discover the master's spec mount |
 | Cross-project view of what is running | deliberately outside this repo; it is your terminal tool, not an agent surface |
 
 ## How to use this file

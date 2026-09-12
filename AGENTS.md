@@ -27,7 +27,7 @@
 ## Delegation
 
 - Read `~/.agents/ORCHESTRATION.md` at the start of any task that will change more than one file, and before starting a worker for any reason. Follow it.
-- A worker is a pi session in a herdr pane that you start with the `delegate` tool and own until you stop it. `delegate` is async: `start` returns at once and never blocks.
+- A worker is a separate pi session, in a Herdr pane or a detached headless process, that you start with the `delegate` tool and own until you stop it. `delegate` is async: `start` returns at once and never blocks.
 - You orchestrate. You do not implement. Every brief names the paths a worker owns, and you do not open those paths afterwards. **This rule binds the orchestrator. A worker follows its brief and implements the work it was given.**
 - The handoff file is the result. `delegate({ action: "read", lane })` returns it. A terminal you scraped is not a result, and a lane that rang without writing its file has failed.
 - The tool writes the worker's return contract and the doorbell line. Never write those yourself.
@@ -38,7 +38,7 @@
 - Nothing wakes you unless the worker rings. It rings because the tool told it to. If you start a lane and never come back, the work sits unread.
 - You clean up what you start. Read the handoff, then `delegate({ action: "stop", lane })`. A lane is not finished until its pane is gone.
 - Depth is one. A worker has no `delegate` tool. If a lane needs sub-lanes, it is two lanes.
-- The tool assigns each lane's handoff path. Override it only when the artifact belongs in the repository, for example a research note or an atlas page, and then say so in the brief.
+- The tool assigns each lane's handoff path. Override it only when the artifact has an exact owned destination, such as one file under a mounted spec's `research/` or `prototypes/`, and then say so in the brief.
 
 <pi-intercom>
 Coordinate with other local pi sessions on related codebases. Use `/skill:pi-intercom` for patterns.
@@ -62,22 +62,24 @@ Coordinate with other local pi sessions on related codebases. Use `/skill:pi-int
 ## Project State
 
 - Keep behavior-shaping preferences in the experience store only when clearly durable.
-- No task tool is loaded. Durable implementation state lives in delegate handoff files, the repository itself, and PRs.
-- Use external PM tools only when the repo declares them or the user asks.
-- Keep technical details in the repository and PRs. External tracker updates should be short and PM-readable.
+- Durable intent and decisions live in the central spec store. Implementation state lives in delegate handoffs and the repository.
+- Use external PM tools only when the repo declares them or the user asks. They may supply incoming requests, but they never own or mirror a spec.
+- Keep technical details in the repository and central spec. External tracker updates should be short and PM-readable.
 
 ## Where specs live
 
-A local spec goes in `.scratch/<feature-slug>/SPEC.md`, beside the tickets `/to-tickets` already writes to `.scratch/<feature-slug>/issues/NN-slug.md`. A module that owns its own spec keeps it at `<module>/.pi/SPEC.md`. Both are existing shapes, so nothing new is invented and one feature's record stays in one folder.
+The canonical store is `~/.pi/specs/`. Each spec is one direct child named `<YYYY-MM-DD>_<feature-slug>/`.
 
-- Write the spec first, then the tickets next to it in the same feature folder.
-- A feature is one folder of record: it holds a `SPEC.md`, an `issues/` directory of `NN-slug.md` tickets, or both. A module keeps the same pair inside its `.pi` container, and the row still reads as the module, because that is what a human calls it.
-- `/spec` lists one row per feature, not one per file: title, folder, its ticket progress, and how recently anything in it changed. Newest first, where a feature's age is its newest record.
-- You pick the feature. Which ticket runs next is the orchestrator's call, so the picker never offers a single ticket.
-- A linked feature adds a short note to each turn: the folder, the spec path or a plain "none written yet", and one line of derived ticket progress — the tally, which tickets are ready now, and which are blocked. It stays a link; read the files when you need the content.
-- Progress is derived from the tickets on every turn, never stored. A ticket is done when every acceptance box is ticked, started when some are, blocked when a ticket on its **Blocked by** line is not done, and ready otherwise. Tickets carry no status field, because a written status drifts and a derived one cannot.
-- A box is a claim that something is done. It is ticked only after a reviewer who did not write the code confirms it, which in practice means the orchestrator ticks it after reading a verifier's handoff. A worker never ticks its own boxes, and no tool writes to a ticket.
-- `/spec:clear` removes the link. Delegate children never see it.
+- Every spec requires `spec.json` and `SPEC.md`. `spec.json` uses schema version 1 and contains `schemaVersion`, `title`, and `status`. Status is only `pending` or `done`; `completedAt` exists only while the spec is done. `SPEC.md` holds the human intent.
+- Write `USER_STORIES.md` when the spec has user stories. Create `tickets/`, `research/`, `prototypes/`, and `log/` only when used.
+- `/to-spec` creates the central folder with status `pending`. Invoking it authorizes creation; it synthesizes the current conversation without another confirmation and never publishes to an issue tracker.
+- `/to-tickets` writes canonical implementation tickets under the spec's `tickets/`. Those files stay local. Remote issues may be incoming request sources, but they are not mirrors and do not sync.
+- Ticket boxes and blockers may guide implementation. The spec extension ignores them, and they never change spec status.
+- `/spec` mounts one whole spec to the master session. It lists every pending spec and every done spec completed within the last 72 hours. A mounted spec remains mounted and listed after it is done, regardless of age. `/spec:clear` unmounts it; `/spec:status pending|done` changes its lifecycle state.
+- Spec mounts are master-only. Delegate children neither inherit nor discover them. Give every child a self-contained brief instead of telling it to inspect the central spec. A research or prototype child may own one exact output path under the matching lazy directory.
+- `/spec:log:append` is the operator command. `spec_log_append` is the master-only LLM tool. Each call creates one immutable timestamped Markdown file under `log/`.
+- Log only durable events: approvals or amendments, rejected alternatives, material discoveries or scope changes, verifier outcomes, and completion or reopening. Do not log prompts, ordinary tool calls, every test, generated files, ticket checkboxes, or routine handoffs.
+- Existing `.scratch` records are legacy. Do not migrate, edit, or delete them, and do not create new specs there.
 
 ## Git
 

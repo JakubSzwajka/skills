@@ -1,30 +1,45 @@
-# Issue tracker: Local Markdown
+# Incoming-request tracker: Local Markdown
 
-Issues and specs for this repo live as markdown files in `.scratch/`.
+Central specs and local implementation tickets live under `~/.pi/specs/`. New specs never use `.scratch/`.
 
-## Conventions
+## Central spec conventions
 
-- One feature per directory: `.scratch/<feature-slug>/`
-- The spec is `.scratch/<feature-slug>/spec.md`
-- Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` — never a single combined tickets file
-- Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
-- Comments and conversation history append to the bottom of the file under a `## Comments` heading
+- One spec folder: `~/.pi/specs/<YYYY-MM-DD>_<feature-slug>/`.
+- Required metadata: `spec.json` with `schemaVersion: 1`, a non-empty `title`, and `status: pending|done`.
+- `completedAt` is present only while status is `done`.
+- Required intent: `SPEC.md`.
+- Write `USER_STORIES.md` when the spec has user stories.
+- Create `tickets/`, `research/`, `prototypes/`, and `log/` only when used.
+- `/to-spec` creates the folder as pending. `/spec:status pending|done` is the only spec lifecycle control.
+- `/spec` lists all pending specs and done specs completed within 72 hours. A mounted spec stays mounted regardless of status or age.
+
+Ticket status, acceptance boxes, and blockers can describe or guide a ticket. They never set spec status, and `/spec` ignores them.
+
+## Local ticket conventions
+
+- Store one implementation ticket per file at `<central-spec>/tickets/<NN>-<slug>.md`, numbered from `01` in dependency order.
+- Do not create a combined tickets file.
+- A `Status:` line may describe a ticket when a triage flow needs one. It does not describe the spec.
+- Comments and request history may append under `## Comments` in that ticket.
+- These files are canonical and local. Do not mirror or sync them to a remote tracker.
 
 ## When a skill says "publish to the issue tracker"
 
-Create a new file under `.scratch/<feature-slug>/` (creating the directory if needed).
+Write a ticket under the selected central spec's `tickets/` directory. If no central spec exists, run `/to-spec` first. Do not create a new `.scratch` record.
 
 ## When a skill says "fetch the relevant ticket"
 
-Read the file at the referenced path. The user will normally pass the path or the issue number directly.
+Read the exact central ticket path supplied by the user or master brief.
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
+Used by `/wayfinder`. Keep the map and its decision tickets under the selected central spec without changing spec status.
 
-- **Map**: `.scratch/<effort>/map.md` — the Notes / Decisions-so-far / Fog body.
-- **Child ticket**: `.scratch/<effort>/issues/NN-<slug>.md`, numbered from `01`, with the question in the body. A `Type:` line records the ticket type (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `claimed`/`resolved`.
-- **Blocking**: a `Blocked by: NN, NN` line near the top. A ticket is unblocked when every file it lists is `resolved`.
-- **Frontier**: scan `.scratch/<effort>/issues/` for files that are open, unblocked, and unclaimed; first by number wins.
-- **Claim**: set `Status: claimed` and save before any work.
-- **Resolve**: append the answer under an `## Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to the map's Decisions-so-far in `map.md`.
+- **Map**: `<central-spec>/tickets/map.md`, with Notes, Decisions so far, and Fog.
+- **Child ticket**: `<central-spec>/tickets/<NN>-<slug>.md`, numbered from `01`, with the question in the body. `Type:` records `research`, `prototype`, `grilling`, or `task`; `Status:` records `claimed` or `resolved` for that ticket only.
+- **Blocking**: `Blocked by: NN, NN`. A decision ticket is unblocked when every listed ticket is resolved.
+- **Frontier**: choose an open, unblocked, unclaimed decision ticket by number.
+- **Claim**: set its ticket status to `claimed` before work.
+- **Resolve**: append the answer under `## Answer`, set its ticket status to `resolved`, and add a short pointer to the map's Decisions so far.
+
+Existing `.scratch` records are legacy. Do not migrate, edit, delete, or use them as active spec locations.

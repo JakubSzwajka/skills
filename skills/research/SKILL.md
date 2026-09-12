@@ -1,22 +1,26 @@
 ---
 name: research
-description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a scout worker.
+description: Investigate a question against high-trust primary sources and save a cited Markdown artifact under the selected central spec's research directory.
 ---
 
-Before delegation, find and verify the repo's notes directory and choose the exact new
-Markdown path. Start one read-only worker for the whole question with the `delegate`
-tool and the `scout` profile, so you keep working while it reads:
+# Research
+
+Research for a feature belongs under `~/.pi/specs/<YYYY-MM-DD>_<feature-slug>/research/`.
+
+Before delegation, confirm the mounted or explicitly selected central spec. If none exists, run `/to-spec` first. Choose and verify one exact new Markdown output path under its `research/` directory. Create the directory only for that first artifact.
+
+Read the relevant spec material yourself. Start one read-only worker with the `scout` profile and a self-contained brief:
 
 ```
-delegate({ action: "start", profile: "scout", brief: "<outcome, owned Markdown path, inputs, non-goals, stop conditions, acceptance>", cwd: "<repo>" })
+delegate({ action: "start", profile: "scout", brief: "<outcome, exact owned research output path, needed context, citation rules, non-goals, stop conditions, acceptance>", cwd: "<repo>" })
 ```
 
-Put the chosen output path and required source citations in the brief. When the worker
-rings, call `delegate({ action: "read", lane: "<lane>" })`, verify the research file,
-then call `delegate({ action: "stop", lane: "<lane>" })`.
+Delegate children do not inherit or discover the master's spec mount. Give the worker the question and all needed context. Give it the one exact output path it owns, but do not tell it to inspect the whole central spec.
 
-Its job:
+The worker must:
 
-1. Investigate the question against **primary sources** — official docs, source code, specs, first-party APIs — not a secondary write-up of them. Follow every claim back to the source that owns it.
-2. Write the findings to a single Markdown file, citing each claim's source.
-3. Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where.
+1. Trace each claim to a primary source such as official documentation, source code, a specification, or a first-party API.
+2. Write one cited Markdown artifact at the assigned path.
+3. Report material discoveries or scope changes as durable-event candidates in its handoff.
+
+When it rings, read the handoff, verify the research file and citations, then stop the lane. Do not log routine source reads, tool calls, or the mere creation of the file. The master may use `spec_log_append` only when the result contains a durable decision, material discovery, or scope change.
