@@ -21,7 +21,7 @@
   "themes": [
     "~/.agents/pi/themes"
   ],
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "shellCommandPrefix": "c() { open -a \"Cursor\" \"$@\"; }",
   "subagents": {
     "agentOverrides": {
