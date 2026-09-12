@@ -719,17 +719,17 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 <main class="wrap">
   <header class="masthead">
     <h1>You talk to one agent. It runs the rest.</h1>
-    <p class="thesis">The human talks to one orchestrator, and the orchestrator talks to engines. A lane now runs two ways: a pane you can watch, or a headless process that outlives the session that started it. <strong>What survives either one is the handoff file and the spec it was briefed from.</strong></p>
+    <p class="thesis">The human talks to one orchestrator, and the orchestrator talks to engines. A lane now runs two ways: a pane you can watch, or a headless process that outlives the session that started it. <strong>What survives either one is the handoff file and the central spec record.</strong></p>
   </header>
 
   <div class="tabs" data-tabs>
     <div class="tabstrip" role="tablist" aria-label="System views">
       <button id="tab-rule" role="tab" aria-controls="panel-rule" data-tab="rule" class="on" aria-selected="true" tabindex="0">The one rule</button>
-      <button id="tab-record" role="tab" aria-controls="panel-record" data-tab="record" aria-selected="false" tabindex="-1">The record</button>
+      <button id="tab-record" role="tab" aria-controls="panel-record" data-tab="record" aria-selected="false" tabindex="-1">Specs &amp; tickets</button>
       <button id="tab-run" role="tab" aria-controls="panel-run" data-tab="run" aria-selected="false" tabindex="-1">Running a lane</button>
       <button id="tab-commit" role="tab" aria-controls="panel-commit" data-tab="commit" aria-selected="false" tabindex="-1">Commit command</button>
       <button id="tab-transports" role="tab" aria-controls="panel-transports" data-tab="transports" aria-selected="false" tabindex="-1">Two transports</button>
-      <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false" tabindex="-1">Missing · 5 gaps</button>
+      <button id="tab-missing" role="tab" aria-controls="panel-missing" data-tab="missing" aria-selected="false" tabindex="-1">Missing · 2 gaps</button>
     </div>
 
     <section id="panel-rule" role="tabpanel" aria-labelledby="tab-rule" data-panel="rule">
@@ -742,7 +742,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
         <div class="key" aria-label="Layer color key">
           <span><i class="s2"></i>Record</span><span><i class="s4"></i>Orchestrator and engines</span><span><i class="flat"></i>People and files</span><span><i class="warn"></i>Gap</span>
         </div>
-        <svg viewBox="0 0 1040 600" role="img" aria-label="You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the record holds specs, tickets and handoff files, and execution runs in separate sessions. Nothing logs what happened during the work, and no lane can be steered once it is running.">
+        <svg viewBox="0 0 1040 600" role="img" aria-label="You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the central record holds specs, local tickets, durable log entries and handoff files, and execution runs in separate sessions. No lane can be steered once it is running.">
           <defs>
             <marker id="rule-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
             <marker id="rule-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
@@ -786,9 +786,9 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 
           <rect class="node-spec" x="390" y="176" width="610" height="140" rx="10"/>
           <text class="lbl-sm" x="414" y="206">Record</text>
-          <text class="sub-spec" x="414" y="232">Spec and tickets say what to build. /spec links one to a session.</text>
-          <text class="sub" x="414" y="254">Handoff files say what a lane did. The repository and PRs hold the rest.</text>
-          <text class="sub-warn" x="414" y="286">Missing: a log of what happened during the work.</text>
+          <text class="sub-spec" x="414" y="232">The central spec and local tickets say what to build.</text>
+          <text class="sub" x="414" y="254">Immutable log entries keep durable decisions and verifier outcomes.</text>
+          <text class="sub" x="414" y="286">Handoffs return evidence; the master decides what enters the log.</text>
 
           <rect class="node-agent" x="390" y="372" width="610" height="200" rx="10"/>
           <text class="lbl-sm" x="414" y="402">Execution</text>
@@ -797,7 +797,7 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <text class="sub" x="414" y="472">Depth is one. A worker has no delegate tool of its own.</text>
           <text class="sub-warn" x="414" y="504">You cannot steer a lane. Stop it and brief a better one.</text>
         </svg>
-        <figcaption>You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the record holds specs, tickets and handoff files, and execution runs in separate sessions. Nothing logs what happened during the work, and no lane can be steered once it is running.</figcaption>
+        <figcaption>You talk to one orchestrator and it talks to the engines. Intent is agreed in the conversation, the central record holds specs, local tickets, durable log entries and handoff files, and execution runs in separate sessions. No lane can be steered once it is running.</figcaption>
       </figure>
       <blockquote class="quote">
         <p>The human talks to one agent. That agent talks to the workers.</p>
@@ -814,68 +814,86 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 
     <section id="panel-record" role="tabpanel" aria-labelledby="tab-record" data-panel="record">
       <div class="sec-head">
-        <span class="sec-tag">what survives</span>
-        <h2>Specs and tickets carry intent into a session</h2>
+        <span class="sec-tag">one central record</span>
+        <h2>Specs have one store, one lifecycle, and a master-only mount</h2>
       </div>
-      <p><code>/to-spec</code> writes the agreed shape. <code>/to-tickets</code> splits a large one into numbered slices with blocking edges. Both land in one feature folder, so a feature's record stays in one place. <code>/spec</code> then links a spec or a ticket to your session and adds a short note to every turn that names its path and title. The note carries the link, never the body, so a linked spec costs three lines a turn.</p>
-      <figure class="system-figure">
-        <svg viewBox="0 0 1040 640" role="img" aria-label="Specs and tickets live in one feature folder. /to-spec writes the spec and /to-tickets splits it into numbered issues. /spec finds them anywhere under the working directory, newest first, and links one to the session. Each turn then carries a short note naming the path and the title. A delegate child never sees that link. Nothing records what happened during the work.">
-          <defs>
-            <marker id="record-spec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s2)"/></marker>
-            <marker id="record-agent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--s4)"/></marker>
-          </defs>
+      <p>Every spec lives under <code>~/.pi/specs/</code>. Machine state stays in <code>spec.json</code>; human intent stays in <code>SPEC.md</code>. Tickets, research, prototypes, and durable log entries join the same folder only when used. The master mounts the whole spec. Children receive self-contained briefs, never the mount.</p>
 
-          <rect class="node-spec" x="60" y="70" width="220" height="70" rx="9"/>
-          <text class="lbl-sm" x="170" y="100" text-anchor="middle">/to-spec</text>
-          <text class="sub-spec" x="170" y="122" text-anchor="middle">small: one spec</text>
-          <rect class="node-spec" x="60" y="160" width="220" height="70" rx="9"/>
-          <text class="lbl-sm" x="170" y="190" text-anchor="middle">/to-tickets</text>
-          <text class="sub-spec" x="170" y="212" text-anchor="middle">large: split it</text>
-
-          <path class="edge-spec" marker-end="url(#record-spec)" d="M280,105 H340"/>
-          <text class="sub-spec" x="310" y="93" text-anchor="middle">writes</text>
-          <path class="edge-spec" marker-end="url(#record-spec)" d="M280,195 H340"/>
-          <text class="sub-spec" x="310" y="183" text-anchor="middle">splits</text>
-
-          <rect class="zone-spec" x="340" y="40" width="380" height="250" rx="12"/>
-          <text class="lbl" x="364" y="70">One feature folder</text>
-          <text class="sub-spec" x="364" y="92">.scratch/feature-slug/</text>
-          <rect class="node-spec" x="364" y="110" width="330" height="56" rx="8"/>
-          <text class="lbl-sm" x="529" y="134" text-anchor="middle">SPEC.md</text>
-          <text class="sub-spec" x="529" y="154" text-anchor="middle">what was agreed</text>
-          <rect class="node-spec" x="364" y="186" width="330" height="56" rx="8"/>
-          <text class="lbl-sm" x="529" y="210" text-anchor="middle">issues/01-slug.md</text>
-          <text class="sub-spec" x="529" y="230" text-anchor="middle">one ticket per slice</text>
-          <text class="sub" x="364" y="272">a module keeps its own at module/.pi/SPEC.md</text>
-
-          <path class="edge-spec" marker-end="url(#record-spec)" d="M720,135 H780"/>
-          <text class="sub-spec" x="750" y="123" text-anchor="middle">reads</text>
-
-          <rect class="node-agent" x="780" y="70" width="220" height="130" rx="9"/>
-          <text class="lbl-sm" x="890" y="102" text-anchor="middle">/spec</text>
-          <text class="sub-agent" x="890" y="126" text-anchor="middle">picks one, newest first</text>
-          <text class="sub" x="890" y="148" text-anchor="middle">up to 5 levels deep</text>
-          <text class="sub" x="890" y="170" text-anchor="middle">status bar shows it</text>
-
-          <path class="edge-agent" marker-end="url(#record-agent)" d="M890,200 V340"/>
-          <text class="sub-agent" x="902" y="276">links it to a session</text>
-
-          <rect class="node-agent" x="60" y="340" width="940" height="120" rx="10"/>
-          <text class="lbl-sm" x="90" y="372">Every turn, one short note</text>
-          <text class="sub-agent" x="90" y="398">names the path and the title, never the body</text>
-          <text class="sub" x="90" y="420">/spec:clear removes the link</text>
-          <text class="sub-warn" x="90" y="444">a delegate child never sees it, so the brief has to carry the path</text>
-
-          <rect class="node-gap" x="60" y="490" width="940" height="110" rx="10"/>
-          <text class="lbl-gap" x="90" y="526">Missing: a log of what happened during the work</text>
-          <text class="sub-warn" x="90" y="552">the task log extension is disabled on purpose, so there is no per-session memory</text>
-          <text class="sub-warn" x="90" y="574">a fresh session recovers the facts from the spec, the repository, and you</text>
-        </svg>
-        <figcaption>Specs and tickets live in one feature folder. /to-spec writes the spec and /to-tickets splits it into numbered issues. /spec finds them anywhere under the working directory, newest first, and links one to the session. Each turn then carries a short note naming the path and the title. A delegate child never sees that link. Nothing records what happened during the work.</figcaption>
+      <figure>
+        <div class="flow" aria-label="Central spec workflow">
+          <span>conversation</span><span class="arw">→</span>
+          <span class="on">/to-spec</span><span class="arw">→</span>
+          <span>pending central spec</span><span class="arw">→</span>
+          <span class="on">/to-tickets</span><span class="arw">→</span>
+          <span>local tickets</span><span class="arw">→</span>
+          <span class="on">/spec</span><span class="arw">→</span>
+          <span>master mount</span><span class="arw">→</span>
+          <span>self-contained brief</span><span class="arw">→</span>
+          <span>worker</span><span class="arw">→</span>
+          <span>fresh verifier</span><span class="arw">→</span>
+          <span class="on">durable log or done</span>
+        </div>
+        <figcaption>The master carries intent into execution. Ticket checks may guide the work, but only <code>/spec:status</code> changes the spec lifecycle.</figcaption>
       </figure>
+
+      <div class="ledger">
+        <div class="row">
+          <div class="who">/to-spec</div>
+          <div class="what">Synthesizes the current conversation without another interview. Invocation authorizes creation, starts status at <code>pending</code>, and writes no remote issue.</div>
+        </div>
+        <div class="row">
+          <div class="who">/to-tickets</div>
+          <div class="what">Writes approved tracer-bullet slices under the central spec's local <code>tickets/</code>. Remote issues can supply requests, but there is no mirror or sync.</div>
+        </div>
+        <div class="row">
+          <div class="who">/spec</div>
+          <div class="what">Lists all pending specs and done specs completed in the last 72 hours. A mounted spec stays mounted and listed after completion, regardless of age.</div>
+        </div>
+        <div class="row flat">
+          <div class="who">master and children</div>
+          <div class="what">The mount exists only in the master session. A child gets the relevant intent, constraints, and checks in its brief. Research and prototype lanes may also receive one exact owned output path.</div>
+        </div>
+      </div>
+
+      <div class="tree" aria-label="Canonical central spec folder">
+        <div class="row head"><span>record</span><span>meaning</span><span>rule</span></div>
+        <div class="row on"><span class="p">~/.pi/specs/YYYY-MM-DD_feature-slug/</span><span class="n">one direct child per spec</span><span class="ct">canonical</span></div>
+        <div class="row"><span class="p">├── spec.json</span><span class="n">schemaVersion 1 · title · pending or done</span><span class="ct">required</span></div>
+        <div class="row"><span class="p">├── SPEC.md</span><span class="n">human intent and testing decisions</span><span class="ct">required</span></div>
+        <div class="row"><span class="p">├── USER_STORIES.md</span><span class="n">written when the spec has user stories</span><span class="ct">optional</span></div>
+        <div class="row"><span class="p">├── tickets/ · research/</span><span class="n">local work slices and cited findings</span><span class="ct">lazy</span></div>
+        <div class="row"><span class="p">├── prototypes/</span><span class="n">standalone artifacts, paths, and verdicts</span><span class="ct">lazy</span></div>
+        <div class="row flat"><span class="p">└── log/timestamp.md</span><span class="n">one immutable durable event per file</span><span class="ct">lazy</span></div>
+      </div>
+
+      <div class="callout">
+        <span class="h">the child boundary is deliberate</span>
+        <p>The spec-link extension registers nothing in delegate children, including its log tool. The master reads the record and writes a self-contained brief. A child must not browse the central folder to reconstruct missing context.</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Control</th><th>What it changes</th><th>What it does not change</th></tr></thead>
+          <tbody>
+            <tr><td class="path"><code>/spec</code></td><td class="what">Mounts one whole spec to the master session</td><td class="what">Does not mount a ticket or expose the mount to children</td></tr>
+            <tr><td class="path"><code>/spec:clear</code></td><td class="what">Unmounts the current spec</td><td class="what">Does not change files or lifecycle state</td></tr>
+            <tr><td class="path"><code>/spec:status pending|done</code></td><td class="what">Updates metadata and adds or removes <code>completedAt</code></td><td class="what">Does not read ticket boxes or blockers</td></tr>
+            <tr><td class="path"><code>/spec:log:append</code></td><td class="what">Creates one immutable timestamped Markdown file</td><td class="what">Does not record routine work automatically</td></tr>
+            <tr><td class="path"><code>spec_log_append</code></td><td class="what">Gives the master the same append operation</td><td class="what">Is never registered for delegate children</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ol class="steps">
+        <li><b>Synthesize.</b> <code>/to-spec</code> writes the pending central record from the current conversation.</li>
+        <li><b>Split when needed.</b> <code>/to-tickets</code> writes approved local slices. Their progress never changes spec status.</li>
+        <li><b>Mount in the master.</b> <code>/spec</code> adds a short pointer to the orchestrator's context without copying file bodies.</li>
+        <li><b>Brief the child.</b> Give it the needed intent and checks, not a direction to inspect the whole spec.</li>
+        <li><b>Keep only durable history.</b> Log approvals, amendments, rejected choices, material discoveries or scope changes, verifier outcomes, and completion or reopening.</li>
+      </ol>
       <div class="note">
-        <span class="h">where a spec lives</span>
-        <p>A local spec goes in <code>.scratch/feature-slug/SPEC.md</code>, next to the tickets <code>/to-tickets</code> writes at <code>issues/NN-slug.md</code>. A module that owns its spec keeps it at <code>module/.pi/SPEC.md</code>. Discovery walks five directories down, skips build output, and sorts by modification time, so the thing you touched last is the first choice offered.</p>
+        <span class="h">what stays out of the log</span>
+        <p>Do not log prompts, ordinary tool calls, every test, generated files, ticket boxes, or routine handoffs. A repository-hosted prototype gets one central record with its exact code path and verdict. Existing <code>.scratch</code> records stay untouched as legacy data; no new spec is written there.</p>
       </div>
     </section>
 
@@ -1123,18 +1141,18 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
 
     <section id="panel-missing" role="tabpanel" aria-labelledby="tab-missing" data-panel="missing" hidden>
       <div class="sec-head">
-        <span class="sec-tag">the gap, stated by the operator</span>
-        <h2>Five things this system still does not do</h2>
+        <span class="sec-tag">remaining gaps</span>
+        <h2>Two things this system still does not do</h2>
       </div>
-      <p>These come from the state table in <code>VISION.md</code>, checked against the code. Autonomy grows on the last two: the system should start work on its own signal and still end in your conversation.</p>
+      <p>The central spec now holds intent, lifecycle state, local tickets, and durable history. The open gaps are runtime controls: steering an active lane and starting work from an external signal.</p>
       <figure class="system-figure">
         <div class="key" aria-label="Gap color key">
           <span><i class="flat"></i>Works today</span><span><i class="warn"></i>Missing</span>
         </div>
-        <svg viewBox="0 0 1040 600" role="img" aria-label="Five gaps the operator named. There is no way to steer a running lane, no log of what happened during the work, no decision record, no trigger other than a typed turn, and no link from a lane back to the spec it came from.">
+        <svg viewBox="0 0 1040 600" role="img" aria-label="Two gaps remain. There is no way to steer a running lane and no trigger other than a typed turn. The central spec log, decision record, and self-contained child brief work today.">
           <rect class="node-neutral" x="40" y="32" width="960" height="76" rx="10"/>
           <text class="lbl-sm" x="520" y="62" text-anchor="middle">The loop that works today</text>
-          <text class="sub" x="520" y="88" text-anchor="middle">you decide · spec or ticket · delegate a lane · read the handoff · verify · integrate</text>
+          <text class="sub" x="520" y="88" text-anchor="middle">you decide · mount a central spec · brief a lane · read the handoff · verify · record durable outcomes</text>
 
           <rect class="node-gap" x="40" y="152" width="306" height="180" rx="10"/>
           <text class="lbl-gap" x="193" y="188" text-anchor="middle">Steer a running engine</text>
@@ -1144,21 +1162,21 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <text class="sub-warn" x="193" y="288" text-anchor="middle">then briefed again from</text>
           <text class="sub-warn" x="193" y="310" text-anchor="middle">the start, and paid for twice</text>
 
-          <rect class="node-gap" x="367" y="152" width="306" height="180" rx="10"/>
-          <text class="lbl-gap" x="520" y="188" text-anchor="middle">A log of the work</text>
-          <text class="sub-warn" x="520" y="216" text-anchor="middle">the task log extension is</text>
-          <text class="sub-warn" x="520" y="238" text-anchor="middle">disabled on purpose</text>
-          <text class="sub-warn" x="520" y="266" text-anchor="middle">no per-session memory, and</text>
-          <text class="sub-warn" x="520" y="288" text-anchor="middle">the handoff file is the only</text>
-          <text class="sub-warn" x="520" y="310" text-anchor="middle">trace a lane leaves behind</text>
+          <rect class="node-neutral" x="367" y="152" width="306" height="180" rx="10"/>
+          <text class="lbl-sm" x="520" y="188" text-anchor="middle">Durable spec log</text>
+          <text class="sub" x="520" y="216" text-anchor="middle">operator command and</text>
+          <text class="sub" x="520" y="238" text-anchor="middle">master-only LLM tool</text>
+          <text class="sub" x="520" y="266" text-anchor="middle">one immutable Markdown file</text>
+          <text class="sub" x="520" y="288" text-anchor="middle">per durable event under</text>
+          <text class="sub" x="520" y="310" text-anchor="middle">the mounted spec's log/</text>
 
-          <rect class="node-gap" x="694" y="152" width="306" height="180" rx="10"/>
-          <text class="lbl-gap" x="847" y="188" text-anchor="middle">Decision records</text>
-          <text class="sub-warn" x="847" y="216" text-anchor="middle">nothing in the loop writes</text>
-          <text class="sub-warn" x="847" y="238" text-anchor="middle">down why a choice was made</text>
-          <text class="sub-warn" x="847" y="266" text-anchor="middle">you can ask for one by hand,</text>
-          <text class="sub-warn" x="847" y="288" text-anchor="middle">and nothing asks you to,</text>
-          <text class="sub-warn" x="847" y="310" text-anchor="middle">so rejected options vanish</text>
+          <rect class="node-neutral" x="694" y="152" width="306" height="180" rx="10"/>
+          <text class="lbl-sm" x="847" y="188" text-anchor="middle">Decision record</text>
+          <text class="sub" x="847" y="216" text-anchor="middle">approvals and amendments</text>
+          <text class="sub" x="847" y="238" text-anchor="middle">rejected alternatives</text>
+          <text class="sub" x="847" y="266" text-anchor="middle">material discoveries</text>
+          <text class="sub" x="847" y="288" text-anchor="middle">verifier outcomes and</text>
+          <text class="sub" x="847" y="310" text-anchor="middle">completion or reopening</text>
 
           <rect class="node-gap" x="40" y="372" width="470" height="180" rx="10"/>
           <text class="lbl-gap" x="275" y="408" text-anchor="middle">Automatic triggers</text>
@@ -1168,15 +1186,15 @@ svg path, svg rect, svg line { stroke-linecap: round; stroke-linejoin: round; }
           <text class="sub-warn" x="275" y="508" text-anchor="middle">but one that starts without being asked</text>
           <text class="sub-warn" x="275" y="530" text-anchor="middle">and still ends in your conversation</text>
 
-          <rect class="node-gap" x="530" y="372" width="470" height="180" rx="10"/>
-          <text class="lbl-gap" x="765" y="408" text-anchor="middle">A lane tied to its spec</text>
-          <text class="sub-warn" x="765" y="436" text-anchor="middle">the lane record carries no spec field</text>
-          <text class="sub-warn" x="765" y="458" text-anchor="middle">a worker never inherits the session's link</text>
-          <text class="sub-warn" x="765" y="486" text-anchor="middle">so the brief has to name the path by hand,</text>
-          <text class="sub-warn" x="765" y="508" text-anchor="middle">and a handoff read six weeks later</text>
-          <text class="sub-warn" x="765" y="530" text-anchor="middle">cannot say which spec it served</text>
+          <rect class="node-neutral" x="530" y="372" width="470" height="180" rx="10"/>
+          <text class="lbl-sm" x="765" y="408" text-anchor="middle">Intent carried into a lane</text>
+          <text class="sub" x="765" y="436" text-anchor="middle">the spec mount stays master-only</text>
+          <text class="sub" x="765" y="458" text-anchor="middle">the master reads the relevant record</text>
+          <text class="sub" x="765" y="486" text-anchor="middle">and writes a self-contained brief</text>
+          <text class="sub" x="765" y="508" text-anchor="middle">the handoff returns evidence and</text>
+          <text class="sub" x="765" y="530" text-anchor="middle">durable-event candidates to the master</text>
         </svg>
-        <figcaption>Five gaps the operator named. There is no way to steer a running lane, no log of what happened during the work, no decision record, no trigger other than a typed turn, and no link from a lane back to the spec it came from.</figcaption>
+        <figcaption>Two runtime gaps remain: a running lane cannot be steered, and work cannot start from an alert, failed deploy, webhook, or schedule. Central spec logs and self-contained child briefs now cover the record gaps.</figcaption>
       </figure>
       <div class="note">
         <span class="h">what is not a gap</span>
