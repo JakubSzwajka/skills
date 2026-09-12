@@ -54,8 +54,8 @@ Four tool actions, no polling, no guessing how long work takes.
 ## Two transports
 
 `transport` is a field on a profile, and **only the operator sets it**. It defaults to
-`herdr` (`pi/extensions/delegate/types.ts:13`, `delegate.ts:166`). No profile in
-`profiles.json` sets it, so every lane is a pane unless the operator changes one.
+`herdr` (`pi/extensions/delegate/types.ts:13`, `pi/extensions/delegate/delegate.ts:164`). No profile in
+`pi/delegate/profiles.json` sets it, so every lane is a pane unless the operator changes one.
 
 There is no `transport` argument on `start`. Naming one is refused with an error, because
 the choice decides whether the operator can watch a worker at all, and that is not yours
@@ -76,7 +76,7 @@ the work, the other is about whether the human can see the work.
 
 Everything else is shared. Same registry, same assigned handoff, same intercom ring,
 same return contract, same depth-one guard. `PI_DELEGATE_ROLE=child` goes into the
-headless environment too (`runners/subprocess.ts:238`), so a headless worker cannot
+headless environment too (`pi/extensions/delegate/runners/subprocess.ts:227`), so a headless worker cannot
 delegate either.
 
 What a headless lane costs you, on purpose:
@@ -86,16 +86,16 @@ What a headless lane costs you, on purpose:
 - **Nothing watches it.** A wedged headless lane burns tokens until you run `list`.
   A wedged pane at least sits in front of you.
 - **`blocked` narrows to one cause.** It is set only when an intercom ask carrying
-  `expectsReply` reaches you (`delegate.ts:112`), and it clears itself when the
+  `expectsReply` reaches you (`pi/extensions/delegate/delegate.ts:110-111`), and it clears itself when the
   worker's transcript grows more than 3 seconds after the ask
-  (`runners/subprocess.ts:13`). Any other stall is invisible.
+  (`pi/extensions/delegate/runners/subprocess.ts:13`). Any other stall is invisible.
 - **Project-local extensions, skills and settings are skipped.** Non-interactive pi
   never prompts for trust, and `defaultProjectTrust` defaults to `ask`, which ignores
   those resources (pi `docs/settings.md:16`). A lane that needs a repo's own skill
   needs a pane.
 
 What it buys: the worker survives the session that started it, and a fresh session
-adopts it once the old parent's process is confirmed gone (`delegate.ts:73`). It also
+adopts it once the old parent's process is confirmed gone (`pi/extensions/delegate/delegate.ts:76-81`). It also
 runs where there is no herdr at all. Without `HERDR_ENV=1` or the binary, only the
 pane transport refuses; headless lanes still start, list, read and stop, and
 `list` names the transport it could not reach as `staleTransports`.
@@ -126,7 +126,7 @@ was wrong, not the worker.
 
 ## Profiles
 
-`~/.agents/pi/delegate/profiles.json`. A profile is a model plus a tool policy. The file
+`pi/delegate/profiles.json`. A profile is a model plus a tool policy. The file
 exists; if it is ever missing or malformed the tool falls back to built-in profiles and
 says so in its result.
 
@@ -171,16 +171,24 @@ A brief a fresh worker can act on without asking you anything:
 5. **Stop conditions** — when to stop and report instead of pushing on.
 6. **Acceptance** — the checks that decide done, and their exit codes.
 
-A brief also has to carry the spec. `/spec` links one spec or ticket to *your*
-session, and the spec-link extension returns early for children
-(`pi/extensions/spec-link/index.ts:12`). A worker never sees your linked spec. Put its
-path in the brief.
+`/spec` mounts one whole central spec to the master session. The spec-link extension
+returns before it registers anything for delegate children
+(`pi/extensions/spec-link/index.ts:29`), so children neither inherit nor discover that
+mount. Read the relevant spec and ticket material yourself, then put the needed intent,
+constraints, and acceptance checks directly in a self-contained brief. Do not tell a
+child to inspect the whole central spec.
+
+A research or prototype child may receive one exact owned artifact path under the
+mounted spec's `research/` or `prototypes/` directory. This is an output contract, not a
+mount. For other work, name only the specific inputs the child needs and include enough
+content that it can act without the master's session context.
 
 The tool appends the seventh part itself: the return contract, the assigned handoff path,
 and the doorbell line. **Never write the contract or the doorbell.** You forgot the
 doorbell twice before the tool owned it. The handoff path can be overridden when the
-artifact belongs in the repository, a research note or an atlas page for instance, but a
-hand-typed path cost a lane its whole budget on 9 Sep, so check it exists first.
+artifact has an exact final destination, such as one file under the mounted spec's
+`research/` or `prototypes/` directory, or a repository atlas page. A hand-typed path
+cost a lane its whole budget on 9 Sep, so check its parent exists first.
 
 Two more rules bought with real losses:
 
@@ -200,6 +208,12 @@ read. It holds:
 - the commands it ran, with exit codes
 - what it could not do, and why
 - what was already dirty before it started
+- durable event candidates for the mounted spec, when the work found any
+
+A child never writes the spec log. After reading the handoff, the master may use
+`spec_log_append` for a durable approval, rejected alternative, material discovery or
+scope change, verifier outcome, completion, or reopening. Routine handoffs, tool calls,
+test runs, generated files, and ticket boxes do not belong in that log.
 
 You read the file. You act on it. You do not re-derive it. **A lane that rang
 without writing its file has failed**, whatever the terminal says.
@@ -265,7 +279,7 @@ whether it rang, whether its handoff is unread.
   The ring is the wake.
 
 The widget repaints on a 1.5 second timer rather than at turn boundaries
-(`pi/extensions/delegate/index.ts:18`), so the numbers move while you work. Most ticks
+(`pi/extensions/delegate/index.ts:17-18`), so the numbers move while you work. Most ticks
 read files only; every fourth one asks the transports for statuses, and only while a lane
 that can still move is on screen.
 
@@ -279,8 +293,8 @@ work nobody has read.
 
 `unknown` means nothing proved the lane alive and nothing proved it dead. A headless
 lane reads `unknown` when `ps` could not be read or the record carries no process start
-time (`runners/subprocess.ts:194`). A pane lane reads `unknown` when the pane is there
-but herdr lists no agent in it (`runners/herdr.ts:77`).
+time (`pi/extensions/delegate/runners/subprocess.ts:154-156`). A pane lane reads `unknown` when the pane is there
+but herdr lists no agent in it (`pi/extensions/delegate/runners/herdr.ts:77`).
 
 The tool then does nothing on your behalf, which is deliberate. The record stays open,
 and `stop` on a headless lane refuses to signal and hands you the pid, the log path and
