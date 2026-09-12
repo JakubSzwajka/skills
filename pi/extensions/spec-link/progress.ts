@@ -1,180 +1,356 @@
-import { readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import {
+	closeSync,
+	constants,
+	fstatSync,
+	fsyncSync,
+	ftruncateSync,
+	lstatSync,
+	mkdirSync,
+	openSync,
+	readFileSync,
+	readdirSync,
+	renameSync,
+	unlinkSync,
+	writeFileSync,
+	writeSync,
+} from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { describeSpec, type SpecRecord, type SpecStatus } from "./discovery.ts";
 
-/**
- * Progress is derived from what a ticket already carries, never stored.
- *
- * The acceptance boxes are the record: `- [x]` means someone confirmed that
- * criterion. The `**Blocked by:**` line is the dependency graph, written in
- * prose. Nothing here writes to a ticket, so the derivation cannot drift.
- *
- * A ticket's `**Status:**` line is ignored on purpose. `/to-tickets` used to
- * stamp one literal value into every ticket, so it could only ever lie; older
- * tickets keep the line and the parser must not treat it as authoritative.
- *
- * - `done` — every box ticked.
- * - `started` — some boxes ticked, not all.
- * - `blocked` — a ticket it depends on is not done, or cannot be found.
- * - `ready` — no boxes ticked and every dependency done.
- * - `unmeasured` — no acceptance boxes at all, so progress was never written down.
- */
-export type TicketState = "done" | "started" | "blocked" | "ready" | "unmeasured";
-
-export interface Ticket {
-	path: string;
-	/** The leading number in the file name, which is how tickets refer to each other. */
-	number: number;
-	/** That number as the operator writes it: `06`. */
-	label: string;
-	boxes: number;
-	ticked: number;
-	dependsOn: number[];
-	/** Dependencies naming a ticket number this feature does not have. */
-	dangling: number[];
-	state: TicketState;
+export interface StatusTransition {
+	record: SpecRecord;
+	changed: boolean;
 }
 
-export interface Progress {
-	tickets: Ticket[];
-	total: number;
-	done: number;
-	started: number;
-	blocked: number;
-	ready: number;
-	unmeasured: number;
+type Identity = { dev: bigint; ino: bigint };
+type Hierarchy = { rootPath: string; root: Identity; specPath: string; spec: Identity };
+type LockOwner = { version: 1; token: string; pid: number; startedAt: number; ticket: number | null };
+type LockCandidate = { path: string; identity: Identity; owner: LockOwner };
+
+const EXCLUSIVE_FILE_FLAGS = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0);
+const LOCK_WAIT_MS = 10;
+const LOCK_TIMEOUT_MS = 10_000;
+const PROCESS_STARTED_AT = Math.floor((Date.now() - process.uptime() * 1_000) / 1_000);
+const waitCell = new Int32Array(new SharedArrayBuffer(4));
+
+function sameIdentity(left: Identity, right: Identity): boolean {
+	return left.dev === right.dev && left.ino === right.ino;
 }
 
-const MAX_LISTED = 4;
-const MAX_TICKET_BYTES = 64_000;
+function directoryIdentity(path: string, label: string): Identity {
+	const entry = lstatSync(path, { bigint: true });
+	if (entry.isSymbolicLink() || !entry.isDirectory()) throw new Error(`${label} must be a regular directory`);
+	return { dev: entry.dev, ino: entry.ino };
+}
 
-const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
-/** A box counts only as the first thing in a list item: `- [x]`, `* [ ]`, `+ [X]`. */
-const CHECKBOX = /^\s{0,3}[-*+]\s+\[([ xX])\]\s/;
-const BLOCKED_BY = /^\s{0,3}\*\*Blocked\s+by:?\*\*:?\s*(.*)$/i;
-/** A dependency is named by its leading number; the em-dashed title after it is prose. */
-const LEADING_NUMBER = /^\s*[-*+]?\s*#?(\d{1,3})\b/;
+function fileIdentity(path: string, label: string): Identity {
+	const entry = lstatSync(path, { bigint: true });
+	if (entry.isSymbolicLink() || !entry.isFile()) throw new Error(`${label} must be a regular file`);
+	return { dev: entry.dev, ino: entry.ino };
+}
 
-/**
- * The lines a Markdown reader would treat as prose. Fenced code is skipped, so
- * a `- [x]` shown as an example is not a claim and a fenced `**Blocked by:**`
- * is not an edge. An unterminated fence swallows the rest, as Markdown does.
- */
-function* proseLines(content: string): Generator<string> {
-	let fence: string | undefined;
-	for (const line of content.split("\n")) {
-		const marker = FENCE.exec(line)?.[1];
-		if (marker) {
-			if (!fence) fence = marker;
-			else if (marker[0] === fence[0] && marker.length >= fence.length) fence = undefined;
-		} else if (!fence) {
-			yield line;
-		}
+function descriptorIdentity(descriptor: number): Identity {
+	const entry = fstatSync(descriptor, { bigint: true });
+	return { dev: entry.dev, ino: entry.ino };
+}
+
+function captureHierarchy(record: SpecRecord, root: string): Hierarchy {
+	const rootPath = resolve(root);
+	const specPath = resolve(record.path);
+	if (dirname(specPath) !== rootPath || basename(specPath) !== record.folder) {
+		throw new Error("Mounted spec must remain a direct child of the spec root");
+	}
+	return {
+		rootPath,
+		root: directoryIdentity(rootPath, "Spec root"),
+		specPath,
+		spec: directoryIdentity(specPath, "Mounted spec folder"),
+	};
+}
+
+function assertHierarchy(hierarchy: Hierarchy): void {
+	if (!sameIdentity(directoryIdentity(hierarchy.rootPath, "Spec root"), hierarchy.root)) {
+		throw new Error("Spec root changed during the write");
+	}
+	if (!sameIdentity(directoryIdentity(hierarchy.specPath, "Mounted spec folder"), hierarchy.spec)) {
+		throw new Error("Mounted spec folder changed during the write");
 	}
 }
 
-export function countBoxes(content: string): { boxes: number; ticked: number } {
-	let boxes = 0;
-	let ticked = 0;
-	for (const line of proseLines(content)) {
-		const box = CHECKBOX.exec(line)?.[1];
-		if (!box) continue;
-		boxes += 1;
-		if (box !== " ") ticked += 1;
-	}
-	return { boxes, ticked };
+function assertDirectory(path: string, expected: Identity, label: string): void {
+	if (!sameIdentity(directoryIdentity(path, label), expected)) throw new Error(`${label} changed during the write`);
 }
 
-/**
- * The numbers on the `**Blocked by:**` line. "None — can start immediately",
- * an absent line and a title with no number all mean no dependencies.
- */
-export function parseDependencies(content: string): number[] {
-	const found = new Set<number>();
-	for (const line of proseLines(content)) {
-		const rest = BLOCKED_BY.exec(line)?.[1];
-		if (rest === undefined) continue;
-		for (const part of rest.split(/[;,]/)) {
-			const number = LEADING_NUMBER.exec(part)?.[1];
-			if (number) found.add(Number(number));
-		}
-	}
-	return [...found].sort((a, b) => a - b);
+function assertFile(path: string, expected: Identity, label: string): void {
+	if (!sameIdentity(fileIdentity(path, label), expected)) throw new Error(`${label} changed during the write`);
 }
 
-const readTicketFile = (path: string): string => {
+function closeQuietly(descriptor: number): void {
 	try {
-		return readFileSync(path, "utf8").slice(0, MAX_TICKET_BYTES);
+		closeSync(descriptor);
+	} catch {}
+}
+
+function removeOwnedFile(path: string, expected: Identity, hierarchy: Hierarchy, directory?: { path: string; identity: Identity }): boolean {
+	try {
+		assertHierarchy(hierarchy);
+		if (directory) assertDirectory(directory.path, directory.identity, "Mounted spec log folder");
+		assertFile(path, expected, "Private file");
+		// These checks stop static links and accidental replacement. Portable Node cannot close a malicious same-UID parent-rename race without openat-style operations.
+		unlinkSync(path);
+		return true;
 	} catch {
-		return "";
+		return false;
 	}
-};
-
-/** All boxes ticked, and at least one box. Local to the ticket, so cycles cannot loop. */
-const isDone = (ticket: Pick<Ticket, "boxes" | "ticked">): boolean => ticket.boxes > 0 && ticket.ticked === ticket.boxes;
-
-/**
- * Reads a feature's tickets and derives each one's state.
- *
- * `blocked` asks only whether each named dependency is done, and "done" is a
- * fact local to that dependency's own boxes. Nothing recurses, so a dependency
- * cycle terminates: every ticket on an unfinished cycle reads `blocked`.
- */
-export function readTickets(files: string[]): Ticket[] {
-	const parsed = files.map((path) => {
-		const content = readTicketFile(path);
-		const number = Number(/^(\d{1,3})-/.exec(basename(path))?.[1] ?? 0);
-		return { path, number, label: String(number).padStart(2, "0"), ...countBoxes(content), dependsOn: parseDependencies(content) };
-	});
-
-	// A number is done only when every ticket carrying it is done, so a duplicated
-	// number cannot let a dependency read as satisfied by its finished twin.
-	const byNumber = new Map<number, Array<(typeof parsed)[number]>>();
-	for (const ticket of parsed) byNumber.set(ticket.number, [...(byNumber.get(ticket.number) ?? []), ticket]);
-	const doneNumbers = new Set([...byNumber].filter(([, group]) => group.every(isDone)).map(([number]) => number));
-
-	return parsed.map((ticket) => {
-		// A dependency we cannot find fails toward blocked. Reading it as satisfied
-		// would quietly promote the ticket to ready on a graph nobody can trust.
-		const dangling = ticket.dependsOn.filter((number) => !byNumber.has(number));
-		const satisfied = ticket.dependsOn.every((number) => doneNumbers.has(number));
-		let state: TicketState;
-		if (isDone(ticket)) state = "done";
-		else if (ticket.ticked > 0) state = "started";
-		else if (!satisfied) state = "blocked";
-		else state = ticket.boxes === 0 ? "unmeasured" : "ready";
-		return { ...ticket, dangling, state };
-	});
 }
 
-export function tally(tickets: Ticket[]): Progress {
-	const count = (state: TicketState): number => tickets.filter((ticket) => ticket.state === state).length;
-	return { tickets, total: tickets.length, done: count("done"), started: count("started"), blocked: count("blocked"), ready: count("ready"), unmeasured: count("unmeasured") };
-}
-
-export const readProgress = (files: string[]): Progress => tally(readTickets(files));
-
-/** The picker's progress segment: `5/11 done, 2 blocked`. */
-export function formatTally(progress: Progress): string {
-	return progress.blocked > 0 ? `${progress.done}/${progress.total} done, ${progress.blocked} blocked` : `${progress.done}/${progress.total} done`;
-}
-
-/** The note's one line: the tally, the frontier, and what is waiting. */
-export function formatProgressLine(progress: Progress): string {
-	const sentences = [`Tickets: ${progress.done}/${progress.total} done.`];
-	for (const [lead, state] of [
-		["In progress", "started"],
-		["Ready now", "ready"],
-		["Blocked", "blocked"],
-		["No acceptance boxes", "unmeasured"],
-	] as Array<[string, TicketState]>) {
-		const labels = progress.tickets
-			.filter((ticket) => ticket.state === state)
-			.map((ticket) => ticket.label)
-			.sort();
-		if (labels.length === 0) continue;
-		// Capped so a forty-ticket feature cannot balloon the per-turn note.
-		const shown = labels.slice(0, MAX_LISTED).join(", ");
-		sentences.push(`${lead}: ${labels.length > MAX_LISTED ? `${shown} +${labels.length - MAX_LISTED} more` : shown}.`);
+function removeDeadCandidate(path: string, identity: Identity, hierarchy: Hierarchy): void {
+	if (removeOwnedFile(path, identity, hierarchy)) return;
+	try {
+		fileIdentity(path, "Spec status lock");
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+		throw error;
 	}
-	return sentences.join(" ");
+	throw new Error("Spec status lock changed during crash recovery");
+}
+
+function currentRecord(record: SpecRecord, root: string): SpecRecord {
+	const current = describeSpec(record.path, root);
+	if (current.kind === "invalid") throw new Error(`Mounted spec is invalid: ${current.error}`);
+	return current;
+}
+
+function lockOwnerFromName(name: string, prefix: string): Omit<LockOwner, "version" | "ticket"> | undefined {
+	if (!name.startsWith(prefix)) return undefined;
+	const [pidText, startedAtText, token, ...rest] = name.slice(prefix.length).split(".");
+	const pid = Number(pidText);
+	const startedAt = Number(startedAtText);
+	if (rest.length > 0 || !Number.isSafeInteger(pid) || pid <= 0 || !Number.isSafeInteger(startedAt) || startedAt <= 0 || !/^[0-9a-f-]{36}$/.test(token ?? "")) {
+		throw new Error("Spec status lock path is unsafe");
+	}
+	return { pid, startedAt, token };
+}
+
+function ownerIsLive(owner: Pick<LockOwner, "pid" | "startedAt">): boolean {
+	if (owner.pid === process.pid) return owner.startedAt === PROCESS_STARTED_AT;
+	try {
+		process.kill(owner.pid, 0);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ESRCH") return false;
+		return true;
+	}
+	try {
+		const started = execFileSync("/bin/ps", ["-p", String(owner.pid), "-o", "lstart="], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+			timeout: 1_000,
+		}).trim();
+		const startedAt = Date.parse(started);
+		if (!Number.isFinite(startedAt)) return true;
+		return Math.abs(Math.floor(startedAt / 1_000) - owner.startedAt) <= 2;
+	} catch {
+		return true;
+	}
+}
+
+function writeLockOwner(descriptor: number, owner: LockOwner): void {
+	const payload = `${JSON.stringify(owner)}\n`;
+	ftruncateSync(descriptor, 0);
+	writeSync(descriptor, payload, 0, "utf8");
+	fsyncSync(descriptor);
+}
+
+function readLockCandidates(hierarchy: Hierarchy, prefix: string): LockCandidate[] {
+	const candidates: LockCandidate[] = [];
+	for (const name of readdirSync(hierarchy.rootPath)) {
+		const namedOwner = lockOwnerFromName(name, prefix);
+		if (!namedOwner) continue;
+		const path = join(hierarchy.rootPath, name);
+		let identity: Identity;
+		let text: string;
+		try {
+			identity = fileIdentity(path, "Spec status lock");
+			text = readFileSync(path, "utf8");
+			assertFile(path, identity, "Spec status lock");
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+			throw error;
+		}
+		const live = ownerIsLive(namedOwner);
+		if (!live) {
+			// PID start time distinguishes a crashed owner from PID reuse, so recovery never removes a candidate owned by a live or unknown process.
+			removeDeadCandidate(path, identity, hierarchy);
+			continue;
+		}
+		let owner: LockOwner;
+		try {
+			owner = JSON.parse(text) as LockOwner;
+		} catch {
+			owner = { version: 1, ...namedOwner, ticket: null };
+		}
+		if (
+			owner.version !== 1 ||
+			owner.pid !== namedOwner.pid ||
+			owner.startedAt !== namedOwner.startedAt ||
+			owner.token !== namedOwner.token ||
+			(owner.ticket !== null && (!Number.isSafeInteger(owner.ticket) || owner.ticket <= 0))
+		) {
+			throw new Error("Spec status lock owner is invalid");
+		}
+		candidates.push({ path, identity, owner });
+	}
+	return candidates;
+}
+
+function precedes(left: LockOwner, right: LockOwner): boolean {
+	if (left.ticket === null) return true;
+	if (right.ticket === null) return false;
+	if (left.ticket !== right.ticket) return left.ticket < right.ticket;
+	if (left.startedAt !== right.startedAt) return left.startedAt < right.startedAt;
+	if (left.pid !== right.pid) return left.pid < right.pid;
+	return left.token < right.token;
+}
+
+function withStatusLock<T>(record: SpecRecord, root: string, run: () => T): T {
+	const hierarchy = captureHierarchy(record, root);
+	const prefix = `.${record.folder}.status.lock.`;
+	const owner: LockOwner = { version: 1, token: randomUUID(), pid: process.pid, startedAt: PROCESS_STARTED_AT, ticket: null };
+	const path = join(hierarchy.rootPath, `${prefix}${owner.pid}.${owner.startedAt}.${owner.token}`);
+	const descriptor = openSync(path, EXCLUSIVE_FILE_FLAGS, 0o600);
+	const identity = descriptorIdentity(descriptor);
+	const deadline = Date.now() + LOCK_TIMEOUT_MS;
+	try {
+		writeLockOwner(descriptor, owner);
+		assertHierarchy(hierarchy);
+		assertFile(path, identity, "Spec status lock");
+		const choosing = readLockCandidates(hierarchy, prefix);
+		owner.ticket = Math.max(0, ...choosing.flatMap((candidate) => (candidate.owner.ticket === null ? [] : [candidate.owner.ticket]))) + 1;
+		writeLockOwner(descriptor, owner);
+		while (true) {
+			assertHierarchy(hierarchy);
+			assertFile(path, identity, "Spec status lock");
+			const contenders = readLockCandidates(hierarchy, prefix);
+			const blocked = contenders.some((candidate) => candidate.owner.token !== owner.token && precedes(candidate.owner, owner));
+			if (!blocked) return run();
+			if (Date.now() >= deadline) throw new Error("Timed out waiting for another spec status change");
+			Atomics.wait(waitCell, 0, 0, LOCK_WAIT_MS);
+		}
+	} finally {
+		closeQuietly(descriptor);
+		removeOwnedFile(path, identity, hierarchy);
+	}
+}
+
+function writeMetadata(record: SpecRecord, root: string): void {
+	const hierarchy = captureHierarchy(record, root);
+	const metadataIdentity = fileIdentity(record.metadataPath, "Mounted spec metadata");
+	const temporary = join(record.path, `.spec.json.${process.pid}.${randomUUID()}.tmp`);
+	const metadata = {
+		schemaVersion: 1,
+		title: record.title,
+		status: record.status,
+		...(record.status === "done" ? { completedAt: record.completedAt } : {}),
+	};
+	let descriptor: number | undefined;
+	let temporaryIdentity: Identity | undefined;
+	let closed = false;
+	try {
+		descriptor = openSync(temporary, EXCLUSIVE_FILE_FLAGS, 0o600);
+		temporaryIdentity = descriptorIdentity(descriptor);
+		assertHierarchy(hierarchy);
+		assertFile(temporary, temporaryIdentity, "Temporary metadata file");
+		assertFile(record.metadataPath, metadataIdentity, "Mounted spec metadata");
+		writeFileSync(descriptor, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
+		fsyncSync(descriptor);
+		assertHierarchy(hierarchy);
+		assertFile(temporary, temporaryIdentity, "Temporary metadata file");
+		assertFile(record.metadataPath, metadataIdentity, "Mounted spec metadata");
+		// A same-directory rename keeps readers from observing a partly written spec.json.
+		renameSync(temporary, record.metadataPath);
+		assertHierarchy(hierarchy);
+		assertFile(record.metadataPath, temporaryIdentity, "Mounted spec metadata");
+		closeSync(descriptor);
+		closed = true;
+	} catch (error) {
+		if (descriptor !== undefined && !closed) closeQuietly(descriptor);
+		if (temporaryIdentity) removeOwnedFile(temporary, temporaryIdentity, hierarchy);
+		throw error;
+	}
+}
+
+export function transitionStatus(record: SpecRecord, status: SpecStatus, root: string, now = Date.now()): StatusTransition {
+	return withStatusLock(record, root, () => {
+		const current = currentRecord(record, root);
+		if (current.status === status) return { record: current, changed: false };
+		const next: SpecRecord =
+			status === "done"
+				? { ...current, status, completedAt: new Date(now).toISOString() }
+				: {
+						kind: "spec",
+						path: current.path,
+						folder: current.folder,
+						metadataPath: current.metadataPath,
+						schemaVersion: 1,
+						title: current.title,
+						status,
+					};
+		writeMetadata(next, root);
+		return { record: next, changed: true };
+	});
+}
+
+function ensureLogDirectory(record: SpecRecord, root: string): { hierarchy: Hierarchy; path: string; identity: Identity } {
+	const hierarchy = captureHierarchy(record, root);
+	const path = join(record.path, "log");
+	try {
+		mkdirSync(path, 0o700);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+	}
+	assertHierarchy(hierarchy);
+	return { hierarchy, path, identity: directoryIdentity(path, "Mounted spec log folder") };
+}
+
+function timestampName(now: number): string {
+	return new Date(now).toISOString().replace(/:/g, "-").replace(".", "-");
+}
+
+export function appendSpecLog(record: SpecRecord, text: string, root: string, now = Date.now()): string {
+	if (typeof text !== "string" || text.trim().length === 0) throw new Error("Log text is required");
+	const current = currentRecord(record, root);
+	const log = ensureLogDirectory(current, root);
+	const base = timestampName(now);
+	const body = text.endsWith("\n") ? text : `${text}\n`;
+	for (let collision = 0; collision < 10_000; collision++) {
+		const suffix = collision === 0 ? "" : `-${String(collision).padStart(2, "0")}`;
+		const path = join(log.path, `${base}${suffix}.md`);
+		let descriptor: number | undefined;
+		let openedIdentity: Identity | undefined;
+		let closed = false;
+		try {
+			// O_EXCL reserves one immutable name even when other processes use the same millisecond.
+			descriptor = openSync(path, EXCLUSIVE_FILE_FLAGS, 0o600);
+			openedIdentity = descriptorIdentity(descriptor);
+			assertHierarchy(log.hierarchy);
+			assertDirectory(log.path, log.identity, "Mounted spec log folder");
+			assertFile(path, openedIdentity, "New spec log file");
+			writeFileSync(descriptor, body, "utf8");
+			fsyncSync(descriptor);
+			assertHierarchy(log.hierarchy);
+			assertDirectory(log.path, log.identity, "Mounted spec log folder");
+			assertFile(path, openedIdentity, "New spec log file");
+			closeSync(descriptor);
+			closed = true;
+			return path;
+		} catch (error) {
+			if (descriptor !== undefined && !closed) closeQuietly(descriptor);
+			if (openedIdentity) removeOwnedFile(path, openedIdentity, log.hierarchy, { path: log.path, identity: log.identity });
+			if ((error as NodeJS.ErrnoException).code === "EEXIST") continue;
+			throw error;
+		}
+	}
+	throw new Error("Could not allocate a unique log filename");
 }

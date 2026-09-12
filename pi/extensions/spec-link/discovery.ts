@@ -1,238 +1,141 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
-import { formatProgressLine, formatTally, type Progress, readProgress } from "./progress.ts";
+import { lstatSync, readdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
-/**
- * A feature is one folder of record: the spec, the tickets, or both.
- * `/spec` lists features, never single files, because naming the work is the
- * operator's job and sequencing the slices is the orchestrator's.
- */
-export interface Feature {
-	/** The feature folder itself. */
-	path: string;
-	relativePath: string;
+export type SpecStatus = "pending" | "done";
+
+export interface SpecMetadata {
+	schemaVersion: 1;
 	title: string;
-	specPath?: string;
-	ticketsPath?: string;
-	ticketCount: number;
-	/** Derived from the tickets themselves, so the picker cannot show a stale claim. */
-	progress?: Progress;
-	/** Newest modification among the records the folder holds. */
-	modifiedAt: number;
+	status: SpecStatus;
+	completedAt?: string;
 }
 
-/** What the session stores. The folder is the identity; the rest is re-derived. */
-export interface FeatureLink {
+export interface SpecRecord extends SpecMetadata {
+	kind: "spec";
 	path: string;
-	title: string;
-	specPath?: string;
-	ticketsPath?: string;
-	ticketCount: number;
+	folder: string;
+	metadataPath: string;
 }
 
-const SKIP_DIRECTORIES = new Set(["node_modules", ".git", "dist", "build", "coverage", "out", ".next", ".venv", "__pycache__"]);
-const MAX_DEPTH = 5;
-const TITLE_SCAN_BYTES = 4096;
+export interface InvalidSpec {
+	kind: "invalid";
+	path: string;
+	folder: string;
+	error: string;
+}
+
+export type DiscoveredSpec = SpecRecord | InvalidSpec;
+
+const RECENT_DONE_MS = 72 * 60 * 60 * 1000;
 const MAX_TITLE = 80;
-const TITLE_COLUMN = 34;
-const PATH_COLUMN = 44;
+const TITLE_COLUMN = 40;
+const FOLDER_COLUMN = 42;
+const SPEC_FOLDER = /^\d{4}-\d{2}-\d{2}_[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
-/** `<slug>/SPEC.md` anywhere, plus `.pi/SPEC.md`. Both precedents in this repo use that name. */
-export const isSpecFileName = (name: string): boolean => name.toLowerCase() === "spec.md";
-
-/** `/to-tickets` writes `issues/NN-slug.md`; the number keeps dependency order. */
-export const isTicketFileName = (name: string): boolean => /^\d{1,3}-.+\.md$/i.test(name);
+export const defaultSpecRoot = (): string => join(homedir(), ".pi", "specs");
 
 export function sanitizeDisplay(text: string, max = MAX_TITLE): string {
+	// Control bytes can redraw or forge terminal output, so picker and status text always pass through this boundary.
 	// eslint-disable-next-line no-control-regex
 	const flat = text.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim();
 	return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
-/** First Markdown heading, else the file or folder name turned back into words. */
-export function extractTitle(content: string, path: string): string {
-	for (const line of content.split("\n", 60)) {
-		const heading = /^\s{0,3}#{1,3}\s+(.*\S)/.exec(line);
-		if (heading) return sanitizeDisplay(heading[1].replace(/#+\s*$/, ""));
+function directChild(root: string, folder: string): boolean {
+	const rootPath = resolve(root);
+	const folderPath = resolve(folder);
+	return dirname(folderPath) === rootPath && relative(rootPath, folderPath) === basename(folderPath);
+}
+
+function invalid(folder: string, error: string): InvalidSpec {
+	return { kind: "invalid", path: folder, folder: basename(folder), error };
+}
+
+function parseMetadata(value: unknown): SpecMetadata | string {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return "spec.json must contain an object";
+	const data = value as Record<string, unknown>;
+	if (data.schemaVersion !== 1) return "spec.json schemaVersion must be 1";
+	if (typeof data.title !== "string" || sanitizeDisplay(data.title).length === 0) return "spec.json title must be a non-empty string";
+	if (data.status !== "pending" && data.status !== "done") return 'spec.json status must be "pending" or "done"';
+	if (data.status === "pending" && Object.hasOwn(data, "completedAt")) return "pending specs must not have completedAt";
+	if (data.status === "done") {
+		if (typeof data.completedAt !== "string") return "done specs must have a valid completedAt timestamp";
+		const completedAt = new Date(data.completedAt);
+		if (!Number.isFinite(completedAt.valueOf()) || completedAt.toISOString() !== data.completedAt) {
+			return "done specs must have a canonical UTC completedAt timestamp";
+		}
+		return { schemaVersion: 1, title: data.title, status: "done", completedAt: data.completedAt };
 	}
-	return nameAsWords(path);
+	return { schemaVersion: 1, title: data.title, status: "pending" };
 }
 
-export function nameAsWords(path: string): string {
-	const name = basename(path).replace(/\.md$/i, "");
-	const words = name.replace(/^\d{1,3}-/, "").replace(/[-_]+/g, " ").trim();
-	return sanitizeDisplay(words || name);
-}
-
-/**
- * One rule, stated from the record's side: a record lives directly in its
- * feature folder, or one level down in that folder's `issues/` or `.pi/`
- * container. `.pi` is tooling storage inside a module, not the feature's name,
- * so the module is the folder a human would call the feature.
- */
-export function featureFolderOf(recordPath: string): string {
-	let folder = dirname(recordPath);
-	if (basename(folder) === "issues") folder = dirname(folder);
-	if (basename(folder) === ".pi") folder = dirname(folder);
-	return folder;
-}
-
-const entriesOf = (directory: string): ReturnType<typeof readdirSync> => {
+export function describeSpec(folder: string, root: string): DiscoveredSpec {
+	const folderPath = resolve(folder);
+	if (!directChild(root, folderPath)) return invalid(folderPath, "spec folder must be a direct child of the spec root");
+	if (!SPEC_FOLDER.test(basename(folderPath))) return invalid(folderPath, "folder name must match YYYY-MM-DD_feature-slug");
 	try {
-		return readdirSync(directory, { withFileTypes: true });
+		if (!lstatSync(folderPath).isDirectory()) return invalid(folderPath, "spec path is not a directory");
+	} catch {
+		return invalid(folderPath, "spec folder cannot be read");
+	}
+	const metadataPath = join(folderPath, "spec.json");
+	try {
+		if (!lstatSync(metadataPath).isFile()) return invalid(folderPath, "spec.json must be a regular file");
+		const parsed = parseMetadata(JSON.parse(readFileSync(metadataPath, "utf8")));
+		if (typeof parsed === "string") return invalid(folderPath, parsed);
+		return { kind: "spec", path: folderPath, folder: basename(folderPath), metadataPath, ...parsed };
+	} catch (error) {
+		const detail = error instanceof SyntaxError ? "spec.json is not valid JSON" : "spec.json cannot be read";
+		return invalid(folderPath, detail);
+	}
+}
+
+function entriesOf(root: string): ReturnType<typeof readdirSync> {
+	try {
+		return readdirSync(root, { withFileTypes: true });
 	} catch {
 		return [];
 	}
-};
+}
 
-const isRecord = (path: string): boolean => {
-	const name = basename(path);
-	if (isSpecFileName(name)) return true;
-	return isTicketFileName(name) && basename(dirname(path)) === "issues";
-};
-
-function walk(directory: string, depth: number, found: Set<string>): void {
-	if (depth > MAX_DEPTH || found.size > 200) return;
-	for (const entry of entriesOf(directory)) {
-		const full = join(directory, entry.name);
-		if (entry.isDirectory()) {
-			if (SKIP_DIRECTORIES.has(entry.name)) continue;
-			if (entry.name.startsWith(".") && entry.name !== ".scratch" && entry.name !== ".pi") continue;
-			walk(full, depth + 1, found);
-		} else if (entry.isFile() && isRecord(full)) {
-			found.add(featureFolderOf(full));
+export function discover(root: string, now = Date.now(), mountedPath?: string): DiscoveredSpec[] {
+	const mounted = mountedPath ? resolve(mountedPath) : undefined;
+	const found: DiscoveredSpec[] = [];
+	for (const entry of entriesOf(root)) {
+		if (!entry.isDirectory()) continue;
+		const record = describeSpec(join(root, entry.name), root);
+		if (
+			record.kind === "invalid" ||
+			record.status === "pending" ||
+			resolve(record.path) === mounted ||
+			(now - Date.parse(record.completedAt ?? "") <= RECENT_DONE_MS && now >= Date.parse(record.completedAt ?? ""))
+		) {
+			found.push(record);
 		}
 	}
+	return found.sort((a, b) => b.folder.localeCompare(a.folder));
 }
 
-const mtimeOf = (path: string): number | undefined => {
-	try {
-		return statSync(path).mtimeMs;
-	} catch {
-		return undefined;
-	}
-};
-
-/** The spec, if the folder or its `.pi` container holds one. */
-function findSpec(folder: string): string | undefined {
-	for (const directory of [folder, join(folder, ".pi")]) {
-		for (const entry of entriesOf(directory)) {
-			if (entry.isFile() && isSpecFileName(entry.name)) return join(directory, entry.name);
-		}
-	}
-	return undefined;
-}
-
-function findTickets(folder: string): { path: string; files: string[] } | undefined {
-	for (const directory of [join(folder, "issues"), join(folder, ".pi", "issues")]) {
-		const files = ticketFilesOf(directory);
-		if (files.length > 0) return { path: directory, files };
-	}
-	return undefined;
-}
-
-/** Reads one feature folder. Returns nothing when the folder holds no record. */
-export function describeFeature(folder: string, root: string): Feature | undefined {
-	const specPath = findSpec(folder);
-	const tickets = findTickets(folder);
-	if (!specPath && !tickets) return undefined;
-	const stamps = [specPath, ...(tickets?.files ?? [])].map((path) => (path ? mtimeOf(path) : undefined));
-	const modifiedAt = Math.max(0, ...stamps.filter((stamp): stamp is number => stamp !== undefined));
-	let title = nameAsWords(folder);
-	if (specPath) {
-		try {
-			title = extractTitle(readFileSync(specPath, "utf8").slice(0, TITLE_SCAN_BYTES), specPath);
-		} catch {
-			// An unreadable spec still leaves a feature worth listing.
-		}
-	}
-	return {
-		path: folder,
-		relativePath: relative(root, folder) || basename(folder),
-		title,
-		specPath,
-		ticketsPath: tickets?.path,
-		ticketCount: tickets?.files.length ?? 0,
-		progress: tickets ? readProgress(tickets.files) : undefined,
-		modifiedAt,
-	};
-}
-
-export function sortByRecency(features: Feature[]): Feature[] {
-	return [...features].sort((a, b) => b.modifiedAt - a.modifiedAt || a.relativePath.localeCompare(b.relativePath));
-}
-
-/** Every feature under `root`, newest first, one row per folder of record. */
-export function discover(root: string): Feature[] {
-	const folders = new Set<string>();
-	walk(root, 0, folders);
-	const features: Feature[] = [];
-	for (const folder of folders) {
-		const feature = describeFeature(folder, root);
-		if (feature) features.push(feature);
-	}
-	return sortByRecency(features);
-}
-
-export function formatAge(modifiedAt: number, now: number): string {
-	const minutes = Math.floor(Math.max(0, now - modifiedAt) / 60_000);
-	if (minutes < 1) return "just now";
-	if (minutes < 60) return `${minutes}m ago`;
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return `${hours}h ago`;
-	return `${Math.floor(hours / 24)}d ago`;
-}
-
-/**
- * What the folder holds, in the operator's words. Tickets report progress
- * rather than a bare count, because the count alone answers nothing. A missing
- * `spec` token is how a spec-less feature reads; a feature with neither record
- * is not a feature at all.
- */
-export function contents(feature: Pick<Feature, "specPath" | "ticketCount" | "progress">): string {
-	const parts: string[] = [];
-	if (feature.progress && feature.ticketCount > 0) parts.push(formatTally(feature.progress));
-	if (feature.specPath) parts.push("spec");
-	if (parts.length === 0) parts.push("no records");
-	return parts.join(", ");
-}
-
-/** Aligned columns: title, folder, contents and age. */
-export function pickerLabels(features: Feature[], now: number): string[] {
-	const titles = features.map((feature) => sanitizeDisplay(feature.title, TITLE_COLUMN));
-	const paths = features.map((feature) => sanitizeDisplay(feature.relativePath, PATH_COLUMN));
+export function pickerLabels(records: DiscoveredSpec[]): string[] {
+	const titles = records.map((record) => sanitizeDisplay(record.kind === "spec" ? record.title : record.folder, TITLE_COLUMN));
+	const folders = records.map((record) => sanitizeDisplay(record.folder, FOLDER_COLUMN));
 	const titleWidth = Math.max(0, ...titles.map((title) => title.length));
-	const pathWidth = Math.max(0, ...paths.map((path) => path.length));
-	return features.map(
-		(feature, index) =>
-			`${titles[index].padEnd(titleWidth)}  ·  ${paths[index].padEnd(pathWidth)}  ·  ${contents(feature)}, ${formatAge(feature.modifiedAt, now)}`,
-	);
+	const folderWidth = Math.max(0, ...folders.map((folder) => folder.length));
+	const ordinalWidth = String(records.length).length;
+	return records.map((record, index) => {
+		const status = record.kind === "spec" ? record.status : "invalid";
+		const detail = record.kind === "invalid" ? `  ·  ${sanitizeDisplay(record.error)}` : "";
+		// The ordinal keeps truncated rows distinct and is the exact value resolved after selection.
+		return `${String(index + 1).padStart(ordinalWidth)}.  ${titles[index].padEnd(titleWidth)}  ·  ${status.padEnd(7)}  ·  ${folders[index].padEnd(folderWidth)}${detail}`;
+	});
 }
 
-/** Every ticket file in an `issues/` directory, in number order. */
-function ticketFilesOf(ticketsPath: string): string[] {
-	return entriesOf(ticketsPath)
-		.filter((entry) => entry.isFile() && isTicketFileName(entry.name))
-		.map((entry) => join(ticketsPath, entry.name))
-		.sort();
-}
-
-/**
- * The whole per-turn cost. The link, never the body.
- *
- * Progress is re-derived on every turn, so ticking a box shows up on the next
- * turn without a timer, a cache or a write.
- */
-export function renderNote(link: FeatureLink): string {
-	const lines = [`[spec-link] The operator linked this feature: "${sanitizeDisplay(link.title)}".`, `Folder: ${link.path}`];
-	lines.push(link.specPath ? `Spec: ${link.specPath}` : "Spec: none written yet, so the intent lives only in the tickets.");
-	if (link.ticketsPath) {
-		const files = ticketFilesOf(link.ticketsPath);
-		if (files.length > 0) {
-			lines.push(formatProgressLine(readProgress(files)));
-			lines.push(`Ticket files: ${link.ticketsPath}`);
-		}
-	}
-	lines.push("Read the files when you need them; this note carries only the link.");
-	return lines.join("\n");
+export function renderNote(record: SpecRecord): string {
+	return [
+		`[spec-link] Mounted spec: "${sanitizeDisplay(record.title)}".`,
+		`Status: ${record.status}`,
+		`Folder: ${record.path}`,
+		"Read files in this folder when needed. This note contains no file bodies.",
+	].join("\n");
 }
