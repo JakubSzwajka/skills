@@ -24,6 +24,6 @@
 
   "conductor": {
     "model": "anthropic/claude-opus-5",
-    "excludeTools": ["edit", "write"]
+    "excludeTools": ["edit"]
   }
 }
