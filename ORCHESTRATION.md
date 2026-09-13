@@ -136,13 +136,23 @@ says so in its result.
 | `worker` | scoped implementation, tests, fixes | full |
 | `reviewer` | audit, verification, adversarial reading | readOnly |
 | `oracle` | architecture, hard judgement calls | readOnly |
+| `conductor` | the top layer: one session supervising one orchestrator per repository | no `edit`, no `write`, keeps `ask_user_question` |
 
 `readOnly` becomes `--exclude-tools edit` and **keeps `write`**, because a worker
 that cannot write cannot produce a handoff. That was a real bug in this file.
 
-Every profile also excludes `ask_user_question`, so a worker cannot stall in a dialog
-nobody is watching. A profile may carry `transport`; none does today, and only the operator
-can add it.
+Every worker profile also excludes `ask_user_question`, so a worker cannot stall in a
+dialog nobody is watching. `conductor` is the exception and keeps it: a conductor talks to
+the operator, so it must be able to ask. A profile may carry `transport`; none does today,
+and only the operator can add it.
+
+**A conductor does not read another agent's pane.** Nothing in the profile schema can stop
+it, because `herdr agent read` is a bash call and the schema only names tools
+(`pi/extensions/delegate/types.ts:15-21`), so this is a rule and not a guard. On its first
+real run a conductor opened four worker panes and pulled 35 KB of other agents' terminals
+into the top-level context. A conductor reads the orchestrator it supervises, and the
+handoff files. Workers belong to their orchestrator; ask the orchestrator what a lane is
+doing instead of looking.
 
 Every profile runs on a subscription provider: `anthropic` and `openai-codex` are flat
 fee oauth. `amazon-bedrock`, `fireworks` and `openrouter` are metered API keys that bill
