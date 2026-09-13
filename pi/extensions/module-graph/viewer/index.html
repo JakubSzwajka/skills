@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module graph</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three/three.module.js",
+          "three/addons/": "/vendor/three/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas
+      id="graph-canvas"
+      aria-label="Interactive three-dimensional module dependency graph"
+    ></canvas>
+
+    <header class="hud panel">
+      <div>
+        <p class="eyebrow">Module dependency analyzer</p>
+        <h1>3D module graph</h1>
+        <nav id="breadcrumb" class="breadcrumb" aria-label="Graph level"></nav>
+      </div>
+      <dl class="metrics">
+        <div>
+          <dt id="metric-primary-label">Items</dt>
+          <dd id="metric-primary">0</dd>
+        </div>
+        <div>
+          <dt>Edges</dt>
+          <dd id="metric-edges">0</dd>
+        </div>
+      </dl>
+    </header>
+
+    <nav class="controls panel" aria-label="Graph controls">
+      <button id="toggle-rotation" type="button">Pause rotation</button>
+    </nav>
+
+    <aside id="inspector" class="inspector panel" aria-live="polite">
+      <p class="inspector__eyebrow">Inspect an item</p>
+      <h2 class="inspector__title">Click any node</h2>
+      <p class="inspector__path">Double-click a directory to open it.</p>
+    </aside>
+
+    <div id="failure" class="failure panel" role="alert" hidden></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
