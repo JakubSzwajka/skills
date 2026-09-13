@@ -144,10 +144,18 @@ Every profile also excludes `ask_user_question`, so a worker cannot stall in a d
 nobody is watching. A profile may carry `transport`; none does today, and only the operator
 can add it.
 
-`reviewer` and `oracle` run `anthropic/claude-opus-5`. On 9 Sep that endpoint returned
-14 consecutive 429s from 17:18 onward and every review silently fell back to one model
-family. There is no automatic retry on a provider failure, so a review that dies on a
-429 is yours to notice and restart.
+Every profile runs on a subscription provider: `anthropic` and `openai-codex` are flat
+fee oauth. `amazon-bedrock`, `fireworks` and `openrouter` are metered API keys that bill
+real cash, and no profile names one. From 10 Sep the measured out-of-pocket spend was
+$595.95, and 92% of it was one Bedrock Opus entry duplicating `anthropic/claude-opus-5`,
+which the subscription already serves. `reviewer` runs `anthropic/claude-sonnet-4-5`
+because a read-only review rarely needs Opus and every Opus lane competes for the same
+subscription headroom. `oracle` keeps Opus as the escape hatch.
+
+`anthropic/claude-opus-5` is also a real availability risk. On 9 Sep that endpoint
+returned 14 consecutive 429s from 17:18 onward and every review silently fell back to one
+model family. There is no automatic retry on a provider failure, so a review that dies on
+a 429 is yours to notice and restart.
 
 Model routing from the pi-subagents era is preserved at
 `audit/experiments/herdr-orchestration/snapshot/subagents-model-routing.json`. The
