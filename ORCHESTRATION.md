@@ -271,6 +271,15 @@ worker can own outright. A fifth lane is a smell.
 Compaction is the same signal. If the window compacts, re-plan before
 continuing.
 
+Turn count is the signal you can always see. Hand the session over at roughly
+80 assistant turns, at an atomic boundary: after a lane is read, verified and
+stopped, or right after a commit. This is cost as much as context. A turn costs
+$0.060 under 50 turns, $0.137 by 100, and $0.246 past 300, so the same work
+bought late costs four times what it did early. Ten sessions over 200 turns
+took 39% of three days' spend, only 12 of 237 sessions ever compacted, and a
+475-turn session started emitting malformed tool arguments of a kind that never
+appears early. `skills/handoff/SKILL.md` says what the next parent must carry.
+
 ## Watching, blocking, and death
 
 `delegate list` and the widget show every live lane: status, context used, spend,
