@@ -147,6 +147,11 @@ function headlessProfiles(root: string): void {
 	assert.ok(prompt[3]!.includes("name your own recommendation"));
 	assert.ok(prompt[3]!.includes("write\nthe handoff describing the block rather than waiting again"));
 	assert.ok(prompt[3]!.includes("session parent-1 and wait for the reply"), "the decisions clause contains the parent session id");
+	assert.ok(prompt[3]!.includes("The handoff carries evidence, not a claim that you finished."), "the contract asks for evidence rather than a done claim");
+	assert.ok(prompt[3]!.includes("exact\npaths you changed"), "the contract asks for the paths that moved");
+	assert.ok(prompt[3]!.includes("commands you ran to verify with their exit codes"), "the contract asks for verification commands and exit codes");
+	assert.ok(prompt[3]!.includes("what you could not verify"), "the contract asks what is left unverified");
+	assert.ok(prompt[3]!.includes("still\nrunning or still open when you stop"), "the contract asks what the lane left running");
 	assert.ok(prompt[3]!.includes("use the intercom tool to message session parent-1"), "the doorbell line contains the same parent session id");
 	assert.equal(prompt[3], returnContract("Write READY", String(result.handoff), "parent-1"));
 }

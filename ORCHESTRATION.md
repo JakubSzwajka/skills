@@ -214,7 +214,8 @@ read. It holds:
 
 - what changed, as a diff summary or a path list
 - the commands it ran, with exit codes
-- what it could not do, and why
+- what it could not do, and what it could not verify, and why
+- anything it started that is still running or still open
 - what was already dirty before it started
 - durable event candidates for the mounted spec, when the work found any
 
