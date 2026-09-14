@@ -27,6 +27,7 @@ class FakeClock implements CommitWidgetClock {
 
 test("renders the approved command, model, phase, count, and staged path shape", () => {
 	assert.equal(shortCommitModel("openai-codex/gpt-5.6-luna"), "luna");
+	assert.equal(shortCommitModel("anthropic/claude-haiku-4-5"), "haiku");
 	assert.equal(shortCommitModel("openrouter/anthropic/claude-haiku-4.5"), "haiku");
 	assert.deepEqual(
 		renderCommitWidget({

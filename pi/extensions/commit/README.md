@@ -26,7 +26,7 @@ Normal release has a bounded wait, checks the lock's file identity against the f
 Models run in this exact order:
 
 1. `openai-codex/gpt-5.6-luna`
-2. `openrouter/anthropic/claude-haiku-4.5`
+2. `anthropic/claude-haiku-4-5`
 
 Haiku is tried only when Luna has a setup or provider failure before any Git mutation, or when Luna passes an invalid commit message before any mutation. There is no fallback after staging starts.
 

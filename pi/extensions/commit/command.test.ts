@@ -449,7 +449,7 @@ test("a rejected pre-mutation commit message falls back to Haiku", async () => {
 
 	const result = await executeCommit("file.ts", context(), deps);
 	assert.match(result, /^Committed /);
-	assert.deepEqual(created.map((entry) => entry.model.id), ["gpt-5.6-luna", "anthropic/claude-haiku-4.5"]);
+	assert.deepEqual(created.map((entry) => entry.model.id), ["gpt-5.6-luna", "claude-haiku-4-5"]);
 	assert.equal(git.calls.filter((args) => args[0] === "commit").length, 1);
 });
 
@@ -467,10 +467,10 @@ test("tries Luna first, reports the model in use, and falls back only before mut
 	assert.match(result, /^Committed /);
 	assert.deepEqual(created.map((entry) => `${entry.model.provider}/${entry.model.id}`), [
 		"openai-codex/gpt-5.6-luna",
-		"openrouter/anthropic/claude-haiku-4.5",
+		"anthropic/claude-haiku-4-5",
 	]);
 	assert.ok(progressModels.includes("openai-codex/gpt-5.6-luna"));
-	assert.ok(progressModels.includes("openrouter/anthropic/claude-haiku-4.5"));
+	assert.ok(progressModels.includes("anthropic/claude-haiku-4-5"));
 });
 
 test("falls back after a pre-mutation provider response error", async () => {
@@ -487,15 +487,15 @@ test("falls back after a pre-mutation provider response error", async () => {
 	});
 	const result = await executeCommit("file.ts", context(), deps);
 	assert.match(result, /^Committed /);
-	assert.deepEqual(created.map((entry) => entry.model.id), ["gpt-5.6-luna", "anthropic/claude-haiku-4.5"]);
+	assert.deepEqual(created.map((entry) => entry.model.id), ["gpt-5.6-luna", "claude-haiku-4-5"]);
 });
 
 test("uses Haiku directly when Luna lacks authentication", async () => {
-	const haiku = model("openrouter", "anthropic/claude-haiku-4.5");
+	const haiku = model("anthropic", "claude-haiku-4-5");
 	const { deps, created } = fakeDependencies();
 	const result = await executeCommit("file.ts", context({ models: [haiku] }), deps);
 	assert.match(result, /^Committed /);
-	assert.equal(`${created[0].model.provider}/${created[0].model.id}`, "openrouter/anthropic/claude-haiku-4.5");
+	assert.equal(`${created[0].model.provider}/${created[0].model.id}`, "anthropic/claude-haiku-4-5");
 });
 
 test("reports missing model authentication without starting a worker", async () => {

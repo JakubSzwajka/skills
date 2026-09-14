@@ -136,18 +136,37 @@ says so in its result.
 | `worker` | scoped implementation, tests, fixes | full |
 | `reviewer` | audit, verification, adversarial reading | readOnly |
 | `oracle` | architecture, hard judgement calls | readOnly |
+| `conductor` | the top layer: one session supervising one orchestrator per repository | no `edit`, no `write`, keeps `ask_user_question` |
 
 `readOnly` becomes `--exclude-tools edit` and **keeps `write`**, because a worker
 that cannot write cannot produce a handoff. That was a real bug in this file.
 
-Every profile also excludes `ask_user_question`, so a worker cannot stall in a dialog
-nobody is watching. A profile may carry `transport`; none does today, and only the operator
-can add it.
+Every worker profile also excludes `ask_user_question`, so a worker cannot stall in a
+dialog nobody is watching. `conductor` is the exception and keeps it: a conductor talks to
+the operator, so it must be able to ask. A profile may carry `transport`; none does today,
+and only the operator can add it.
 
-`reviewer` and `oracle` run `anthropic/claude-opus-5`. On 9 Sep that endpoint returned
-14 consecutive 429s from 17:18 onward and every review silently fell back to one model
-family. There is no automatic retry on a provider failure, so a review that dies on a
-429 is yours to notice and restart.
+**A conductor does not read another agent's pane.** Nothing in the profile schema can stop
+it, because `herdr agent read` is a bash call and the schema only names tools
+(`pi/extensions/delegate/types.ts:15-21`), so this is a rule and not a guard. A conductor
+reads the orchestrator it supervises, and the handoff files. Workers belong to their
+orchestrator; ask the orchestrator what a lane is doing instead of looking.
+
+**A profile picks a tier. Policy picks the route.** A profile names a model, but what it
+expresses is how strong a model the lane's work deserves. `~/.pi/agent/model-policy.json`
+decides who gets billed, keyed by working directory. An agent does not pick a provider to
+save money. It picks a tier, and policy routes it. In a directory whose work is billed to
+an employer the metered providers are the only permitted ones, and naming them there is
+correct.
+
+So read the model ids in `profiles.json` as tier defaults, not as provider choices:
+`reviewer` sits a tier below `worker` because a read-only review rarely needs the top
+model, and `oracle` keeps the top tier for hard calls. The file is strict JSON and the
+loader requires every key to be a profile, so it cannot carry a comment saying this. That
+is why it is here.
+
+Provider failure is yours to notice. There is no automatic retry, so a lane that dies on a
+rate limit or a 5xx stays dead and one model family quietly serves everything. Restart it.
 
 Model routing from the pi-subagents era is preserved at
 `audit/experiments/herdr-orchestration/snapshot/subagents-model-routing.json`. The
@@ -206,7 +225,8 @@ read. It holds:
 
 - what changed, as a diff summary or a path list
 - the commands it ran, with exit codes
-- what it could not do, and why
+- what it could not do, and what it could not verify, and why
+- anything it started that is still running or still open
 - what was already dirty before it started
 - durable event candidates for the mounted spec, when the work found any
 
@@ -261,6 +281,13 @@ worker can own outright. A fifth lane is a smell.
 
 Compaction is the same signal. If the window compacts, re-plan before
 continuing.
+
+Turn count is the signal you can always see. Hand the session over at roughly
+80 assistant turns, at an atomic boundary: after a lane is read, verified and
+stopped, or right after a commit. This is cost as much as context. Cost per
+assistant turn climbs steeply with session length, and a long session rarely
+compacts, so it does not correct itself. `skills/handoff/SKILL.md` says what the
+next parent must carry.
 
 ## Watching, blocking, and death
 
