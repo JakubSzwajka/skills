@@ -25,7 +25,7 @@ import { CommitStatusWidget, type CommitProgress } from "./widget.ts";
 
 export const COMMIT_MODELS = [
 	{ provider: "openai-codex", id: "gpt-5.6-luna" },
-	{ provider: "openrouter", id: "anthropic/claude-haiku-4.5" },
+	{ provider: "anthropic", id: "claude-haiku-4-5" },
 ] as const;
 
 export const COMMIT_TOOL_ALLOWLIST = ["read", "git_snapshot", "git_stage", "git_commit"] as const;

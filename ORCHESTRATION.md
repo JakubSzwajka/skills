@@ -148,24 +148,25 @@ and only the operator can add it.
 
 **A conductor does not read another agent's pane.** Nothing in the profile schema can stop
 it, because `herdr agent read` is a bash call and the schema only names tools
-(`pi/extensions/delegate/types.ts:15-21`), so this is a rule and not a guard. On its first
-real run a conductor opened four worker panes and pulled 35 KB of other agents' terminals
-into the top-level context. A conductor reads the orchestrator it supervises, and the
-handoff files. Workers belong to their orchestrator; ask the orchestrator what a lane is
-doing instead of looking.
+(`pi/extensions/delegate/types.ts:15-21`), so this is a rule and not a guard. A conductor
+reads the orchestrator it supervises, and the handoff files. Workers belong to their
+orchestrator; ask the orchestrator what a lane is doing instead of looking.
 
-Every profile runs on a subscription provider: `anthropic` and `openai-codex` are flat
-fee oauth. `amazon-bedrock`, `fireworks` and `openrouter` are metered API keys that bill
-real cash, and no profile names one. From 10 Sep the measured out-of-pocket spend was
-$595.95, and 92% of it was one Bedrock Opus entry duplicating `anthropic/claude-opus-5`,
-which the subscription already serves. `reviewer` runs `anthropic/claude-sonnet-4-5`
-because a read-only review rarely needs Opus and every Opus lane competes for the same
-subscription headroom. `oracle` keeps Opus as the escape hatch.
+**A profile picks a tier. Policy picks the route.** A profile names a model, but what it
+expresses is how strong a model the lane's work deserves. `~/.pi/agent/model-policy.json`
+decides who gets billed, keyed by working directory. An agent does not pick a provider to
+save money. It picks a tier, and policy routes it. In a directory whose work is billed to
+an employer the metered providers are the only permitted ones, and naming them there is
+correct.
 
-`anthropic/claude-opus-5` is also a real availability risk. On 9 Sep that endpoint
-returned 14 consecutive 429s from 17:18 onward and every review silently fell back to one
-model family. There is no automatic retry on a provider failure, so a review that dies on
-a 429 is yours to notice and restart.
+So read the model ids in `profiles.json` as tier defaults, not as provider choices:
+`reviewer` sits a tier below `worker` because a read-only review rarely needs the top
+model, and `oracle` keeps the top tier for hard calls. The file is strict JSON and the
+loader requires every key to be a profile, so it cannot carry a comment saying this. That
+is why it is here.
+
+Provider failure is yours to notice. There is no automatic retry, so a lane that dies on a
+rate limit or a 5xx stays dead and one model family quietly serves everything. Restart it.
 
 Model routing from the pi-subagents era is preserved at
 `audit/experiments/herdr-orchestration/snapshot/subagents-model-routing.json`. The
@@ -283,12 +284,10 @@ continuing.
 
 Turn count is the signal you can always see. Hand the session over at roughly
 80 assistant turns, at an atomic boundary: after a lane is read, verified and
-stopped, or right after a commit. This is cost as much as context. A turn costs
-$0.060 under 50 turns, $0.137 by 100, and $0.246 past 300, so the same work
-bought late costs four times what it did early. Ten sessions over 200 turns
-took 39% of three days' spend, only 12 of 237 sessions ever compacted, and a
-475-turn session started emitting malformed tool arguments of a kind that never
-appears early. `skills/handoff/SKILL.md` says what the next parent must carry.
+stopped, or right after a commit. This is cost as much as context. Cost per
+assistant turn climbs steeply with session length, and a long session rarely
+compacts, so it does not correct itself. `skills/handoff/SKILL.md` says what the
+next parent must carry.
 
 ## Watching, blocking, and death
 

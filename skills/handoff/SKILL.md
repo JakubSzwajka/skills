@@ -21,19 +21,9 @@ If the user passed arguments, treat them as a description of what the next sessi
 
 An orchestrator or conductor hands over at roughly 80 assistant turns. Do it at an atomic boundary: after a lane is read, verified and stopped, or right after a commit. Never mid-lane.
 
-Turn count is the trigger. A context percentage is not, because it needs a provider that reports one and it only ever covered project parents. You can always count turns.
+Turn count is the trigger. A context percentage is not, because it needs a provider that reports one and it does not cover every session. You can always count turns.
 
-This is about cost and reliability, not only the context limit. Measured cost per assistant turn by session length:
-
-| Session length | Cost per assistant turn |
-| --- | --- |
-| under 50 turns | $0.060 |
-| 50–99 | $0.077 |
-| 100–199 | $0.137 |
-| 200–299 | $0.150 |
-| 300+ | $0.246 |
-
-Ten sessions over 200 turns took 39% of three days' spend. Only 12 of 237 sessions ever compacted, so length was not self-correcting. Late turns also degrade: a 475-turn session emitted malformed tool arguments (`"actionishly":"start"`, corrupted edit payloads) of a kind that never appears early.
+Cost and reliability drive this, not only the context limit. Cost per assistant turn rises sharply the longer a session runs, and a long session rarely compacts, so it does not correct itself. Late turns also degrade: a very long session starts emitting malformed tool arguments of a kind that never appears early.
 
 A rotating parent carries these across, beyond the usual handoff content:
 
